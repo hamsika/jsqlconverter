@@ -3,14 +3,14 @@ package com.googlecode.jsqlconverter.definition.create.table;
 import com.googlecode.jsqlconverter.definition.type.Type;
 import com.googlecode.jsqlconverter.definition.Name;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class Column {
 	private Name columnName;
 	private Type dataType;
-	private Vector<Constraint> constraints = new Vector<Constraint>();
-	private Vector<Reference> references = new Vector<Reference>();
-	private int size = -1;
+	private ArrayList<Constraint> constraints = new ArrayList<Constraint>();
+	private ArrayList<Reference> references = new ArrayList<Reference>();
+	private int size = 0;
 
 	public Column(Name columnName) {
 		this(columnName, null);
@@ -34,12 +34,12 @@ public class Column {
 		return size;
 	}
 
-	public Vector<Constraint> getConstraints() {
-		return constraints;
+	public Constraint[] getConstraints() {
+		return constraints.toArray(new Constraint[] {});
 	}
 
-	public Vector<Reference> getReferences() {
-		return references;
+	public Reference[] getReferences() {
+		return references.toArray(new Reference[] {});
 	}
 
 	// setters

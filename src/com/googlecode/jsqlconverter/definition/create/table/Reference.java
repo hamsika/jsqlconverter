@@ -25,7 +25,7 @@ public class Reference {
 
 
 	private String tableName;
-	//private Vector<ReferenceConstraint> columnConstraints = new Vector<ReferenceConstraint>(); // can include size, and order
+	//private ArrayList<ReferenceConstraint> columnConstraints = new ArrayList<ReferenceConstraint>(); // can include size, and order
 	private Match match;
 	private Action updateAction;
 	private Action deleteAction;
@@ -39,7 +39,7 @@ public class Reference {
 		return tableName;
 	}
 
-	/*public Vector<ReferenceConstraint> getConstraints() {
+	/*public ReferenceConstraint[] getConstraints() {
 		return columnConstraints;
 	}*/
 
