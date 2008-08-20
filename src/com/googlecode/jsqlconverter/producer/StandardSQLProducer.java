@@ -6,6 +6,7 @@ import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.Reference;
+import com.googlecode.jsqlconverter.definition.create.table.Constraint;
 
 public class StandardSQLProducer implements SQLProducer {
 	public void produce(Statement[] statements) {
@@ -19,6 +20,7 @@ public class StandardSQLProducer implements SQLProducer {
 		}
 	}
 
+	// TODO: make sure correct type is being detected (use size / precision to calculate)
 	private void handleCreateTable(CreateTable table) {
 		System.out.print("CREATE ");
 
@@ -40,54 +42,74 @@ public class StandardSQLProducer implements SQLProducer {
 				System.out.print("(" + column.getSize() + ")");
 			}
 
+			// constraints
+			for (Constraint constraint : column.getConstraints()) {
+				System.out.print(" ");
+				System.out.print(getConstraintValue(constraint));
+			}
+
+			// references
 			Reference[] references = column.getReferences();
 
 			for (Reference reference : references) {
-				System.out.print(" REFERENCES " + getValidName(reference.getTableName()) + " (" + getValidName(reference.getColumnName()) + ")");
-
-				if (reference.getUpdateAction() != Reference.Action.NO_ACTION) {
-					System.out.print(" ON UPDATE ");
-
-					switch (reference.getUpdateAction()) {
-						case CASCADE:
-							System.out.print("CASCADE");
-						break;
-						case RESTRICT:
-							System.out.print("RESTRICT");
-						break;
-						case SET_DEFAULT:
-							System.out.print("SET DEFAULT");
-						break;
-						case SET_NULL:
-							System.out.print("SET NULL");
-						break;
-					}
-				}
-
-				if (reference.getDeleteAction() != Reference.Action.NO_ACTION) {
-					System.out.print(" ON DELETE ");
-
-					switch (reference.getDeleteAction()) {
-						case CASCADE:
-							System.out.print("CASCADE");
-						break;
-						case RESTRICT:
-							System.out.print("RESTRICT");
-						break;
-						case SET_DEFAULT:
-							System.out.print("SET DEFAULT");
-						break;
-						case SET_NULL:
-							System.out.print("SET NULL");
-						break;
-					}
-				}
+				System.out.print(getReferenceValue(reference));
 			}
 
 			System.out.println(",");
 		}
 
 		System.out.println(");");
+	}
+
+	private String getReferenceValue(Reference reference) {
+		StringBuffer sb = new StringBuffer();
+
+		sb.append(" REFERENCES ");
+		sb.append(getValidName(reference.getTableName()));
+		sb.append(" (");
+		sb.append(getValidName(reference.getColumnName()));
+		sb.append(")");
+
+		if (reference.getUpdateAction() != Reference.Action.NO_ACTION) {
+			sb.append(" ON UPDATE ");
+
+			sb.append(getActionValue(reference.getUpdateAction()));
+		}
+
+		if (reference.getDeleteAction() != Reference.Action.NO_ACTION) {
+			sb.append(" ON DELETE ");
+
+			sb.append(getActionValue(reference.getDeleteAction()));
+		}
+
+		return sb.toString();
+	}
+
+	private String getActionValue(Reference.Action action) {
+		switch (action) {
+			case CASCADE:
+				return "CASCADE";
+			case RESTRICT:
+				return "RESTRICT";
+			case SET_DEFAULT:
+				return "SET DEFAULT";
+			case SET_NULL:
+				return "SET NULL";
+		}
+
+		return null;
+	}
+
+	private String getConstraintValue(Constraint constraint) {
+		switch(constraint.getType()) {
+			case NOT_NULL:
+				return "NOT NULL";
+			default:
+				System.out.println("Unknown constraint: " + constraint.getType());
+			break;
+		}
+
+		return null;
 	}
 
 	public String getType(Type type) {

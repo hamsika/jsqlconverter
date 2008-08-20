@@ -3,9 +3,8 @@ package com.googlecode.jsqlconverter.parser;
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
-import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
-import com.googlecode.jsqlconverter.definition.create.table.Column;
-import com.googlecode.jsqlconverter.definition.create.table.Reference;
+import com.googlecode.jsqlconverter.definition.create.table.*;
+import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 
 import java.sql.ResultSet;
 import java.sql.Types;
@@ -42,18 +41,19 @@ public class JDBCParser implements Parser {
 			ResultSet tablesRs = meta.getTables(catalog, schemaPattern, tableNamePattern, types);
 
 			while (tablesRs.next()) {
+				// find out what type the object returned is (it may be a table / view / other)
+				Statement generatedStatement = null;
 				String tableType = tablesRs.getString("TABLE_TYPE");
 
 				if (tableType.equals("TABLE")) {
-					CreateTable[] createStatements = getCreateTable(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"));
-
-					if (createStatements != null) {
-						for (CreateTable createTable : createStatements) {
-							statements.add(createTable);
-						}
-					}
+					generatedStatement = getCreateTable(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"));
 				} else {
 					System.out.println("Unhandled Table Type: " + tableType);
+				}
+
+				// add the statements to main list
+				if (generatedStatement != null) {
+					statements.add(generatedStatement);
 				}
 			}
 
@@ -67,59 +67,53 @@ public class JDBCParser implements Parser {
 			return null;
 		}
 
+		// TODO: support ordering of tables, views, etc so they're in correct 'create' order. select should be ignored.
+
 		return statements.toArray(new Statement[] {});
 	}
 
-	private CreateTable[] getCreateTable(DatabaseMetaData meta, String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
-		ArrayList<CreateTable> createStatments = new ArrayList<CreateTable>();
-
+	private CreateTable getCreateTable(DatabaseMetaData meta, String catalog, String schema, String tableName) throws SQLException {
 		ResultSet columnsRs = meta.getColumns(
 								catalog,
-								schemaPattern,
-								tableNamePattern,
+								schema,
+								tableName,
 								columnNamePattern
 		);
 
-		String lastTable = "";
-
-		CreateTable ct = null;
-		Type dt = null;
+		CreateTable createTable = null;
+		Type dataType = null;
 
 		while (columnsRs.next()) {
 			String currentTable = columnsRs.getString("TABLE_NAME");
 			String tableSchema = columnsRs.getString("TABLE_SCHEM");
 
-			if (!lastTable.equals(currentTable)) {
-				lastTable = currentTable;
-
-				ct = new CreateTable(new Name(tableSchema, currentTable));
-
-				createStatments.add(ct);
+			if (createTable == null) {
+				createTable = new CreateTable(new Name(tableSchema, currentTable));
 			}
 
-			int dataType = columnsRs.getInt("DATA_TYPE");
+			int dbType = columnsRs.getInt("DATA_TYPE");
 
-			switch(dataType) {
+			switch(dbType) {
 				case Types.ARRAY:
 
 				break;
 				case Types.BIGINT:
-					dt = ExactNumericType.BIGINT;
+					dataType = ExactNumericType.BIGINT;
 				break;
 				case Types.BINARY:
-					dt = BinaryType.BINARY;
+					dataType = BinaryType.BINARY;
 				break;
 				case Types.BIT:
-					dt = BinaryType.BIT;
+					dataType = BinaryType.BIT;
 				break;
 				case Types.BLOB:
-					dt = BinaryType.BLOB;
+					dataType = BinaryType.BLOB;
 				break;
 				case Types.BOOLEAN:
-					dt = BooleanType.BOOLEAN;
+					dataType = BooleanType.BOOLEAN;
 				break;
 				case Types.CHAR:
-					dt = StringType.CHAR;
+					dataType = StringType.CHAR;
 				break;
 				case Types.CLOB:
 
@@ -129,7 +123,7 @@ public class JDBCParser implements Parser {
 				break;
 				case Types.DATE:
 					// TODO: make sure this is right
-					dt = DateTimeType.DATETIME;
+					dataType = DateTimeType.DATETIME;
 				break;
 				case Types.DECIMAL:
 
@@ -138,13 +132,13 @@ public class JDBCParser implements Parser {
 
 				break;
 				case Types.DOUBLE:
-					dt = ApproximateNumericType.DOUBLE;
+					dataType = ApproximateNumericType.DOUBLE;
 				break;
 				case Types.FLOAT:
-					dt = ApproximateNumericType.FLOAT;
+					dataType = ApproximateNumericType.FLOAT;
 				break;
 				case Types.INTEGER:
-					dt = ExactNumericType.INTEGER;
+					dataType = ExactNumericType.INTEGER;
 				break;
 				case Types.JAVA_OBJECT:
 
@@ -159,7 +153,7 @@ public class JDBCParser implements Parser {
 
 				break;
 				case Types.NCHAR:
-					dt = StringType.NCHAR;
+					dataType = StringType.NCHAR;
 				break;
 				case Types.NCLOB:
 
@@ -168,16 +162,16 @@ public class JDBCParser implements Parser {
 
 				break;
 				case Types.NUMERIC:
-					dt = ExactNumericType.NUMERIC;
+					dataType = ExactNumericType.NUMERIC;
 				break;
 				case Types.NVARCHAR:
-					dt = StringType.NVARCHAR;
+					dataType = StringType.NVARCHAR;
 				break;
 				case Types.OTHER:
 
 				break;
 				case Types.REAL:
-					dt = ApproximateNumericType.REAL;
+					dataType = ApproximateNumericType.REAL;
 				break;
 				case Types.REF:
 
@@ -186,7 +180,7 @@ public class JDBCParser implements Parser {
 
 				break;
 				case Types.SMALLINT:
-					dt = ExactNumericType.SMALLINT;
+					dataType = ExactNumericType.SMALLINT;
 				break;
 				case Types.SQLXML:
 
@@ -198,98 +192,209 @@ public class JDBCParser implements Parser {
 
 				break;
 				case Types.TIMESTAMP:
-					dt = DateTimeType.TIMESTAMP;
+					dataType = DateTimeType.TIMESTAMP;
 				break;
 				case Types.TINYINT:
-					dt = ExactNumericType.TINYINT;
+					dataType = ExactNumericType.TINYINT;
 				break;
 				case Types.VARBINARY:
-					dt = BinaryType.VARBINARY;
+					dataType = BinaryType.VARBINARY;
 				break;
 				case Types.VARCHAR:
-					dt = StringType.VARCHAR;
+					dataType = StringType.VARCHAR;
 				break;
 				default:
-					dt = new UnhandledType(String.valueOf(dataType));
+					dataType = new UnhandledType(String.valueOf(dbType));
 				break;
 			}
 
-			Column col = new Column(new Name(columnsRs.getString("COLUMN_NAME")), dt);
+			Column col = new Column(new Name(columnsRs.getString("COLUMN_NAME")), dataType);
 
-			if (!(dt instanceof NumericType)) {
+			if (!(dataType instanceof NumericType)) {
 				col.setSize(columnsRs.getInt("COLUMN_SIZE"));
 			}
 
-			ct.addColumn(col);
+			if (columnsRs.getString("IS_NULLABLE").equals("NO")) {
+				col.addConstraint(new Constraint(ConstraintType.NOT_NULL));
+			}
+
+			createTable.addColumn(col);
 
 
 			// references
-			ResultSet rs = meta.getImportedKeys(catalog, tableSchema, currentTable);
+			ResultSet referencesRs = null;
 
-			while (rs.next()) {
-				if (rs.getString("PKCOLUMN_NAME").equals(columnsRs.getString("COLUMN_NAME"))) {
-					Reference ref = new Reference(new Name(rs.getString("PKTABLE_NAME")), new Name(rs.getString("PKCOLUMN_NAME")));
+			try {
+				referencesRs = meta.getImportedKeys(catalog, tableSchema, currentTable);
+			} catch (SQLException sqle) {
+				// TODO: handle nicely
+				//sqle.printStackTrace();
+			}
 
-					switch(rs.getShort("UPDATE_RULE")) {
-						case DatabaseMetaData.importedKeyNoAction:
-							ref.setUpdate(Reference.Action.NO_ACTION);
-						break;
-						case DatabaseMetaData.importedKeyCascade:
-							ref.setUpdate(Reference.Action.CASCADE);
-						break;
-						case DatabaseMetaData.importedKeySetNull:
-							ref.setUpdate(Reference.Action.SET_NULL);
-						break;
-						case DatabaseMetaData.importedKeySetDefault:
-							ref.setUpdate(Reference.Action.SET_DEFAULT);
-						break;
-						case DatabaseMetaData.importedKeyRestrict:
-							ref.setUpdate(Reference.Action.RESTRICT);
-						break;
-						default:
-							System.out.println("Unknown yodate reference");
-						break;
+			if (referencesRs != null) {
+				while (referencesRs.next()) {
+					if (referencesRs.getString("PKCOLUMN_NAME").equals(columnsRs.getString("COLUMN_NAME"))) {
+						Reference ref = new Reference(new Name(referencesRs.getString("PKTABLE_NAME")), new Name(referencesRs.getString("PKCOLUMN_NAME")));
+
+						switch(referencesRs.getShort("UPDATE_RULE")) {
+							case DatabaseMetaData.importedKeyNoAction:
+								ref.setUpdate(Reference.Action.NO_ACTION);
+							break;
+							case DatabaseMetaData.importedKeyCascade:
+								ref.setUpdate(Reference.Action.CASCADE);
+							break;
+							case DatabaseMetaData.importedKeySetNull:
+								ref.setUpdate(Reference.Action.SET_NULL);
+							break;
+							case DatabaseMetaData.importedKeySetDefault:
+								ref.setUpdate(Reference.Action.SET_DEFAULT);
+							break;
+							case DatabaseMetaData.importedKeyRestrict:
+								ref.setUpdate(Reference.Action.RESTRICT);
+							break;
+							default:
+								System.out.println("Unknown yodate reference");
+							break;
+						}
+
+						switch(referencesRs.getShort("DELETE_RULE")) {
+							case DatabaseMetaData.importedKeyNoAction:
+								ref.setDelete(Reference.Action.NO_ACTION);
+							break;
+							case DatabaseMetaData.importedKeyCascade:
+								ref.setDelete(Reference.Action.CASCADE);
+							break;
+							case DatabaseMetaData.importedKeySetNull:
+								ref.setDelete(Reference.Action.SET_NULL);
+							break;
+							case DatabaseMetaData.importedKeySetDefault:
+								ref.setDelete(Reference.Action.SET_DEFAULT);
+							break;
+							case DatabaseMetaData.importedKeyRestrict:
+								ref.setDelete(Reference.Action.RESTRICT);
+							break;
+							default:
+								System.out.println("Unknown delete reference");
+							break;
+						}
+
+						// TODO: support setting match
+						//ref.setMatch();
+
+						col.addReference(ref);
 					}
-
-					switch(rs.getShort("DELETE_RULE")) {
-						case DatabaseMetaData.importedKeyNoAction:
-							ref.setDelete(Reference.Action.NO_ACTION);
-						break;
-						case DatabaseMetaData.importedKeyCascade:
-							ref.setDelete(Reference.Action.CASCADE);
-						break;
-						case DatabaseMetaData.importedKeySetNull:
-							ref.setDelete(Reference.Action.SET_NULL);
-						break;
-						case DatabaseMetaData.importedKeySetDefault:
-							ref.setDelete(Reference.Action.SET_DEFAULT);
-						break;
-						case DatabaseMetaData.importedKeyRestrict:
-							ref.setDelete(Reference.Action.RESTRICT);
-						break;
-						default:
-							System.out.println("Unknown delete reference");
-						break;
-					}
-
-					// TODO: support setting match
-					//ref.setMatch();
-
-					col.addReference(ref);
 				}
 			}
 
 			// constraints
 			// TODO: constriants
 			// does this include NOT NULL, default etc?
+
 		}
 
 		columnsRs.close();
 
-		if (createStatments.size() == 0) {
+		// query indexes and associate with table
+		// TODO: associate indexes with table object
+		CreateIndex[] indexes = getTableIndexes(meta, createTable.getName());
+
+		return createTable;
+	}
+
+	private CreateIndex[] getTableIndexes(DatabaseMetaData meta, Name tableName) throws SQLException {
+		ResultSet indexesRs = meta.getIndexInfo(catalog, tableName.getSchemaName(), tableName.getObjectName(), false, false);
+
+		ArrayList<CreateIndex> indexes = new ArrayList<CreateIndex>();
+
+		while (indexesRs.next()) {
+			String indexName = indexesRs.getString("INDEX_NAME");
+			String columnName = indexesRs.getString("COLUMN_NAME");
+
+			if (indexName == null) {
+				if (columnName == null) {
+					// TODO: find out if this is unique to access (and what it means)
+					//System.out.println("both column name and index name is null :(");
+					continue;
+				}
+
+				System.out.println("ok, index name is null, but we have a column name, lets do this");
+
+				/*if (!indexesRs.getBoolean("NON_UNIQUE")) {
+					//for (Column column : createTable.getColumns()) {
+
+					System.out.println("searching for column: " + columnName);
+
+					for (Iterator<Column> i = createTable.getColumnsIter(); i.hasNext(); ) {
+						Column column = i.next();
+
+						if (column.getName().getObjectName().equals(columnName)) {
+							column.addConstraint(new Constraint(ConstraintType.UNIQUE));
+							System.out.println("LOL");
+							break;
+						}
+					}
+				} else {
+					System.out.println("Index name is null, but it's not unique.. ");
+				}*/
+
+				continue;
+			}
+
+			CreateIndex createIndex = null;
+
+			// find out if the index already exists (multiple column index)
+			for (CreateIndex previousIndex : indexes) {
+				if (previousIndex.getName().getObjectName().equals(indexName)) {
+					createIndex = previousIndex;
+
+					break;
+				}
+			}
+
+			if (createIndex == null) {
+				createIndex = new CreateIndex(new Name(indexName));
+
+				indexes.add(createIndex);
+
+				if (!indexesRs.getBoolean("NON_UNIQUE")) {
+					createIndex.setUnique(true);
+				}
+
+				String sortSeq = indexesRs.getString("ASC_OR_DESC");
+
+				if (sortSeq != null) {
+					if (sortSeq.equals("A")) {
+						createIndex.setSortSequence(CreateIndex.SortSequence.ASC);
+					} else if (sortSeq.equals("D")) {
+						createIndex.setSortSequence(CreateIndex.SortSequence.DESC);
+					} else {
+						System.out.println("Unknown sort sequence");
+					}
+				}
+
+				switch(indexesRs.getShort("TYPE")) {
+					case DatabaseMetaData.tableIndexStatistic:
+
+					break;
+					case DatabaseMetaData.tableIndexClustered:
+						createIndex.setType(CreateIndex.IndexType.CLUSTERED);
+					break;
+					case DatabaseMetaData.tableIndexHashed:
+						createIndex.setType(CreateIndex.IndexType.HASHED);
+					break;
+					case DatabaseMetaData.tableIndexOther:
+
+					break;
+				}
+			}
+
+			createIndex.addColumn(new Name(columnName));
+		}
+
+		if (indexes.size() == 0) {
 			return null;
 		}
 
-		return createStatments.toArray(new CreateTable[] {});
+		return indexes.toArray(new CreateIndex[] {});
 	}
 }
