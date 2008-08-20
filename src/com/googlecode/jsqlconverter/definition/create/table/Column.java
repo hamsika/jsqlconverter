@@ -6,6 +6,7 @@ import com.googlecode.jsqlconverter.definition.Name;
 import java.util.ArrayList;
 
 public class Column {
+	// TODO: find out if a single column can have multiple references
 	private Name columnName;
 	private Type dataType;
 	private ArrayList<Constraint> constraints = new ArrayList<Constraint>();

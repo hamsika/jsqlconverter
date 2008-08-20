@@ -1,6 +1,10 @@
 package com.googlecode.jsqlconverter.definition.create.table;
 
+import com.googlecode.jsqlconverter.definition.Name;
+
 public class Reference {
+	// TODO: support defferable
+
 	public enum Event { UPDATE, DELETE }
 	public enum Action { RESTRICT, CASCADE, SET_NULL, NO_ACTION, SET_DEFAULT }
 	public enum Match { FULL, PARTIAL, SIMPLE }
@@ -23,25 +27,26 @@ public class Reference {
 		}
 	}
 
+	private Name tableName;
+	private Name columnName;
 
-	private String tableName;
-	//private ArrayList<ReferenceConstraint> columnConstraints = new ArrayList<ReferenceConstraint>(); // can include size, and order
 	private Match match;
 	private Action updateAction;
 	private Action deleteAction;
 
-	public Reference(String tableName) {
+	public Reference(Name tableName, Name columnName) {
 		this.tableName = tableName;
+		this.columnName = columnName;
 	}
 
 	// getters
-	public String getTableName() {
+	public Name getTableName() {
 		return tableName;
 	}
 
-	/*public ReferenceConstraint[] getConstraints() {
-		return columnConstraints;
-	}*/
+	public Name getColumnName() {
+		return columnName;
+	}
 
 	public Action getUpdateAction() {
 		return updateAction;
@@ -67,9 +72,4 @@ public class Reference {
 	public void setDelete(Action delete) {
 		deleteAction = delete;
 	}
-
-	// adders
-	/*public void addConstraint(Event event, Action action) {
-		columnConstraints.add(new ReferenceConstraint(event, action));
-	}*/
 }

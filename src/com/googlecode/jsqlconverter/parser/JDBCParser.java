@@ -5,6 +5,7 @@ import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
+import com.googlecode.jsqlconverter.definition.create.table.Reference;
 
 import java.sql.ResultSet;
 import java.sql.Types;
@@ -86,11 +87,12 @@ public class JDBCParser implements Parser {
 
 		while (columnsRs.next()) {
 			String currentTable = columnsRs.getString("TABLE_NAME");
+			String tableSchema = columnsRs.getString("TABLE_SCHEM");
 
 			if (!lastTable.equals(currentTable)) {
 				lastTable = currentTable;
 
-				ct = new CreateTable(new Name(columnsRs.getString("TABLE_SCHEM"), currentTable));
+				ct = new CreateTable(new Name(tableSchema, currentTable));
 
 				createStatments.add(ct);
 			}
@@ -219,6 +221,67 @@ public class JDBCParser implements Parser {
 			}
 
 			ct.addColumn(col);
+
+
+			// references
+			ResultSet rs = meta.getImportedKeys(catalog, tableSchema, currentTable);
+
+			while (rs.next()) {
+				if (rs.getString("PKCOLUMN_NAME").equals(columnsRs.getString("COLUMN_NAME"))) {
+					Reference ref = new Reference(new Name(rs.getString("PKTABLE_NAME")), new Name(rs.getString("PKCOLUMN_NAME")));
+
+					switch(rs.getShort("UPDATE_RULE")) {
+						case DatabaseMetaData.importedKeyNoAction:
+							ref.setUpdate(Reference.Action.NO_ACTION);
+						break;
+						case DatabaseMetaData.importedKeyCascade:
+							ref.setUpdate(Reference.Action.CASCADE);
+						break;
+						case DatabaseMetaData.importedKeySetNull:
+							ref.setUpdate(Reference.Action.SET_NULL);
+						break;
+						case DatabaseMetaData.importedKeySetDefault:
+							ref.setUpdate(Reference.Action.SET_DEFAULT);
+						break;
+						case DatabaseMetaData.importedKeyRestrict:
+							ref.setUpdate(Reference.Action.RESTRICT);
+						break;
+						default:
+							System.out.println("Unknown yodate reference");
+						break;
+					}
+
+					switch(rs.getShort("DELETE_RULE")) {
+						case DatabaseMetaData.importedKeyNoAction:
+							ref.setDelete(Reference.Action.NO_ACTION);
+						break;
+						case DatabaseMetaData.importedKeyCascade:
+							ref.setDelete(Reference.Action.CASCADE);
+						break;
+						case DatabaseMetaData.importedKeySetNull:
+							ref.setDelete(Reference.Action.SET_NULL);
+						break;
+						case DatabaseMetaData.importedKeySetDefault:
+							ref.setDelete(Reference.Action.SET_DEFAULT);
+						break;
+						case DatabaseMetaData.importedKeyRestrict:
+							ref.setDelete(Reference.Action.RESTRICT);
+						break;
+						default:
+							System.out.println("Unknown delete reference");
+						break;
+					}
+
+					// TODO: support setting match
+					//ref.setMatch();
+
+					col.addReference(ref);
+				}
+			}
+
+			// constraints
+			// TODO: constriants
+			// does this include NOT NULL, default etc?
 		}
 
 		columnsRs.close();
