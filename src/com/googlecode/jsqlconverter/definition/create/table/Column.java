@@ -2,6 +2,7 @@ package com.googlecode.jsqlconverter.definition.create.table;
 
 import com.googlecode.jsqlconverter.definition.type.Type;
 import com.googlecode.jsqlconverter.definition.Name;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
 
 import java.util.ArrayList;
 
@@ -9,8 +10,8 @@ public class Column {
 	// TODO: find out if a single column can have multiple references
 	private Name columnName;
 	private Type dataType;
-	private ArrayList<Constraint> constraints = new ArrayList<Constraint>();
-	private ArrayList<Reference> references = new ArrayList<Reference>();
+	private ArrayList<ColumnOption> options = new ArrayList<ColumnOption>();
+	private ForeignKeyConstraint reference = null;
 	private int size = 0;
 
 	public Column(Name columnName) {
@@ -35,12 +36,12 @@ public class Column {
 		return size;
 	}
 
-	public Constraint[] getConstraints() {
-		return constraints.toArray(new Constraint[] {});
+	public ColumnOption[] getOptions() {
+		return options.toArray(new ColumnOption[] {});
 	}
 
-	public Reference[] getReferences() {
-		return references.toArray(new Reference[] {});
+	public ForeignKeyConstraint getForeignKeyConstraint() {
+		return reference;
 	}
 
 	// setters
@@ -48,12 +49,12 @@ public class Column {
 		this.size = size;
 	}
 
-	// adders
-	public void addConstraint(Constraint constraint) {
-		constraints.add(constraint);
+	public void setForeignKeyConstraint(ForeignKeyConstraint reference) {
+		this.reference = reference;
 	}
 
-	public void addReference(Reference reference) {
-		references.add(reference);
+	// adders
+	public void addColumnOption(ColumnOption option) {
+		options.add(option);
 	}
 }

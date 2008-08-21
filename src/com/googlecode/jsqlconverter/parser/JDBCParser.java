@@ -4,6 +4,8 @@ import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.*;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 
 import java.sql.ResultSet;
@@ -14,6 +16,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class JDBCParser implements Parser {
+	// TODO: support temp tables (does that have anything to do with GLOBAL / LOCAL TEMPORARY?)
 	private Connection con;
 	private String catalog;
 	private String schemaPattern;
@@ -42,18 +45,20 @@ public class JDBCParser implements Parser {
 
 			while (tablesRs.next()) {
 				// find out what type the object returned is (it may be a table / view / other)
-				Statement generatedStatement = null;
+				Statement[] generatedStatements = null;
 				String tableType = tablesRs.getString("TABLE_TYPE");
 
 				if (tableType.equals("TABLE")) {
-					generatedStatement = getCreateTable(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"));
+					generatedStatements = getCreateTable(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"));
 				} else {
 					System.out.println("Unhandled Table Type: " + tableType);
 				}
 
 				// add the statements to main list
-				if (generatedStatement != null) {
-					statements.add(generatedStatement);
+				if (generatedStatements != null) {
+					for (Statement statement : generatedStatements) {
+						statements.add(statement);
+					}
 				}
 			}
 
@@ -72,7 +77,7 @@ public class JDBCParser implements Parser {
 		return statements.toArray(new Statement[] {});
 	}
 
-	private CreateTable getCreateTable(DatabaseMetaData meta, String catalog, String schema, String tableName) throws SQLException {
+	private Statement[] getCreateTable(DatabaseMetaData meta, String catalog, String schema, String tableName) throws SQLException {
 		ResultSet columnsRs = meta.getColumns(
 								catalog,
 								schema,
@@ -80,6 +85,7 @@ public class JDBCParser implements Parser {
 								columnNamePattern
 		);
 
+		ArrayList<Statement> statements = new ArrayList<Statement>();
 		CreateTable createTable = null;
 		Type dataType = null;
 
@@ -89,6 +95,7 @@ public class JDBCParser implements Parser {
 
 			if (createTable == null) {
 				createTable = new CreateTable(new Name(tableSchema, currentTable));
+				statements.add(createTable);
 			}
 
 			int dbType = columnsRs.getInt("DATA_TYPE");
@@ -216,13 +223,14 @@ public class JDBCParser implements Parser {
 			}
 
 			if (columnsRs.getString("IS_NULLABLE").equals("NO")) {
-				col.addConstraint(new Constraint(ConstraintType.NOT_NULL));
+				col.addColumnOption(ColumnOption.NOT_NULL);
 			}
 
 			String defaultValue = columnsRs.getString("COLUMN_DEF");
 
 			if (defaultValue != null) {
-				col.addConstraint(new Constraint(ConstraintType.DEFAULT, defaultValue));
+				// TODO: add this support back in
+				//col.addConstraint(new Constraint(ConstraintType.DEFAULT, defaultValue));
 			}
 
 			createTable.addColumn(col);
@@ -241,23 +249,23 @@ public class JDBCParser implements Parser {
 			if (referencesRs != null) {
 				while (referencesRs.next()) {
 					if (referencesRs.getString("PKCOLUMN_NAME").equals(columnsRs.getString("COLUMN_NAME"))) {
-						Reference ref = new Reference(new Name(referencesRs.getString("PKTABLE_NAME")), new Name(referencesRs.getString("PKCOLUMN_NAME")));
+						ForeignKeyConstraint ref = new ForeignKeyConstraint(new Name(referencesRs.getString("PKTABLE_NAME")), new Name(referencesRs.getString("PKCOLUMN_NAME")));
 
 						switch(referencesRs.getShort("UPDATE_RULE")) {
 							case DatabaseMetaData.importedKeyNoAction:
-								ref.setUpdate(Reference.Action.NO_ACTION);
+								ref.setUpdate(ForeignKeyAction.NO_ACTION);
 							break;
 							case DatabaseMetaData.importedKeyCascade:
-								ref.setUpdate(Reference.Action.CASCADE);
+								ref.setUpdate(ForeignKeyAction.CASCADE);
 							break;
 							case DatabaseMetaData.importedKeySetNull:
-								ref.setUpdate(Reference.Action.SET_NULL);
+								ref.setUpdate(ForeignKeyAction.SET_NULL);
 							break;
 							case DatabaseMetaData.importedKeySetDefault:
-								ref.setUpdate(Reference.Action.SET_DEFAULT);
+								ref.setUpdate(ForeignKeyAction.SET_DEFAULT);
 							break;
 							case DatabaseMetaData.importedKeyRestrict:
-								ref.setUpdate(Reference.Action.RESTRICT);
+								ref.setUpdate(ForeignKeyAction.RESTRICT);
 							break;
 							default:
 								System.out.println("Unknown yodate reference");
@@ -266,19 +274,19 @@ public class JDBCParser implements Parser {
 
 						switch(referencesRs.getShort("DELETE_RULE")) {
 							case DatabaseMetaData.importedKeyNoAction:
-								ref.setDelete(Reference.Action.NO_ACTION);
+								ref.setDelete(ForeignKeyAction.NO_ACTION);
 							break;
 							case DatabaseMetaData.importedKeyCascade:
-								ref.setDelete(Reference.Action.CASCADE);
+								ref.setDelete(ForeignKeyAction.CASCADE);
 							break;
 							case DatabaseMetaData.importedKeySetNull:
-								ref.setDelete(Reference.Action.SET_NULL);
+								ref.setDelete(ForeignKeyAction.SET_NULL);
 							break;
 							case DatabaseMetaData.importedKeySetDefault:
-								ref.setDelete(Reference.Action.SET_DEFAULT);
+								ref.setDelete(ForeignKeyAction.SET_DEFAULT);
 							break;
 							case DatabaseMetaData.importedKeyRestrict:
-								ref.setDelete(Reference.Action.RESTRICT);
+								ref.setDelete(ForeignKeyAction.RESTRICT);
 							break;
 							default:
 								System.out.println("Unknown delete reference");
@@ -288,15 +296,10 @@ public class JDBCParser implements Parser {
 						// TODO: support setting match
 						//ref.setMatch();
 
-						col.addReference(ref);
+						col.setForeignKeyConstraint(ref);
 					}
 				}
 			}
-
-			// constraints
-			// TODO: constriants
-			// does this include NOT NULL, default etc?
-
 		}
 
 		columnsRs.close();
@@ -306,14 +309,20 @@ public class JDBCParser implements Parser {
 
 		if (indexes != null) {
 			for (CreateIndex index : indexes) {
-				createTable.addIndex(index);
+				// TODO: detect if it's a generated index or not
+				// if it is NOT generated
+				// 	simply return the createIndex
+				// if it IS generated
+				//	add to create table (but also detect if it's primary or unique)
+				statements.add(index);
 			}
 		}
 
-		return createTable;
+		return statements.toArray(new Statement[] {});
 	}
 
 	private CreateIndex[] getTableIndexes(DatabaseMetaData meta, Name tableName) throws SQLException {
+		// TODO: make sure only one index for each column is returned (no primary key + unique index like access shows)
 		ResultSet indexesRs = meta.getIndexInfo(catalog, tableName.getSchemaName(), tableName.getObjectName(), false, false);
 
 		ArrayList<CreateIndex> indexes = new ArrayList<CreateIndex>();
@@ -356,7 +365,7 @@ public class JDBCParser implements Parser {
 
 			// find out if the index already exists (multiple column index)
 			for (CreateIndex previousIndex : indexes) {
-				if (previousIndex.getName().getObjectName().equals(indexName)) {
+				if (previousIndex.getIndexName().getObjectName().equals(indexName)) {
 					createIndex = previousIndex;
 
 					break;
@@ -364,7 +373,7 @@ public class JDBCParser implements Parser {
 			}
 
 			if (createIndex == null) {
-				createIndex = new CreateIndex(new Name(indexName));
+				createIndex = new CreateIndex(new Name(indexName), tableName);
 
 				indexes.add(createIndex);
 

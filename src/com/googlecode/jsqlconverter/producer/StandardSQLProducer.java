@@ -5,8 +5,10 @@ import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
-import com.googlecode.jsqlconverter.definition.create.table.Reference;
-import com.googlecode.jsqlconverter.definition.create.table.Constraint;
+import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
+import com.googlecode.jsqlconverter.definition.create.table.TableOption;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 
 import java.io.PrintStream;
@@ -19,17 +21,47 @@ public class StandardSQLProducer implements SQLProducer {
 			if (statement instanceof CreateTable) {
 				//out.println("this is pg sql prod :) create table");
 				handleCreateTable((CreateTable)statement);
+			} else if (statement instanceof CreateIndex) {
+				handleCreateIndex((CreateIndex)statement);
 			} else {
-				out.print("unhandled statement type");
+				System.out.print("unhandled statement type");
 			}
 		}
+	}
+
+	private void handleCreateIndex(CreateIndex createIndex) {
+		out.print("CREATE ");
+
+		if (createIndex.isUnique()) {
+			out.print("UNIQUE ");
+		}
+
+		out.print("INDEX ");
+		out.print(getValidName(createIndex.getIndexName()));
+		out.print(" ON ");
+		out.print(getValidName(createIndex.getTableName()));
+		out.print(" (");
+
+		StringBuffer columnList = new StringBuffer();
+
+		for (Name columnName : createIndex.getColumns()) {
+			if (columnList.length() != 0) {
+				columnList.append(", ");
+			}
+
+			columnList.append(getValidName(columnName));
+		}
+
+		out.print(columnList);
+
+		out.println(");");
 	}
 
 	// TODO: make sure correct type is being detected (use size / precision to calculate)
 	private void handleCreateTable(CreateTable table) {
 		out.print("CREATE ");
 
-		if (table.isTemporary()) {
+		if (table.containsOption(TableOption.TEMPORARY)) {
 			out.print("TEMPORARY ");
 		}
 
@@ -51,19 +83,19 @@ public class StandardSQLProducer implements SQLProducer {
 			}
 
 			// constraints
-			for (Constraint constraint : column.getConstraints()) {
+			for (ColumnOption option : column.getOptions()) {
 				out.print(" ");
-				out.print(getConstraintValue(constraint));
+				out.print(getOptionValue(option));
 			}
 
-			// references
-			Reference[] references = column.getReferences();
+			// reference
+			ForeignKeyConstraint reference = column.getForeignKeyConstraint();
 
-			for (Reference reference : references) {
-				out.print(getReferenceValue(reference));
+			if (reference != null) {
+				out.print(getForeignKeyConstraintString(reference));
 			}
 
-			if (i + 1 != columns.length || table.getIndexes().length != 0) {
+			if (i + 1 != columns.length) {
 				out.print(",");
 			}
 
@@ -71,34 +103,12 @@ public class StandardSQLProducer implements SQLProducer {
 		}
 
 		// check indexes
-		CreateIndex[] indexes = table.getIndexes();
-
-		for (int i=0; i<indexes.length; i++) {
-			CreateIndex index = indexes[i];
-
-			StringBuffer columnList = new StringBuffer();
-
-			for (Name columnName : index.getColumns()) {
-				if (columnList.length() != 0) {
-					columnList.append(", ");
-				}
-
-				columnList.append(getValidName(columnName));
-			}
-
-			out.print("\tUNIQUE (" + columnList + ")");
-
-			if (i + 1 != indexes.length) {
-				out.print(",");
-			}
-
-			out.println();
-		}
+		// TODO: support indexes
 
 		out.println(");");
 	}
 
-	private String getReferenceValue(Reference reference) {
+	private String getForeignKeyConstraintString(ForeignKeyConstraint reference) {
 		StringBuffer sb = new StringBuffer();
 
 		sb.append(" REFERENCES ");
@@ -107,13 +117,13 @@ public class StandardSQLProducer implements SQLProducer {
 		sb.append(getValidName(reference.getColumnName()));
 		sb.append(")");
 
-		if (reference.getUpdateAction() != Reference.Action.NO_ACTION) {
+		if (reference.getUpdateAction() != ForeignKeyAction.NO_ACTION) {
 			sb.append(" ON UPDATE ");
 
 			sb.append(getActionValue(reference.getUpdateAction()));
 		}
 
-		if (reference.getDeleteAction() != Reference.Action.NO_ACTION) {
+		if (reference.getDeleteAction() != ForeignKeyAction.NO_ACTION) {
 			sb.append(" ON DELETE ");
 
 			sb.append(getActionValue(reference.getDeleteAction()));
@@ -122,7 +132,7 @@ public class StandardSQLProducer implements SQLProducer {
 		return sb.toString();
 	}
 
-	private String getActionValue(Reference.Action action) {
+	private String getActionValue(ForeignKeyAction action) {
 		switch (action) {
 			case CASCADE:
 				return "CASCADE";
@@ -137,14 +147,14 @@ public class StandardSQLProducer implements SQLProducer {
 		return null;
 	}
 
-	private String getConstraintValue(Constraint constraint) {
-		switch(constraint.getType()) {
+	private String getOptionValue(ColumnOption option) {
+		switch(option) {
+			//case AUTO_INCREMENT:
+			//case NULL:
 			case NOT_NULL:
 				return "NOT NULL";
-			case DEFAULT:
-				return "DEFAULT " + constraint.getValue();
 			default:
-				out.println("Unknown constraint: " + constraint.getType());
+				out.println("Unknown constraint: " + option);
 			break;
 		}
 
