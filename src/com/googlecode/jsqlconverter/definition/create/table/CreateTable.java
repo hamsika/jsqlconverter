@@ -2,6 +2,7 @@ package com.googlecode.jsqlconverter.definition.create.table;
 
 import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
+import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 
 import java.util.ArrayList;
 
@@ -9,6 +10,7 @@ public class CreateTable extends Statement {
 	private Name tableName;
 	private boolean isTemporary = false;
 	ArrayList<Column> columns = new ArrayList<Column>();
+	private ArrayList<CreateIndex> indexes = new ArrayList<CreateIndex>();
 
 	public CreateTable(Name tableName) {
 		this(tableName, false);
@@ -25,6 +27,10 @@ public class CreateTable extends Statement {
 
 	public Column[] getColumns() {
 		return columns.toArray(new Column[] {});
+	}
+
+	public CreateIndex[] getIndexes() {
+		return indexes.toArray(new CreateIndex[] {});
 	}
 
 	public Column getColumn(int index) {
@@ -58,5 +64,9 @@ public class CreateTable extends Statement {
 
 	public void removeColumn(Column column) {
 		columns.remove(column);
+	}
+
+	public void addIndex(CreateIndex index) {
+		indexes.add(index);
 	}
 }

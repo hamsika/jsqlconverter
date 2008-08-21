@@ -104,7 +104,8 @@ public class JDBCParser implements Parser {
 					dataType = BinaryType.BINARY;
 				break;
 				case Types.BIT:
-					dataType = BinaryType.BIT;
+					//dataType = BinaryType.BIT;
+					dataType = BooleanType.BOOLEAN;
 				break;
 				case Types.BLOB:
 					dataType = BinaryType.BLOB;
@@ -210,12 +211,18 @@ public class JDBCParser implements Parser {
 
 			Column col = new Column(new Name(columnsRs.getString("COLUMN_NAME")), dataType);
 
-			if (!(dataType instanceof NumericType)) {
+			if (!(dataType instanceof NumericType) && !(dataType instanceof BooleanType)) {
 				col.setSize(columnsRs.getInt("COLUMN_SIZE"));
 			}
 
 			if (columnsRs.getString("IS_NULLABLE").equals("NO")) {
 				col.addConstraint(new Constraint(ConstraintType.NOT_NULL));
+			}
+
+			String defaultValue = columnsRs.getString("COLUMN_DEF");
+
+			if (defaultValue != null) {
+				col.addConstraint(new Constraint(ConstraintType.DEFAULT, defaultValue));
 			}
 
 			createTable.addColumn(col);
@@ -295,8 +302,13 @@ public class JDBCParser implements Parser {
 		columnsRs.close();
 
 		// query indexes and associate with table
-		// TODO: associate indexes with table object
 		CreateIndex[] indexes = getTableIndexes(meta, createTable.getName());
+
+		if (indexes != null) {
+			for (CreateIndex index : indexes) {
+				createTable.addIndex(index);
+			}
+		}
 
 		return createTable;
 	}

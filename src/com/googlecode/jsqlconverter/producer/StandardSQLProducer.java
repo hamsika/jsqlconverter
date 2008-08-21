@@ -7,58 +7,95 @@ import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.Reference;
 import com.googlecode.jsqlconverter.definition.create.table.Constraint;
+import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
+
+import java.io.PrintStream;
 
 public class StandardSQLProducer implements SQLProducer {
+	private PrintStream out = System.out;
+
 	public void produce(Statement[] statements) {
 		for (Statement statement : statements) {
 			if (statement instanceof CreateTable) {
-				//System.out.println("this is pg sql prod :) create table");
+				//out.println("this is pg sql prod :) create table");
 				handleCreateTable((CreateTable)statement);
 			} else {
-				System.out.print("unhandled statement type");
+				out.print("unhandled statement type");
 			}
 		}
 	}
 
 	// TODO: make sure correct type is being detected (use size / precision to calculate)
 	private void handleCreateTable(CreateTable table) {
-		System.out.print("CREATE ");
+		out.print("CREATE ");
 
 		if (table.isTemporary()) {
-			System.out.print("TEMPORARY ");
+			out.print("TEMPORARY ");
 		}
 
-		System.out.print("TABLE ");
-		System.out.print(getValidName(table.getName()));
-		System.out.println(" (");
+		out.print("TABLE ");
+		out.print(getValidName(table.getName()));
+		out.println(" (");
 
-		for (Column column : table.getColumns()) {
-			System.out.print("\t");
-			System.out.print(getValidName(column.getName()));
-			System.out.print(" ");
-			System.out.print(getType(column.getType()));
+		Column[] columns = table.getColumns();
+		for (int i=0; i<columns.length; i++) {
+			Column column = columns[i];
+
+			out.print("\t");
+			out.print(getValidName(column.getName()));
+			out.print(" ");
+			out.print(getType(column.getType()));
 
 			if (column.getSize() != 0) {
-				System.out.print("(" + column.getSize() + ")");
+				out.print("(" + column.getSize() + ")");
 			}
 
 			// constraints
 			for (Constraint constraint : column.getConstraints()) {
-				System.out.print(" ");
-				System.out.print(getConstraintValue(constraint));
+				out.print(" ");
+				out.print(getConstraintValue(constraint));
 			}
 
 			// references
 			Reference[] references = column.getReferences();
 
 			for (Reference reference : references) {
-				System.out.print(getReferenceValue(reference));
+				out.print(getReferenceValue(reference));
 			}
 
-			System.out.println(",");
+			if (i + 1 != columns.length || table.getIndexes().length != 0) {
+				out.print(",");
+			}
+
+			out.println();
 		}
 
-		System.out.println(");");
+		// check indexes
+		CreateIndex[] indexes = table.getIndexes();
+
+		for (int i=0; i<indexes.length; i++) {
+			CreateIndex index = indexes[i];
+
+			StringBuffer columnList = new StringBuffer();
+
+			for (Name columnName : index.getColumns()) {
+				if (columnList.length() != 0) {
+					columnList.append(", ");
+				}
+
+				columnList.append(getValidName(columnName));
+			}
+
+			out.print("\tUNIQUE (" + columnList + ")");
+
+			if (i + 1 != indexes.length) {
+				out.print(",");
+			}
+
+			out.println();
+		}
+
+		out.println(");");
 	}
 
 	private String getReferenceValue(Reference reference) {
@@ -104,8 +141,10 @@ public class StandardSQLProducer implements SQLProducer {
 		switch(constraint.getType()) {
 			case NOT_NULL:
 				return "NOT NULL";
+			case DEFAULT:
+				return "DEFAULT " + constraint.getValue();
 			default:
-				System.out.println("Unknown constraint: " + constraint.getType());
+				out.println("Unknown constraint: " + constraint.getType());
 			break;
 		}
 

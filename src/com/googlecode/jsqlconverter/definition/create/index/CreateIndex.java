@@ -14,7 +14,7 @@ public class CreateIndex extends Statement {
 	private IndexType indexType = IndexType.UNKNOWN;
 
 	public enum SortSequence { ASC, DESC, UNKNOWN }
-	public enum IndexType { CLUSTERED, HASHED, UNKNOWN };
+	public enum IndexType { CLUSTERED, HASHED, UNKNOWN }
 
 	public CreateIndex(Name indexName) {
 		this.indexName = indexName;
