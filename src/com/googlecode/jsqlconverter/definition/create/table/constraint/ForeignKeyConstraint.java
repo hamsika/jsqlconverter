@@ -2,7 +2,7 @@ package com.googlecode.jsqlconverter.definition.create.table.constraint;
 
 import com.googlecode.jsqlconverter.definition.Name;
 
-public class ForeignKeyConstraint extends ColumnConstraint {
+public class ForeignKeyConstraint {
 	private Name tableName;
 	private Name columnName;
 

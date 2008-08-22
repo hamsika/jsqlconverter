@@ -6,13 +6,12 @@ import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.*;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstraint;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
+import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 
-import java.sql.ResultSet;
-import java.sql.Types;
-import java.sql.DatabaseMetaData;
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 
 public class JDBCParser implements Parser {
@@ -23,6 +22,9 @@ public class JDBCParser implements Parser {
 	private String tableNamePattern;
 	private String columnNamePattern = null;
 	private String[] types = { "TABLE" }; // TODO: support VIEW, GLOBAL TEMPORARY, LOCAL TEMPORARY
+	private boolean convertDataToInsert = true;
+	private String productName;
+	private String productVersion;
 
 	public JDBCParser(Connection con) {
 		this(con, null, null, null);
@@ -41,6 +43,9 @@ public class JDBCParser implements Parser {
 		try {
 			DatabaseMetaData meta = con.getMetaData();
 
+			productName = meta.getDatabaseProductName();
+			productVersion = meta.getDatabaseProductVersion();
+
 			ResultSet tablesRs = meta.getTables(catalog, schemaPattern, tableNamePattern, types);
 
 			while (tablesRs.next()) {
@@ -49,7 +54,7 @@ public class JDBCParser implements Parser {
 				String tableType = tablesRs.getString("TABLE_TYPE");
 
 				if (tableType.equals("TABLE")) {
-					generatedStatements = getCreateTable(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"));
+					generatedStatements = getTableStatements(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"), convertDataToInsert);
 				} else {
 					System.out.println("Unhandled Table Type: " + tableType);
 				}
@@ -63,6 +68,7 @@ public class JDBCParser implements Parser {
 			}
 
 			tablesRs.close();
+
 			con.close();
 		} catch (SQLException sqle) {
 			throw new ParserException(sqle.getMessage(), sqle.getCause());
@@ -77,7 +83,7 @@ public class JDBCParser implements Parser {
 		return statements.toArray(new Statement[] {});
 	}
 
-	private Statement[] getCreateTable(DatabaseMetaData meta, String catalog, String schema, String tableName) throws SQLException {
+	private Statement[] getTableStatements(DatabaseMetaData meta, String catalog, String schema, String tableName, boolean convertDataToInsert) throws SQLException {
 		ResultSet columnsRs = meta.getColumns(
 								catalog,
 								schema,
@@ -87,7 +93,7 @@ public class JDBCParser implements Parser {
 
 		ArrayList<Statement> statements = new ArrayList<Statement>();
 		CreateTable createTable = null;
-		Type dataType = null;
+		Type dataType;
 
 		while (columnsRs.next()) {
 			String currentTable = columnsRs.getString("TABLE_NAME");
@@ -100,121 +106,7 @@ public class JDBCParser implements Parser {
 
 			int dbType = columnsRs.getInt("DATA_TYPE");
 
-			switch(dbType) {
-				case Types.ARRAY:
-
-				break;
-				case Types.BIGINT:
-					dataType = ExactNumericType.BIGINT;
-				break;
-				case Types.BINARY:
-					dataType = BinaryType.BINARY;
-				break;
-				case Types.BIT:
-					//dataType = BinaryType.BIT;
-					dataType = BooleanType.BOOLEAN;
-				break;
-				case Types.BLOB:
-					dataType = BinaryType.BLOB;
-				break;
-				case Types.BOOLEAN:
-					dataType = BooleanType.BOOLEAN;
-				break;
-				case Types.CHAR:
-					dataType = StringType.CHAR;
-				break;
-				case Types.CLOB:
-
-				break;
-				case Types.DATALINK:
-
-				break;
-				case Types.DATE:
-					// TODO: make sure this is right
-					dataType = DateTimeType.DATETIME;
-				break;
-				case Types.DECIMAL:
-
-				break;
-				case Types.DISTINCT:
-
-				break;
-				case Types.DOUBLE:
-					dataType = ApproximateNumericType.DOUBLE;
-				break;
-				case Types.FLOAT:
-					dataType = ApproximateNumericType.FLOAT;
-				break;
-				case Types.INTEGER:
-					dataType = ExactNumericType.INTEGER;
-				break;
-				case Types.JAVA_OBJECT:
-
-				break;
-				case Types.LONGNVARCHAR:
-
-				break;
-				case Types.LONGVARBINARY:
-
-				break;
-				case Types.LONGVARCHAR:
-
-				break;
-				case Types.NCHAR:
-					dataType = StringType.NCHAR;
-				break;
-				case Types.NCLOB:
-
-				break;
-				case Types.NULL:
-
-				break;
-				case Types.NUMERIC:
-					dataType = ExactNumericType.NUMERIC;
-				break;
-				case Types.NVARCHAR:
-					dataType = StringType.NVARCHAR;
-				break;
-				case Types.OTHER:
-
-				break;
-				case Types.REAL:
-					dataType = ApproximateNumericType.REAL;
-				break;
-				case Types.REF:
-
-				break;
-				case Types.ROWID:
-
-				break;
-				case Types.SMALLINT:
-					dataType = ExactNumericType.SMALLINT;
-				break;
-				case Types.SQLXML:
-
-				break;
-				case Types.STRUCT:
-
-				break;
-				case Types.TIME:
-
-				break;
-				case Types.TIMESTAMP:
-					dataType = DateTimeType.TIMESTAMP;
-				break;
-				case Types.TINYINT:
-					dataType = ExactNumericType.TINYINT;
-				break;
-				case Types.VARBINARY:
-					dataType = BinaryType.VARBINARY;
-				break;
-				case Types.VARCHAR:
-					dataType = StringType.VARCHAR;
-				break;
-				default:
-					dataType = new UnhandledType(String.valueOf(dbType));
-				break;
-			}
+			dataType = getType(dbType);
 
 			Column col = new Column(new Name(columnsRs.getString("COLUMN_NAME")), dataType);
 
@@ -226,11 +118,15 @@ public class JDBCParser implements Parser {
 				col.addColumnOption(ColumnOption.NOT_NULL);
 			}
 
+			// default value
 			String defaultValue = columnsRs.getString("COLUMN_DEF");
 
 			if (defaultValue != null) {
-				// TODO: add this support back in
-				//col.addConstraint(new Constraint(ConstraintType.DEFAULT, defaultValue));
+				if (defaultValue.startsWith("nextval(")) {
+					col.addColumnOption(ColumnOption.AUTO_INCREMENT);
+				} else {
+					col.setDefaultConstraint(new DefaultConstraint(defaultValue));
+				}
 			}
 
 			createTable.addColumn(col);
@@ -309,16 +205,122 @@ public class JDBCParser implements Parser {
 
 		if (indexes != null) {
 			for (CreateIndex index : indexes) {
-				// TODO: detect if it's a generated index or not
+				// detect if it's a generated index or not
 				// if it is NOT generated
 				// 	simply return the createIndex
 				// if it IS generated
 				//	add to create table (but also detect if it's primary or unique)
+
+				if (productName.equals("PostgreSQL")) {
+					if (index.isUnique() && index.getIndexName().getObjectName().startsWith(index.getTableName().getObjectName() + "_") && index.getIndexName().getObjectName().endsWith("_key")) {
+						if (index.getColumns().length == 1) {
+							Column column = getTableColumn(createTable, index.getColumns()[0]);
+
+							if (column != null) {
+								column.addColumnOption(ColumnOption.UNIQUE);
+
+								continue;
+							} else {
+								System.out.println("warning: found a unique column index, but couldn't find the column it applies to for some reason");
+							}
+						} else {
+							createTable.addUniqueCompoundKeyConstraint(new KeyConstraint(index.getColumns()));
+
+							continue;
+						}
+					}
+				} else if (productName.equals("ACCESS")) {
+					if (productVersion.equals("2.0") && index.isUnique()) {
+						if (index.getIndexName().getObjectName().equals("ID_BASED")) {
+							createTable.addUniqueCompoundKeyConstraint(new KeyConstraint(index.getColumns()));
+
+							continue;
+						} else if (index.getColumns().length == 1) {
+							Column column = getTableColumn(createTable, index.getColumns()[0]);
+
+							if (column != null) {
+								if (index.getIndexName().getObjectName().equals("PrimaryKey")) {
+									column.addColumnOption(ColumnOption.AUTO_INCREMENT);
+								}
+
+								column.addColumnOption(ColumnOption.UNIQUE);
+							}
+
+							continue;
+						}
+					}
+				}
+
+				// user created index
 				statements.add(index);
+
+				if (index.isUnique()) {
+					System.out.println("possible implicit database index: " + index.getTableName().getObjectName() + " " + index.getIndexName().getObjectName() + " " + index.getColumns().length + " " + index.isUnique());
+				}
+			}
+		}
+
+		if (convertDataToInsert) {
+			InsertFromValues[] inserts = getTableData(createTable.getName());
+
+			for (InsertFromValues insert : inserts) {
+				statements.add(insert);
 			}
 		}
 
 		return statements.toArray(new Statement[] {});
+	}
+
+	private Column getTableColumn(CreateTable createTable, Name columnName) {
+		for (int i=0; i<createTable.getColumnCount(); i++) {
+			Column column = createTable.getColumn(i);
+
+			if (column.getName().getObjectName().equals(columnName.getObjectName())) {
+				return column;
+			}
+		}
+
+		return null;
+	}
+
+	private InsertFromValues[] getTableData(Name tableName) throws SQLException {
+		PreparedStatement dataPs = con.prepareStatement("SELECT * FROM \"" + tableName.getObjectName() + "\"");
+
+		ResultSet dataRs = dataPs.executeQuery();
+
+		ResultSetMetaData meta = dataRs.getMetaData();
+
+		boolean[] isNumeric = new boolean[meta.getColumnCount()];
+
+		for (int i=1; i<=meta.getColumnCount(); i++) {
+			Type type = getType(meta.getColumnType(i));
+
+			isNumeric[i - 1] = type instanceof NumericType;
+		}
+
+		ArrayList<InsertFromValues> inserts = new ArrayList<InsertFromValues>();
+
+		while (dataRs.next()) {
+			InsertFromValues insert = new InsertFromValues(tableName);
+
+			for (int i=0; i<meta.getColumnCount(); i++) {
+				String col = dataRs.getString(i + 1);
+
+				if (col == null) {
+					continue;
+				}
+
+				if (isNumeric[i]) {
+					insert.setNumeric(i, Double.parseDouble(col));
+				} else {
+					insert.setString(i, col);
+				}
+			}
+
+			inserts.add(insert);
+		}
+
+		return inserts.toArray(new InsertFromValues[] {});
 	}
 
 	private CreateIndex[] getTableIndexes(DatabaseMetaData meta, Name tableName) throws SQLException {
@@ -417,5 +419,127 @@ public class JDBCParser implements Parser {
 		}
 
 		return indexes.toArray(new CreateIndex[] {});
+	}
+
+	private Type getType(int dbType) {
+		Type dataType = null;
+
+		switch(dbType) {
+			case Types.ARRAY:
+
+			break;
+			case Types.BIGINT:
+				dataType = ExactNumericType.BIGINT;
+			break;
+			case Types.BINARY:
+				dataType = BinaryType.BINARY;
+			break;
+			case Types.BIT:
+				//dataType = BinaryType.BIT;
+				dataType = BooleanType.BOOLEAN;
+			break;
+			case Types.BLOB:
+				dataType = BinaryType.BLOB;
+			break;
+			case Types.BOOLEAN:
+				dataType = BooleanType.BOOLEAN;
+			break;
+			case Types.CHAR:
+				dataType = StringType.CHAR;
+			break;
+			case Types.CLOB:
+
+			break;
+			case Types.DATALINK:
+
+			break;
+			case Types.DATE:
+				// TODO: make sure this is right
+				dataType = DateTimeType.DATETIME;
+			break;
+			case Types.DECIMAL:
+
+			break;
+			case Types.DISTINCT:
+
+			break;
+			case Types.DOUBLE:
+				dataType = ApproximateNumericType.DOUBLE;
+			break;
+			case Types.FLOAT:
+				dataType = ApproximateNumericType.FLOAT;
+			break;
+			case Types.INTEGER:
+				dataType = ExactNumericType.INTEGER;
+			break;
+			case Types.JAVA_OBJECT:
+
+			break;
+			case Types.LONGNVARCHAR:
+
+			break;
+			case Types.LONGVARBINARY:
+
+			break;
+			case Types.LONGVARCHAR:
+
+			break;
+			case Types.NCHAR:
+				dataType = StringType.NCHAR;
+			break;
+			case Types.NCLOB:
+
+			break;
+			case Types.NULL:
+
+			break;
+			case Types.NUMERIC:
+				dataType = ExactNumericType.NUMERIC;
+			break;
+			case Types.NVARCHAR:
+				dataType = StringType.NVARCHAR;
+			break;
+			case Types.OTHER:
+
+			break;
+			case Types.REAL:
+				dataType = ApproximateNumericType.REAL;
+			break;
+			case Types.REF:
+
+			break;
+			case Types.ROWID:
+
+			break;
+			case Types.SMALLINT:
+				dataType = ExactNumericType.SMALLINT;
+			break;
+			case Types.SQLXML:
+
+			break;
+			case Types.STRUCT:
+
+			break;
+			case Types.TIME:
+
+			break;
+			case Types.TIMESTAMP:
+				dataType = DateTimeType.TIMESTAMP;
+			break;
+			case Types.TINYINT:
+				dataType = ExactNumericType.TINYINT;
+			break;
+			case Types.VARBINARY:
+				dataType = BinaryType.VARBINARY;
+			break;
+			case Types.VARCHAR:
+				dataType = StringType.VARCHAR;
+			break;
+			default:
+				dataType = new UnhandledType(String.valueOf(dbType));
+			break;
+		}
+
+		return dataType;
 	}
 }

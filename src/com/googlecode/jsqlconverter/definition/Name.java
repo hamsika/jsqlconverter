@@ -4,9 +4,10 @@ public class Name {
 	private String databaseName;
 	private String schemaName;
 	private String objectName;
+	private String serverName;
 
 	public Name(String objectName) {
-		this(null, null, objectName);
+		this(null, objectName);
 	}
 
 	public Name(String schemaName, String objectName) {
@@ -14,9 +15,18 @@ public class Name {
 	}
 
 	public Name(String databaseName, String schemaName, String objectName) {
+		this(null, databaseName, schemaName, objectName);
+	}
+
+	public Name(String serverName, String databaseName, String schemaName, String objectName) {
+		this.serverName = serverName;
 		this.databaseName = databaseName;
 		this.schemaName = schemaName;
 		this.objectName = objectName;
+	}
+
+	public String getServerName() {
+		return serverName;
 	}
 
 	public String getDatabaseName() {

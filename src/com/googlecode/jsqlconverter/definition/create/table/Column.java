@@ -3,6 +3,7 @@ package com.googlecode.jsqlconverter.definition.create.table;
 import com.googlecode.jsqlconverter.definition.type.Type;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
 
 import java.util.ArrayList;
 
@@ -12,6 +13,7 @@ public class Column {
 	private Type dataType;
 	private ArrayList<ColumnOption> options = new ArrayList<ColumnOption>();
 	private ForeignKeyConstraint reference = null;
+	private DefaultConstraint defaultConstraint = null;
 	private int size = 0;
 
 	public Column(Name columnName) {
@@ -44,6 +46,14 @@ public class Column {
 		return reference;
 	}
 
+	public DefaultConstraint getDefaultConstraint() {
+		return defaultConstraint;
+	}
+
+	public boolean containsOption(ColumnOption option) {
+		return options.contains(option);
+	}
+
 	// setters
 	public void setSize(int size) {
 		this.size = size;
@@ -51,6 +61,10 @@ public class Column {
 
 	public void setForeignKeyConstraint(ForeignKeyConstraint reference) {
 		this.reference = reference;
+	}
+
+	public void setDefaultConstraint(DefaultConstraint defaultConstraint) {
+		this.defaultConstraint = defaultConstraint;
 	}
 
 	// adders

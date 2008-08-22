@@ -2,6 +2,7 @@ package com.googlecode.jsqlconverter.definition.create.table;
 
 import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstraint;
 
 import java.util.ArrayList;
 
@@ -9,8 +10,10 @@ public class CreateTable extends Statement {
 	// set primary key
 	// add unique key
 	private Name tableName;
-	ArrayList<Column> columns = new ArrayList<Column>();
+	private ArrayList<Column> columns = new ArrayList<Column>();
 	private ArrayList<TableOption> options = new ArrayList<TableOption>();
+	private ArrayList<KeyConstraint> uniqueKeys = new ArrayList<KeyConstraint>();
+	private KeyConstraint primaryKey = null;
 
 	public CreateTable(Name tableName) {
 		this.tableName = tableName;
@@ -37,6 +40,14 @@ public class CreateTable extends Statement {
 		return options.toArray(new TableOption[] {});
 	}
 
+	public KeyConstraint[] getUniqueCompoundKeyConstraint() {
+		return uniqueKeys.toArray(new KeyConstraint[] {});
+	}
+
+	public KeyConstraint getPrimaryCompoundKeyConstraint() {
+		return primaryKey;
+	}
+
 	public boolean containsOption(TableOption option) {
 		return options.contains(option);
 	}
@@ -50,6 +61,10 @@ public class CreateTable extends Statement {
 		columns.set(index, column);
 	}
 
+	public void setPrimaryCompoundKeyConstraint(KeyConstraint keyConstraint) {
+		primaryKey = keyConstraint;
+	}
+
 	// adders
 	public void addColumn(Column column) {
 		columns.add(column);
@@ -57,6 +72,10 @@ public class CreateTable extends Statement {
 
 	public void addOption(TableOption option) {
 		options.add(option);
+	}
+
+	public void addUniqueCompoundKeyConstraint(KeyConstraint keyConstraint) {
+		uniqueKeys.add(keyConstraint);
 	}
 
 	// removers
