@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project name="jsqlconverter" basedir=".">
+	<property name="jsqlconverter_jar" value="jsqlconverter.jar"/>
+	<property name="jsqlconverter_src" value="src"/>
+	<property name="jsqlconverter_lib" value="lib"/>
+
+	<property name="buildtemp" value="build/temp"/>
+	<property name="distdir" value="build/bin"/>
+
+	<path id="class.path">
+		<pathelement location="./"/>
+
+		<pathelement path="${jsqlconverter_lib}/*.jar"/>
+	</path>
+
+	<target name="compile">
+		<mkdir dir="${buildtemp}"/>
+
+		<copy todir="${buildtemp}/">
+			<fileset dir="${jsqlconverter_src}" includes="**/*.java"/>
+		</copy>
+
+		<javac srcdir="${buildtemp}" destdir="${buildtemp}">
+			<classpath refid="class.path"/>
+		</javac>
+	</target>
+
+	<target name="jar" depends="compile">
+		<mkdir dir="${distdir}"/>
+
+		<jar compress="true" jarfile="${buildtemp}\${jsqlconverter_jar}">
+			<manifest>
+				<attribute name="Main-Class" value="com.googlecode.jsqlconverter.frontend.cli.SQLConverterCLI"/>
+				<attribute name="Implementation-Vendor" value="James Carter"/>
+			</manifest>
+
+			<fileset dir="${buildtemp}">
+				<patternset>
+					<exclude name="**/*.java"/>
+				</patternset>
+			</fileset>
+		</jar>
+
+		<move todir="${distdir}">
+			<fileset dir="${buildtemp}" includes="${jsqlconverter_jar}"/>
+		</move>
+	</target>
+
+	<target name="clean" description="Delete build files, etc.">
+		<delete dir="build"/>
+	</target>
+</project>
