@@ -50,7 +50,7 @@ public class PostgreSQLProducer extends SQLProducer {
 	public String getType(StringType type) {
 		switch(type) {
 			case CHAR:
-				return "CHAR";
+				return "char";
 			case LONGTEXT:
 			case MEDIUMTEXT:
 			case NCHAR:
@@ -58,11 +58,11 @@ public class PostgreSQLProducer extends SQLProducer {
 			case NVARCHAR:
 				return null;
 			case TEXT:
-				return "TEXT";
+				return "text";
 			case TINYTEXT:
 				return null;
 			case VARCHAR:
-				return "VARCHAR";
+				return "varchar";
 			default:
 				return null;
 		}
@@ -71,11 +71,11 @@ public class PostgreSQLProducer extends SQLProducer {
 	public String getType(ApproximateNumericType type) {
 		switch (type) {
 			case DOUBLE:
-				return "FLOAT8";
+				return "float8";
 			case FLOAT:
 				return null;
 			case REAL:
-				return "REAL";
+				return "real";
 			default:
 				return null;
 		}
@@ -84,16 +84,16 @@ public class PostgreSQLProducer extends SQLProducer {
 	public String getType(BinaryType type) {
 		switch(type) {
 			case BINARY:
-				return "BYTEA";
+				return "bytea";
 			case BIT:
-				return "BIT";
+				return "bit";
 			// TODO: confirm 'bytea' is correct to return for blob / binary types
 			case BLOB:
 			case LONGBLOB:
 			case MEDIUMBLOB:
 			case TINYBLOB:
 			case VARBINARY:
-				return "BYTEA";
+				return "bytea";
 			default:
 				return null;
 		}
@@ -111,9 +111,9 @@ public class PostgreSQLProducer extends SQLProducer {
 	public String getType(DateTimeType type) {
 		switch(type) {
 			case DATETIME:
-				return "TIMESTAMP"; // according to some docs TIMESTAMP is eqiv to DATETIME aparantly
+				return "timstamp"; // according to some docs TIMESTAMP is eqiv to DATETIME aparantly
 			case TIMESTAMP:
-				return "TIMESTAMP"; // TODO find out if this can have a time zone
+				return "timstamp"; // TODO find out if this can have a time zone
 			default:
 				return null;
 		}
@@ -122,15 +122,15 @@ public class PostgreSQLProducer extends SQLProducer {
 	public String getType(ExactNumericType type) {
 		switch(type) {
 			case BIGINT:
-				return "BIGINT";
+				return "bigint";
 			case INTEGER:
-				return "INTEGER";
+				return "integer";
 			case MEDIUMINT:
 				return null;
 			case NUMERIC:
-				return "NUMERIC";
+				return "numeric";
 			case SMALLINT:
-				return "SMALLINT";
+				return "smallint";
 			case TINYINT:
 				return null;
 			default:
@@ -143,7 +143,7 @@ public class PostgreSQLProducer extends SQLProducer {
 			case MONEY:
 				return null;
 			case SMALLMONEY:
-				return "MONEY";
+				return "money";
 			default:
 				return null;
 		}

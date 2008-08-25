@@ -7,8 +7,6 @@ import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstr
 import java.util.ArrayList;
 
 public class CreateTable extends Statement {
-	// set primary key
-	// add unique key
 	private Name tableName;
 	private ArrayList<Column> columns = new ArrayList<Column>();
 	private ArrayList<TableOption> options = new ArrayList<TableOption>();

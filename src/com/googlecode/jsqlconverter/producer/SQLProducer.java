@@ -17,6 +17,7 @@ import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import java.io.PrintStream;
 
 public abstract class SQLProducer implements Producer {
+	// TODO: support quoting ([ ], ', ", `, etc)
 	private PrintStream out = System.out;
 
 	public void produce(Statement[] statements) {
@@ -219,7 +220,7 @@ public abstract class SQLProducer implements Producer {
 		return dataTypeString;
 	}
 
-	// methods for overriding
+	// other
 	public abstract String getPrimaryKeyValue();
 
 	public abstract String getDefaultConstraintString(DefaultConstraint defaultConstraint);
