@@ -108,7 +108,7 @@ public abstract class SQLProducer implements Producer {
 
 			// constraints
 			// TODO: may want to check current data type here too (must be int / etc?)
-			if (column.containsOption(ColumnOption.AUTO_INCREMENT) && column.containsOption(ColumnOption.UNIQUE)) {
+			if (column.containsOption(ColumnOption.PRIMARY_KEY) || column.containsOption(ColumnOption.AUTO_INCREMENT) && column.containsOption(ColumnOption.UNIQUE)) {
 				out.print(getPrimaryKeyValue());
 			} else {
 				out.print(getType(column.getType()));

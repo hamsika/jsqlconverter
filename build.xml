@@ -1,49 +1,69 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<project name="jsqlconverter" basedir=".">
-	<property name="jsqlconverter_jar" value="jsqlconverter.jar"/>
-	<property name="jsqlconverter_src" value="src"/>
-	<property name="jsqlconverter_lib" value="lib"/>
+<project basedir=".">
+	<property name="project_name" value="jsqlconverter"/>
+	<property name="project_author" value="James Carter"/>
+	<property name="project_mainclass" value="com.googlecode.jsqlconverter.frontend.cli.SQLConverterCLI"/>
 
-	<property name="buildtemp" value="build/temp"/>
-	<property name="distdir" value="build/bin"/>
+	<property name="project_jar" value="${project_name}.jar"/>
+	<property name="project_zip" value="${project_name}.zip"/>
+	<property name="project_src" value="src"/>
+	<property name="project_lib" value="lib"/>
+
+	<property name="build_temp" value="build/temp"/>
+	<property name="build_bin" value="build/bin"/>
+	<property name="build_zip" value="build/zip"/>
 
 	<path id="class.path">
 		<pathelement location="./"/>
 
-		<pathelement path="${jsqlconverter_lib}/*.jar"/>
+		<pathelement path="${project_lib}/*.jar"/>
 	</path>
 
 	<target name="compile">
-		<mkdir dir="${buildtemp}"/>
+		<mkdir dir="${build_temp}"/>
 
-		<copy todir="${buildtemp}/">
-			<fileset dir="${jsqlconverter_src}" includes="**/*.java"/>
+		<copy todir="${build_temp}/">
+			<fileset dir="${project_src}" includes="**/*.java"/>
 		</copy>
 
-		<javac srcdir="${buildtemp}" destdir="${buildtemp}">
+		<javac srcdir="${build_temp}" destdir="${build_temp}">
 			<classpath refid="class.path"/>
 		</javac>
 	</target>
 
 	<target name="jar" depends="compile">
-		<mkdir dir="${distdir}"/>
+		<mkdir dir="${build_bin}"/>
 
-		<jar compress="true" jarfile="${buildtemp}\${jsqlconverter_jar}">
+		<jar compress="true" jarfile="${build_temp}\${project_jar}">
 			<manifest>
-				<attribute name="Main-Class" value="com.googlecode.jsqlconverter.frontend.cli.SQLConverterCLI"/>
-				<attribute name="Implementation-Vendor" value="James Carter"/>
+				<attribute name="Main-Class" value="${project_mainclass}"/>
+				<attribute name="Implementation-Vendor" value="${project_author}"/>
 			</manifest>
 
-			<fileset dir="${buildtemp}">
+			<fileset dir="${build_temp}">
 				<patternset>
 					<exclude name="**/*.java"/>
 				</patternset>
 			</fileset>
 		</jar>
 
-		<move todir="${distdir}">
-			<fileset dir="${buildtemp}" includes="${jsqlconverter_jar}"/>
+		<move todir="${build_bin}">
+			<fileset dir="${build_temp}" includes="${project_jar}"/>
 		</move>
+	</target>
+
+	<target name="zip" depends="jar">
+		<mkdir dir="${build_zip}"/>
+		<mkdir dir="${build_zip}/${project_name}"/>
+		<mkdir dir="${build_zip}/${project_name}/lib"/>
+
+		<copy todir="${build_zip}/${project_name}/lib">
+			<fileset dir="${build_bin}" includes="*.jar"/>
+		</copy>
+
+		<zip destfile="${build_zip}/${project_zip}">
+			<zipfileset dir="${build_zip}/${project_name}" includes="**/*"/>
+		</zip>
 	</target>
 
 	<target name="clean" description="Delete build files, etc.">

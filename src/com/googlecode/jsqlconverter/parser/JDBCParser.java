@@ -22,19 +22,22 @@ public class JDBCParser implements Parser {
 	private String tableNamePattern;
 	private String columnNamePattern = null;
 	private String[] types = { "TABLE" }; // TODO: support VIEW, GLOBAL TEMPORARY, LOCAL TEMPORARY
-	private boolean convertDataToInsert = true;
-	private String productName;
-	private String productVersion;
+	private boolean convertDataToInsert;
 
 	public JDBCParser(Connection con) {
 		this(con, null, null, null);
 	}
 
 	public JDBCParser(Connection con, String catalog, String schemaPattern, String tableNamePattern) {
+		this(con, catalog, schemaPattern, tableNamePattern, false);
+	}
+
+	public JDBCParser(Connection con, String catalog, String schemaPattern, String tableNamePattern, boolean convertDataToInsert) {
 		this.con = con;
 		this.catalog = catalog;
 		this.schemaPattern = schemaPattern;
 		this.tableNamePattern = tableNamePattern;
+		this.convertDataToInsert = convertDataToInsert;
 	}
 
 	public Statement[] parse() throws ParserException {
@@ -42,9 +45,6 @@ public class JDBCParser implements Parser {
 
 		try {
 			DatabaseMetaData meta = con.getMetaData();
-
-			productName = meta.getDatabaseProductName();
-			productVersion = meta.getDatabaseProductVersion();
 
 			ResultSet tablesRs = meta.getTables(catalog, schemaPattern, tableNamePattern, types);
 
@@ -121,8 +121,11 @@ public class JDBCParser implements Parser {
 			// default value
 			String defaultValue = columnsRs.getString("COLUMN_DEF");
 
+			// work out if the default value is auto increment
 			if (defaultValue != null) {
 				if (defaultValue.startsWith("nextval(")) {
+					col.addColumnOption(ColumnOption.AUTO_INCREMENT);
+				} else if (defaultValue.startsWith("(NEXT VALUE FOR")) {
 					col.addColumnOption(ColumnOption.AUTO_INCREMENT);
 				} else {
 					col.setDefaultConstraint(new DefaultConstraint(defaultValue));
@@ -138,7 +141,7 @@ public class JDBCParser implements Parser {
 			try {
 				referencesRs = meta.getImportedKeys(catalog, tableSchema, currentTable);
 			} catch (SQLException sqle) {
-				// TODO: handle nicely
+				// TODO: handle nicely for those RDBMS that do not support this
 				//sqle.printStackTrace();
 			}
 
@@ -200,56 +203,62 @@ public class JDBCParser implements Parser {
 
 		columnsRs.close();
 
+		if (createTable == null) {
+			return null;
+		}
+
 		// query indexes and associate with table
 		CreateIndex[] indexes = getTableIndexes(meta, createTable.getName());
 
+		CreateIndex primaryKey = null;
+
+		try {
+			primaryKey = getTablePrimaryKey(meta, createTable.getName());
+		} catch (SQLException sqle) {
+			// TODO: handle nicely for those RDBMS that do not support this
+			//sqle.printStackTrace();
+		}
+
+		if (primaryKey != null) {
+			if (primaryKey.getColumns().length == 1) {
+				//setSingleColumnPrimarKey(createTable, primaryKey);
+				Column column = getTableColumn(createTable, primaryKey.getColumns()[0]);
+
+				if (column != null) {
+					column.addColumnOption(ColumnOption.PRIMARY_KEY);
+				} else {
+					System.out.println("error.. couldn't find primary key column");
+				}
+			} else {
+				createTable.setPrimaryCompoundKeyConstraint(new KeyConstraint(primaryKey.getColumns()));
+			}
+		}
+
 		if (indexes != null) {
 			for (CreateIndex index : indexes) {
-				// detect if it's a generated index or not
-				// if it is NOT generated
-				// 	simply return the createIndex
-				// if it IS generated
-				//	add to create table (but also detect if it's primary or unique)
-
-				if (productName.equals("PostgreSQL")) {
-					if (index.isUnique() && index.getIndexName().getObjectName().startsWith(index.getTableName().getObjectName() + "_") && index.getIndexName().getObjectName().endsWith("_key")) {
-						if (index.getColumns().length == 1) {
-							Column column = getTableColumn(createTable, index.getColumns()[0]);
-
-							if (column != null) {
-								column.addColumnOption(ColumnOption.UNIQUE);
-
-								continue;
-							} else {
-								System.out.println("warning: found a unique column index, but couldn't find the column it applies to for some reason");
-							}
-						} else {
-							createTable.addUniqueCompoundKeyConstraint(new KeyConstraint(index.getColumns()));
-
-							continue;
-						}
-					}
-				} else if (productName.equals("ACCESS")) {
-					if (productVersion.equals("2.0") && index.isUnique()) {
-						if (index.getIndexName().getObjectName().equals("ID_BASED")) {
-							createTable.addUniqueCompoundKeyConstraint(new KeyConstraint(index.getColumns()));
-
-							continue;
-						} else if (index.getColumns().length == 1) {
-							Column column = getTableColumn(createTable, index.getColumns()[0]);
-
-							if (column != null) {
-								if (index.getIndexName().getObjectName().equals("PrimaryKey")) {
-									column.addColumnOption(ColumnOption.AUTO_INCREMENT);
-								}
-
-								column.addColumnOption(ColumnOption.UNIQUE);
-							}
-
-							continue;
-						}
+				// if this index is actually a primary key, then ignore it
+				if (primaryKey != null) {
+					if (index.getIndexName().getObjectName().equals(primaryKey.getIndexName().getObjectName())) {
+						continue;
 					}
 				}
+
+				// any unique indexes are considers to be part of the table and not user generated
+				if (index.isUnique()) {
+					if (index.getColumns().length == 1) {
+						Column column = getTableColumn(createTable, index.getColumns()[0]);
+
+						if (column != null) {
+							column.addColumnOption(ColumnOption.UNIQUE);
+						}
+
+						continue;
+					} else {
+						createTable.addUniqueCompoundKeyConstraint(new KeyConstraint(index.getColumns()));
+						continue;
+					}
+				}
+
 
 				// user created index
 				statements.add(index);
@@ -419,6 +428,25 @@ public class JDBCParser implements Parser {
 		}
 
 		return indexes.toArray(new CreateIndex[] {});
+	}
+
+	private CreateIndex getTablePrimaryKey(DatabaseMetaData meta, Name tableName) throws SQLException {
+		ResultSet primarykeyRs = meta.getPrimaryKeys(catalog, tableName.getSchemaName(), tableName.getObjectName());
+
+		CreateIndex primaryKey = null;
+
+		while(primarykeyRs.next()) {
+			if (primaryKey == null) {
+				primaryKey = new CreateIndex(
+					new Name(primarykeyRs.getString("PK_NAME")),
+					new Name(primarykeyRs.getString("TABLE_CAT"), primarykeyRs.getString("TABLE_SCHEM"), primarykeyRs.getString("TABLE_NAME"))
+				);
+			}
+
+			primaryKey.addColumn(new Name(primarykeyRs.getString("COLUMN_NAME")));
+		}
+
+		return primaryKey;
 	}
 
 	private Type getType(int dbType) {
