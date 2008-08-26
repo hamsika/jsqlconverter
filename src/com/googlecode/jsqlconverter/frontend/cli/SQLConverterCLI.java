@@ -5,6 +5,7 @@ import com.googlecode.jsqlconverter.parser.DelimitedParser;
 import com.googlecode.jsqlconverter.parser.JDBCParser;
 import com.googlecode.jsqlconverter.parser.ParserException;
 import com.googlecode.jsqlconverter.definition.Statement;
+import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.producer.PostgreSQLProducer;
 import com.googlecode.jsqlconverter.producer.Producer;
 
@@ -168,9 +169,9 @@ public class SQLConverterCLI {
 		switch(inputOp) {
 			case DELIMITED:
 				if (file != null) {
-					parser = new DelimitedParser(new BufferedReader(new InputStreamReader(new FileInputStream(new File(file)))), delimiter, textQuantifier, hasHeaderRow);
+					parser = new DelimitedParser(new File(file), delimiter, textQuantifier, hasHeaderRow);
 				} else {
-					parser = new DelimitedParser(new BufferedReader(new InputStreamReader(System.in)), delimiter, textQuantifier, hasHeaderRow);
+					parser = new DelimitedParser(new BufferedReader(new InputStreamReader(System.in)), new Name("unknown"), delimiter, textQuantifier, hasHeaderRow);
 				}
 			break;
 			case JDBC:

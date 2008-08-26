@@ -68,19 +68,7 @@ public abstract class SQLProducer implements Producer {
 		out.print(" ON ");
 		out.print(getValidName(createIndex.getTableName()));
 		out.print(" (");
-
-		StringBuffer columnList = new StringBuffer();
-
-		for (Name columnName : createIndex.getColumns()) {
-			if (columnList.length() != 0) {
-				columnList.append(", ");
-			}
-
-			columnList.append(getValidName(columnName));
-		}
-
-		out.print(columnList);
-
+		out.print(getColumnList(createIndex.getColumns()));
 		out.println(");");
 	}
 
@@ -139,11 +127,20 @@ public abstract class SQLProducer implements Producer {
 				out.print(getForeignKeyConstraintString(reference));
 			}
 
-			if (i + 1 != columns.length || table.getUniqueCompoundKeyConstraint().length != 0) {
+			if (i + 1 != columns.length || (table.getPrimaryCompoundKeyConstraint() != null || table.getUniqueCompoundKeyConstraint().length != 0)) {
 				out.print(",");
 			}
 
 			out.println();
+		}
+
+		// combined primary key
+		KeyConstraint primaryKey = table.getPrimaryCompoundKeyConstraint();
+
+		if (primaryKey != null) {
+			out.print("\tPRIMARY KEY (");
+			out.print(getColumnList(primaryKey.getColumns()));
+			out.println(")");
 		}
 
 		// indexes
@@ -152,22 +149,26 @@ public abstract class SQLProducer implements Producer {
 		for (int i=0; i<keys.length; i++) {
 			KeyConstraint key = keys[i];
 
-			StringBuffer columnList = new StringBuffer();
-
-			for (Name columnName : key.getColumns()) {
-				if (columnList.length() != 0) {
-					columnList.append(", ");
-				}
-
-				columnList.append(getValidName(columnName));
-			}
-
 			out.print("\tUNIQUE (");
-			out.print(columnList);
+			out.print(getColumnList(key.getColumns()));
 			out.println(")");
 		}
 
 		out.println(");");
+	}
+
+	private String getColumnList(Name[] names) {
+		StringBuffer columnList = new StringBuffer();
+
+		for (Name columnName : names) {
+			if (columnList.length() != 0) {
+				columnList.append(", ");
+			}
+
+			columnList.append(getValidName(columnName));
+		}
+
+		return columnList.toString();
 	}
 
 	private String getForeignKeyConstraintString(ForeignKeyConstraint reference) {
@@ -194,7 +195,7 @@ public abstract class SQLProducer implements Producer {
 		return sb.toString();
 	}
 
-	public final String getType(Type type) {
+	private String getType(Type type) {
 		String dataTypeString = null;
 
 		if (type instanceof ApproximateNumericType) {

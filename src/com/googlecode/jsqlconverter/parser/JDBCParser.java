@@ -15,6 +15,7 @@ import java.sql.*;
 import java.util.ArrayList;
 
 public class JDBCParser implements Parser {
+	// TODO: find out if all RDBMS always create indexes on foreign key columns
 	// TODO: support temp tables (does that have anything to do with GLOBAL / LOCAL TEMPORARY?)
 	private Connection con;
 	private String catalog;
@@ -454,7 +455,7 @@ public class JDBCParser implements Parser {
 
 		switch(dbType) {
 			case Types.ARRAY:
-
+				
 			break;
 			case Types.BIGINT:
 				dataType = ExactNumericType.BIGINT;
@@ -482,7 +483,7 @@ public class JDBCParser implements Parser {
 
 			break;
 			case Types.DATE:
-				// TODO: make sure this is right
+				// TODO: make sure JDBC DATE is same as our DATETIME
 				dataType = DateTimeType.DATETIME;
 			break;
 			case Types.DECIMAL:
@@ -552,6 +553,7 @@ public class JDBCParser implements Parser {
 
 			break;
 			case Types.TIMESTAMP:
+				// TODO: is JDBC timestamp the same as our timestamp?
 				dataType = DateTimeType.TIMESTAMP;
 			break;
 			case Types.TINYINT:
@@ -564,6 +566,7 @@ public class JDBCParser implements Parser {
 				dataType = StringType.VARCHAR;
 			break;
 			default:
+				// This should only happen if new types are added in newer JDBC versions
 				dataType = new UnhandledType(String.valueOf(dbType));
 			break;
 		}
