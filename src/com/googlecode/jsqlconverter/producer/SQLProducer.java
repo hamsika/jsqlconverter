@@ -121,15 +121,20 @@ public abstract class SQLProducer implements Producer {
 
 				switch(option) {
 					case AUTO_INCREMENT:
-						out.print("AUTO_INCREMENT");
+						out.print(" AUTO_INCREMENT");
+					break;
 					case NULL:
-						out.print("NULL");
+						out.print(" NULL");
+					break;
 					case NOT_NULL:
-						out.print("NOT NULL");
+						out.print(" NOT NULL");
+					break;
 					case UNIQUE:
-						out.print("UNIQUE");
+						out.print(" UNIQUE");
+					break;
 					case PRIMARY_KEY:
-						out.print("PRIMARY KEY");
+						out.print(" PRIMARY KEY");
+					break;
 					default:
 						System.out.println("Unknown constraint: " + option);
 					break;
