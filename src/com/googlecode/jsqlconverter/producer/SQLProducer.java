@@ -77,11 +77,24 @@ public abstract class SQLProducer implements Producer {
 	private void handleCreateTable(CreateTable table) {
 		out.print("CREATE ");
 
-		if (table.containsOption(TableOption.TEMPORARY)) {
+		if (table.containsOption(TableOption.GLOBAL) && supportsTableOption(TableOption.GLOBAL)) {
+			out.print("GLOBAL ");
+		}
+
+		if (table.containsOption(TableOption.LOCAL) && supportsTableOption(TableOption.LOCAL)) {
+			out.print("LOCAL ");
+		}
+
+		if (table.containsOption(TableOption.TEMPORARY) && supportsTableOption(TableOption.TEMPORARY)) {
 			out.print("TEMPORARY ");
 		}
 
 		out.print("TABLE ");
+
+		if (table.containsOption(TableOption.IF_NOT_EXISTS) && supportsTableOption(TableOption.IF_NOT_EXISTS)) {
+			out.print("IF NOT EXISTS ");
+		}
+
 		out.print(getValidName(table.getName()));
 		out.println(" (");
 
@@ -95,19 +108,31 @@ public abstract class SQLProducer implements Producer {
 			out.print(" ");
 
 			// constraints
-			// TODO: may want to check current data type here too (must be int / etc?)
-			if (column.containsOption(ColumnOption.PRIMARY_KEY) || column.containsOption(ColumnOption.AUTO_INCREMENT) && column.containsOption(ColumnOption.UNIQUE)) {
-				out.print(getPrimaryKeyValue());
-			} else {
-				out.print(getType(column.getType()));
+			out.print(getType(column.getType()));
 
-				if (column.getSize() != 0 && outputTypeSize(column.getType())) {
-					out.print("(" + column.getSize() + ")");
+			if (column.getSize() != 0 && outputTypeSize(column.getType())) {
+				out.print("(" + column.getSize() + ")");
+			}
+
+			for (ColumnOption option : column.getOptions()) {
+				if (!supportsColumnOption(option)) {
+					continue;
 				}
 
-				for (ColumnOption option : column.getOptions()) {
-					out.print(" ");
-					out.print(getColumnOptionValue(option));
+				switch(option) {
+					case AUTO_INCREMENT:
+						out.print("AUTO_INCREMENT");
+					case NULL:
+						out.print("NULL");
+					case NOT_NULL:
+						out.print("NOT NULL");
+					case UNIQUE:
+						out.print("UNIQUE");
+					case PRIMARY_KEY:
+						out.print("PRIMARY KEY");
+					default:
+						System.out.println("Unknown constraint: " + option);
+					break;
 				}
 			}
 
@@ -180,13 +205,13 @@ public abstract class SQLProducer implements Producer {
 		sb.append(getValidName(reference.getColumnName()));
 		sb.append(")");
 
-		if (reference.getUpdateAction() != ForeignKeyAction.NO_ACTION) {
+		if (reference.getUpdateAction() != null && supportsForeignKeyAction(reference.getUpdateAction())) {
 			sb.append(" ON UPDATE ");
 
 			sb.append(getActionValue(reference.getUpdateAction()));
 		}
 
-		if (reference.getDeleteAction() != ForeignKeyAction.NO_ACTION) {
+		if (reference.getDeleteAction() != null && supportsForeignKeyAction(reference.getDeleteAction())) {
 			sb.append(" ON DELETE ");
 
 			sb.append(getActionValue(reference.getDeleteAction()));
@@ -221,16 +246,25 @@ public abstract class SQLProducer implements Producer {
 		return dataTypeString;
 	}
 
+	private String getActionValue(ForeignKeyAction action) {
+		switch (action) {
+			case CASCADE:
+				return "CASCADE";
+			case RESTRICT:
+				return "RESTRICT";
+			case SET_DEFAULT:
+				return "SET DEFAULT";
+			case SET_NULL:
+				return "SET NULL";
+		}
+
+		return null;
+	}
+
 	// other
-	public abstract String getPrimaryKeyValue();
+	public abstract String getValidName(Name name);
 
 	public abstract String getDefaultConstraintString(DefaultConstraint defaultConstraint);
-
-	public abstract String getActionValue(ForeignKeyAction action);
-
-	public abstract String getColumnOptionValue(ColumnOption option);
-
-	public abstract String getValidName(Name name);
 
 	public abstract String getType(StringType type);
 	public abstract String getType(ApproximateNumericType type);
@@ -241,4 +275,8 @@ public abstract class SQLProducer implements Producer {
 	public abstract String getType(MonetaryType type);
 
 	public abstract boolean outputTypeSize(Type type);
+
+	public abstract boolean supportsTableOption(TableOption option);
+	public abstract boolean supportsForeignKeyAction(ForeignKeyAction action);
+	public abstract boolean supportsColumnOption(ColumnOption option);
 }

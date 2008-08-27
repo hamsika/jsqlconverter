@@ -8,6 +8,7 @@ import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.producer.PostgreSQLProducer;
 import com.googlecode.jsqlconverter.producer.Producer;
+import com.googlecode.jsqlconverter.producer.AccessSQLProducer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,8 +27,9 @@ public class SQLConverterCLI {
 	private String url;
 	private String user;
 	private String pass;
+	private boolean doData = false;
 
-	// delim / sql input
+	// delim
 	private String file;
 	private boolean hasHeaderRow = true;
 	private char delimiter = ',';
@@ -39,6 +41,7 @@ public class SQLConverterCLI {
 	}
 
 	private enum OutputOperation {
+		MSACCESS,
 		POSTGRESQL
 	}
 
@@ -66,7 +69,7 @@ public class SQLConverterCLI {
 
 
 		if (inputOp == null) {
-			printMessage("No input operation specified");
+			exitMessage("No input operation specified");
 		}
 
 		// detect parser options
@@ -76,6 +79,7 @@ public class SQLConverterCLI {
 				url = getRequiredParameter("-url");
 				user = getOptionalParameter("-user");
 				pass = getOptionalParameter("-pass");
+				doData = argList.contains("-data");
 			break;
 			case DELIMITED:
 				setStdInOrFile();
@@ -88,7 +92,7 @@ public class SQLConverterCLI {
 					if (seperator.length() == 1) {
 						delimiter = seperator.charAt(0);
 					} else {
-						printMessage("Seperator must be a single character");
+						exitMessage("Seperator must be a single character");
 					}
 				}
 
@@ -99,19 +103,23 @@ public class SQLConverterCLI {
 					if (quantifier.length() == 1) {
 						textQuantifier = quantifier.charAt(0);
 					} else {
-						printMessage("Text quantifier must be a single character");
+						exitMessage("Text quantifier must be a single character");
 					}
 				}
 			break;
 		}
 
 		// detect producer options
+		if (argList.contains("-out-access")) {
+			setOutputOperation(OutputOperation.MSACCESS);
+		}
+
 		if (argList.contains("-out-postgre")) {
 			setOutputOperation(OutputOperation.POSTGRESQL);
 		}
 
 		if (outputOp == null) {
-			printMessage("No output operation specified");
+			exitMessage("No output operation specified");
 		}
 
 		// run it! :)
@@ -126,7 +134,7 @@ public class SQLConverterCLI {
 		String value = getOptionalParameter(param);
 
 		if (value == null) {
-			printMessage("Missing required parameter");
+			exitMessage("Missing required parameter");
 		}
 
 		return value;
@@ -140,7 +148,7 @@ public class SQLConverterCLI {
 		int paramIndex = argList.indexOf(param);
 
 		if (paramIndex + 1 >= argList.size()) {
-			printMessage("Parameter value missing for " + param);
+			exitMessage("Parameter value missing for " + param);
 		}
 
 		return argList.get(paramIndex + 1);
@@ -148,7 +156,7 @@ public class SQLConverterCLI {
 
 	private void setInputOperation(InputOperation newOp) {
 		if (inputOp != null) {
-			printMessage("Multiple input operations found");
+			exitMessage("Multiple input operations found");
 		}
 
 		this.inputOp = newOp;
@@ -156,7 +164,7 @@ public class SQLConverterCLI {
 
 	private void setOutputOperation(OutputOperation newOp) {
 		if (outputOp != null) {
-			printMessage("Multiple output operations found");
+			exitMessage("Multiple output operations found");
 		}
 
 		this.outputOp = newOp;
@@ -177,10 +185,10 @@ public class SQLConverterCLI {
 			case JDBC:
 				Class.forName(driver);
 				Connection con = DriverManager.getConnection(url, user, pass);
-				parser = new JDBCParser(con);
+				parser = new JDBCParser(con, null, null, null, doData);
 			break;
 			default:
-				printMessage("This input option hasn't been defined!");
+				exitMessage("This input option hasn't been defined!");
 				System.exit(0);
 			break;
 		}
@@ -189,7 +197,7 @@ public class SQLConverterCLI {
 		Statement[] statements = parser.parse();
 
 		if (statements == null) {
-			printMessage("Parser returned no results");
+			exitMessage("Parser returned no results");
 		}
 
 
@@ -200,8 +208,11 @@ public class SQLConverterCLI {
 			case POSTGRESQL:
 				 producer = new PostgreSQLProducer();
 			break;
+			case MSACCESS:
+				producer = new AccessSQLProducer();
+			break;
 			default:
-				printMessage("This output option hasn't been defined!");
+				exitMessage("This output option hasn't been defined!");
 				System.exit(0);
 			break;
 		}
@@ -209,7 +220,7 @@ public class SQLConverterCLI {
 		producer.produce(statements);
 	}
 
-	private void printMessage(String message) {
+	private void exitMessage(String message) {
 		System.out.println(message);
 
 		System.exit(0);
@@ -220,10 +231,11 @@ public class SQLConverterCLI {
 			"jsqlparser <input options> <output options>\n" +
 
 			"input options:\n" +
-			"\t-jdbc -driver <driver> -url <url> [-user <username>] [-pass <password>]\n" +
+			"\t-jdbc -driver <driver> -url <url> [-user <username>] [-pass <password>] [-data]\n" +
 			"\t-delim [ -file <filename> ] [-noheader] [-seperator <char>] [-quantifier <char>]\n" +
 			"\n" +
 			"output options:\n" +
+			"\t-out-access\n" +
 			"\t-out-postgre"
 		);
 	}

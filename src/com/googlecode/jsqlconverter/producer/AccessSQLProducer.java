@@ -3,24 +3,13 @@ package com.googlecode.jsqlconverter.producer;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
+import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.type.*;
 
 public class AccessSQLProducer extends SQLProducer {
-	public String getPrimaryKeyValue() {
-		return null;
-	}
-
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
-		return null;
-	}
-
-	public String getActionValue(ForeignKeyAction action) {
-		return null;
-	}
-
-	public String getColumnOptionValue(ColumnOption option) {
-		return null;
+		return "DEFAULT " + defaultConstraint.getValue();
 	}
 
 	public String getValidName(Name name) {
@@ -103,7 +92,7 @@ public class AccessSQLProducer extends SQLProducer {
 				return "long";
 			case MEDIUMINT:
 			case NUMERIC:
-				return "null";
+				return null;
 			case SMALLINT:
 				return "integer";
 			case TINYINT:
@@ -125,5 +114,53 @@ public class AccessSQLProducer extends SQLProducer {
 
 	public boolean outputTypeSize(Type type) {
 		return false;
+	}
+
+	public boolean supportsTableOption(TableOption option) {
+		switch(option) {
+			case TEMPORARY:
+				return true;
+			case IF_NOT_EXISTS:
+			case LOCAL:
+			case GLOBAL:
+				return false;
+			default:
+				System.out.println("Unknown table option: " + option);
+				return false;
+		}
+	}
+
+	public boolean supportsForeignKeyAction(ForeignKeyAction action) {
+		switch(action) {
+			case CASCADE:
+
+			break;
+			case RESTRICT:
+
+			break;
+			case SET_DEFAULT:
+
+			break;
+			case SET_NULL:
+
+			break;
+		}
+
+		return false;
+	}
+
+	public boolean supportsColumnOption(ColumnOption option) {
+		switch(option) {
+			case AUTO_INCREMENT:
+				return false;
+			case NOT_NULL:
+			case NULL:
+			case PRIMARY_KEY:
+			case UNIQUE:
+				return true;
+			default:
+				System.out.println("Unknown column option: " + option);
+				return false;
+		}
 	}
 }

@@ -15,6 +15,7 @@ import java.sql.*;
 import java.util.ArrayList;
 
 public class JDBCParser implements Parser {
+	// TODO: support schemas
 	// TODO: find out if all RDBMS always create indexes on foreign key columns
 	// TODO: support temp tables (does that have anything to do with GLOBAL / LOCAL TEMPORARY?)
 	private Connection con;
@@ -334,7 +335,6 @@ public class JDBCParser implements Parser {
 	}
 
 	private CreateIndex[] getTableIndexes(DatabaseMetaData meta, Name tableName) throws SQLException {
-		// TODO: make sure only one index for each column is returned (no primary key + unique index like access shows)
 		ResultSet indexesRs = meta.getIndexInfo(catalog, tableName.getSchemaName(), tableName.getObjectName(), false, false);
 
 		ArrayList<CreateIndex> indexes = new ArrayList<CreateIndex>();
@@ -351,24 +351,6 @@ public class JDBCParser implements Parser {
 				}
 
 				System.out.println("ok, index name is null, but we have a column name, lets do this");
-
-				/*if (!indexesRs.getBoolean("NON_UNIQUE")) {
-					//for (Column column : createTable.getColumns()) {
-
-					System.out.println("searching for column: " + columnName);
-
-					for (Iterator<Column> i = createTable.getColumnsIter(); i.hasNext(); ) {
-						Column column = i.next();
-
-						if (column.getName().getObjectName().equals(columnName)) {
-							column.addConstraint(new Constraint(ConstraintType.UNIQUE));
-							System.out.println("LOL");
-							break;
-						}
-					}
-				} else {
-					System.out.println("Index name is null, but it's not unique.. ");
-				}*/
 
 				continue;
 			}

@@ -5,46 +5,23 @@ import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
+import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 
 public class PostgreSQLProducer extends SQLProducer {
-	public String getPrimaryKeyValue() {
-		return "serial NOT NULL";
+	public String getValidName(Name name) {
+		if (name.getDatabaseName() != null) {
+
+		}
+
+		if (name.getSchemaName() != null) {
+
+		}
+
+		return name.getObjectName();
 	}
 
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
 		return "DEFAULT " + defaultConstraint.getValue();
-	}
-
-	public String getActionValue(ForeignKeyAction action) {
-		switch (action) {
-			case CASCADE:
-				return "CASCADE";
-			case RESTRICT:
-				return "RESTRICT";
-			case SET_DEFAULT:
-				return "SET DEFAULT";
-			case SET_NULL:
-				return "SET NULL";
-		}
-
-		return null;
-	}
-
-	public String getColumnOptionValue(ColumnOption option) {
-		switch(option) {
-			case AUTO_INCREMENT:
-				return "SERIAL";
-			//case NULL:
-			case NOT_NULL:
-				return "NOT NULL";
-			case UNIQUE:
-				return "UNIQUE";
-			default:
-				System.out.println("Unknown constraint: " + option);
-			break;
-		}
-
-		return null;
 	}
 
 	public String getType(StringType type) {
@@ -153,15 +130,46 @@ public class PostgreSQLProducer extends SQLProducer {
 		return true;
 	}
 
-	public String getValidName(Name name) {
-		if (name.getDatabaseName() != null) {
-
+	public boolean supportsTableOption(TableOption option) {
+		switch(option) {
+			case TEMPORARY:
+			case LOCAL:
+			case GLOBAL:
+				return true;
+			case IF_NOT_EXISTS:
+				return false;
+			default:
+				System.out.println("Unknown table option: " + option);
+				return false;
 		}
+	}
 
-		if (name.getSchemaName() != null) {
-
+	public boolean supportsForeignKeyAction(ForeignKeyAction action) {
+		switch(action) {
+			case CASCADE:
+			case NO_ACTION:
+			case RESTRICT:
+			case SET_DEFAULT:
+			case SET_NULL:
+				return true;
+			default:
+				System.out.println("Unknown ForeignKeyAction: " + action);
+				return false;
 		}
+	}
 
-		return name.getObjectName();
+	public boolean supportsColumnOption(ColumnOption option) {
+		switch(option) {
+			case AUTO_INCREMENT:
+				return false;
+			case NOT_NULL:
+			case NULL:
+			case PRIMARY_KEY:
+			case UNIQUE:
+				return true;
+			default:
+				System.out.println("Unknown column option: " + option);
+				return false;
+		}
 	}
 }
