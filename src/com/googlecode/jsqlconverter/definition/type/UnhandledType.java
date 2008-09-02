@@ -1,13 +1,13 @@
 package com.googlecode.jsqlconverter.definition.type;
 
 public class UnhandledType implements Type {
-	private String typeString;
+	private String name;
 
-	public UnhandledType(String typeString) {
-		this.typeString = typeString;
+	public UnhandledType(String name) {
+		this.name = name;
 	}
 
 	public String toString() {
-		return typeString;
+		return name;
 	}
 }

@@ -8,10 +8,11 @@ import com.googlecode.jsqlconverter.definition.type.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-public class DelimitedParser implements Parser {
+public class DelimitedParser extends Parser {
 	private BufferedReader in;
 	private Name tableName;
 	private boolean hasHeaders;
@@ -208,7 +209,7 @@ public class DelimitedParser implements Parser {
 
 					// TODO: next char must either be nothing, or delimiter
 					if (lineChars[i + 1] != delimiter) {
-						System.out.println("Expected delimiter on next char.. not found");
+						log.log(Level.WARNING, "Expected delimiter on next char.. not found, skipping row");
 						continue;
 					}
 
@@ -240,10 +241,10 @@ public class DelimitedParser implements Parser {
 		columns.add(columnBuffer.toString());
 
 		for (int i=0; i<columns.size(); i++) {
-			System.out.println("col " + (i + 1) + ": " + columns.get(i));
+			log.fine("col " + (i + 1) + ": " + columns.get(i));
 		}
 
-		System.out.println("-----------");
+		log.fine("-----------");
 
 		return columns.toArray(new String[] {});
 	}

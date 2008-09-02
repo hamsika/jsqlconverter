@@ -10,21 +10,24 @@ import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultCo
 import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstraint;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
+import com.googlecode.jsqlconverter.logging.LogLevel;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.logging.Level;
 
-public class JDBCParser implements Parser {
-	// TODO: support schemas
+public class JDBCParser extends Parser {
+	// TODO: support create schema
 	// TODO: find out if all RDBMS always create indexes on foreign key columns
-	// TODO: support temp tables (does that have anything to do with GLOBAL / LOCAL TEMPORARY?)
 	private Connection con;
 	private String catalog;
 	private String schemaPattern;
 	private String tableNamePattern;
 	private String columnNamePattern = null;
-	private String[] types = { "TABLE" }; // TODO: support VIEW, GLOBAL TEMPORARY, LOCAL TEMPORARY
 	private boolean convertDataToInsert;
+	private String[] types = { "TABLE" };	// TODO: support VIEW, GLOBAL TEMPORARY, LOCAL TEMPORARY
+											// h2: TABLE LINK
+											// postgres: TEMPORARY TABLE
 
 	public JDBCParser(Connection con) {
 		this(con, null, null, null);
@@ -58,7 +61,7 @@ public class JDBCParser implements Parser {
 				if (tableType.equals("TABLE")) {
 					generatedStatements = getTableStatements(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"), convertDataToInsert);
 				} else {
-					System.out.println("Unhandled Table Type: " + tableType);
+					log.log(Level.WARNING, "Unhandled Table Type: " + tableType);
 				}
 
 				// add the statements to main list
@@ -107,13 +110,14 @@ public class JDBCParser implements Parser {
 			}
 
 			int dbType = columnsRs.getInt("DATA_TYPE");
+			int colSize = columnsRs.getInt("COLUMN_SIZE");
 
-			dataType = getType(dbType);
+			dataType = getType(dbType, colSize, columnsRs.getInt("DECIMAL_DIGITS"));
 
 			Column col = new Column(new Name(columnsRs.getString("COLUMN_NAME")), dataType);
 
 			if (!(dataType instanceof NumericType) && !(dataType instanceof BooleanType)) {
-				col.setSize(columnsRs.getInt("COLUMN_SIZE"));
+				col.setSize(colSize);
 			}
 
 			if (columnsRs.getString("IS_NULLABLE").equals("NO")) {
@@ -169,7 +173,7 @@ public class JDBCParser implements Parser {
 								ref.setUpdate(ForeignKeyAction.RESTRICT);
 							break;
 							default:
-								System.out.println("Unknown yodate reference");
+								log.log(LogLevel.UNHANDLED, "Unknown update reference");
 							break;
 						}
 
@@ -190,7 +194,7 @@ public class JDBCParser implements Parser {
 								ref.setDelete(ForeignKeyAction.RESTRICT);
 							break;
 							default:
-								System.out.println("Unknown delete reference");
+								log.log(LogLevel.UNHANDLED, "Unknown delete reference");
 							break;
 						}
 
@@ -223,13 +227,12 @@ public class JDBCParser implements Parser {
 
 		if (primaryKey != null) {
 			if (primaryKey.getColumns().length == 1) {
-				//setSingleColumnPrimarKey(createTable, primaryKey);
 				Column column = getTableColumn(createTable, primaryKey.getColumns()[0]);
 
 				if (column != null) {
 					column.addColumnOption(ColumnOption.PRIMARY_KEY);
 				} else {
-					System.out.println("error.. couldn't find primary key column");
+					log.log(LogLevel.ERROR, "couldn't find primary key column");
 				}
 			} else {
 				createTable.setPrimaryCompoundKeyConstraint(new KeyConstraint(primaryKey.getColumns()));
@@ -266,7 +269,7 @@ public class JDBCParser implements Parser {
 				statements.add(index);
 
 				if (index.isUnique()) {
-					System.out.println("possible implicit database index: " + index.getTableName().getObjectName() + " " + index.getIndexName().getObjectName() + " " + index.getColumns().length + " " + index.isUnique());
+					log.log(LogLevel.UNHANDLED, "possible implicit database index: " + index.getTableName().getObjectName() + " " + index.getIndexName().getObjectName() + " " + index.getColumns().length + " " + index.isUnique());
 				}
 			}
 		}
@@ -304,7 +307,7 @@ public class JDBCParser implements Parser {
 		boolean[] isNumeric = new boolean[meta.getColumnCount()];
 
 		for (int i=1; i<=meta.getColumnCount(); i++) {
-			Type type = getType(meta.getColumnType(i));
+			Type type = getType(meta.getColumnType(i), meta.getPrecision(i), meta.getScale(i));
 
 			isNumeric[i - 1] = type instanceof NumericType;
 		}
@@ -346,11 +349,13 @@ public class JDBCParser implements Parser {
 			if (indexName == null) {
 				if (columnName == null) {
 					// TODO: find out if this is unique to access (and what it means)
-					//System.out.println("both column name and index name is null :(");
+					// TODO: find out if statistic index has anything to do with this 
+
+					log.log(LogLevel.ERROR, "both column name and index name are null - skipped");
 					continue;
 				}
 
-				System.out.println("ok, index name is null, but we have a column name, lets do this");
+				log.log(LogLevel.ERROR, "index name is null, but a column name is available - skipped");
 
 				continue;
 			}
@@ -383,13 +388,13 @@ public class JDBCParser implements Parser {
 					} else if (sortSeq.equals("D")) {
 						createIndex.setSortSequence(CreateIndex.SortSequence.DESC);
 					} else {
-						System.out.println("Unknown sort sequence");
+						log.log(LogLevel.UNHANDLED, "Unknown sort sequence");
 					}
 				}
 
 				switch(indexesRs.getShort("TYPE")) {
 					case DatabaseMetaData.tableIndexStatistic:
-
+						
 					break;
 					case DatabaseMetaData.tableIndexClustered:
 						createIndex.setType(CreateIndex.IndexType.CLUSTERED);
@@ -432,12 +437,12 @@ public class JDBCParser implements Parser {
 		return primaryKey;
 	}
 
-	private Type getType(int dbType) {
+	private Type getType(int dbType, int columnSize, int decimalDigits) {
 		Type dataType = null;
 
 		switch(dbType) {
 			case Types.ARRAY:
-				
+				dataType = BinaryType.BLOB; // guess
 			break;
 			case Types.BIGINT:
 				dataType = ExactNumericType.BIGINT;
@@ -446,8 +451,7 @@ public class JDBCParser implements Parser {
 				dataType = BinaryType.BINARY;
 			break;
 			case Types.BIT:
-				//dataType = BinaryType.BIT;
-				dataType = BooleanType.BOOLEAN;
+				dataType = BinaryType.BIT;
 			break;
 			case Types.BLOB:
 				dataType = BinaryType.BLOB;
@@ -461,19 +465,21 @@ public class JDBCParser implements Parser {
 			case Types.CLOB:
 
 			break;
-			case Types.DATALINK:
+			/*case Types.DATALINK:
 
-			break;
+			break;*/
 			case Types.DATE:
 				// TODO: make sure JDBC DATE is same as our DATETIME
 				dataType = DateTimeType.DATETIME;
 			break;
 			case Types.DECIMAL:
-
+			case Types.NUMERIC:
+				// TODO: detect if this should be money / small money
+				dataType = new DecimalType(columnSize, decimalDigits);
 			break;
-			case Types.DISTINCT:
+			/*case Types.DISTINCT:
 
-			break;
+			break;*/
 			case Types.DOUBLE:
 				dataType = ApproximateNumericType.DOUBLE;
 			break;
@@ -483,17 +489,17 @@ public class JDBCParser implements Parser {
 			case Types.INTEGER:
 				dataType = ExactNumericType.INTEGER;
 			break;
-			case Types.JAVA_OBJECT:
+			/*case Types.JAVA_OBJECT:
 
-			break;
+			break;*/
 			case Types.LONGNVARCHAR:
-
+				dataType = StringType.NVARCHAR; // guess
 			break;
 			case Types.LONGVARBINARY:
-
+				dataType = BinaryType.VARBINARY; // guess
 			break;
 			case Types.LONGVARCHAR:
-
+				dataType = StringType.VARCHAR; // guess
 			break;
 			case Types.NCHAR:
 				dataType = StringType.NCHAR;
@@ -501,18 +507,15 @@ public class JDBCParser implements Parser {
 			case Types.NCLOB:
 
 			break;
-			case Types.NULL:
+			/*case Types.NULL:
 
-			break;
-			case Types.NUMERIC:
-				dataType = ExactNumericType.NUMERIC;
-			break;
+			break;*/
 			case Types.NVARCHAR:
 				dataType = StringType.NVARCHAR;
 			break;
-			case Types.OTHER:
+			/*case Types.OTHER:
 
-			break;
+			break;*/
 			case Types.REAL:
 				dataType = ApproximateNumericType.REAL;
 			break;
@@ -525,12 +528,12 @@ public class JDBCParser implements Parser {
 			case Types.SMALLINT:
 				dataType = ExactNumericType.SMALLINT;
 			break;
-			case Types.SQLXML:
+			/*case Types.SQLXML:
 
 			break;
 			case Types.STRUCT:
 
-			break;
+			break;*/
 			case Types.TIME:
 
 			break;
@@ -549,8 +552,14 @@ public class JDBCParser implements Parser {
 			break;
 			default:
 				// This should only happen if new types are added in newer JDBC versions
+				log.log(LogLevel.UNHANDLED, "unknown data type - this needs to be fixed: " + dbType);
 				dataType = new UnhandledType(String.valueOf(dbType));
 			break;
+		}
+
+		if (dataType == null) {
+			log.log(LogLevel.UNHANDLED, "Unhandled type from database: " + dbType);
+			dataType = StringType.VARCHAR;
 		}
 
 		return dataType;

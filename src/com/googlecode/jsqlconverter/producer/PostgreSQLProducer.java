@@ -6,15 +6,16 @@ import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultCo
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
+import com.googlecode.jsqlconverter.logging.LogLevel;
 
 public class PostgreSQLProducer extends SQLProducer {
 	public String getValidName(Name name) {
 		if (name.getDatabaseName() != null) {
-
+			return name.getDatabaseName() + "." + name.getSchemaName() + "." + name.getObjectName();
 		}
 
 		if (name.getSchemaName() != null) {
-
+			return name.getSchemaName() + "." + name.getObjectName();
 		}
 
 		return name.getObjectName();
@@ -104,8 +105,6 @@ public class PostgreSQLProducer extends SQLProducer {
 				return "integer";
 			case MEDIUMINT:
 				return null;
-			case NUMERIC:
-				return "numeric";
 			case SMALLINT:
 				return "smallint";
 			case TINYINT:
@@ -126,7 +125,12 @@ public class PostgreSQLProducer extends SQLProducer {
 		}
 	}
 
-	public boolean outputTypeSize(Type type) {
+	public String getType(DecimalType type) {
+		// TODO: precision / scale
+		return "numeric";
+	}
+
+	public boolean outputTypeSize(Type type, String localname) {
 		return true;
 	}
 
@@ -136,10 +140,8 @@ public class PostgreSQLProducer extends SQLProducer {
 			case LOCAL:
 			case GLOBAL:
 				return true;
-			case IF_NOT_EXISTS:
-				return false;
 			default:
-				System.out.println("Unknown table option: " + option);
+				log.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
 				return false;
 		}
 	}
@@ -153,7 +155,7 @@ public class PostgreSQLProducer extends SQLProducer {
 			case SET_NULL:
 				return true;
 			default:
-				System.out.println("Unknown ForeignKeyAction: " + action);
+				log.log(LogLevel.UNHANDLED, "Unknown ForeignKeyAction: " + action);
 				return false;
 		}
 	}
@@ -168,7 +170,7 @@ public class PostgreSQLProducer extends SQLProducer {
 			case UNIQUE:
 				return true;
 			default:
-				System.out.println("Unknown column option: " + option);
+				log.log(LogLevel.UNHANDLED, "Unknown column option: " + option);
 				return false;
 		}
 	}

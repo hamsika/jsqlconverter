@@ -8,12 +8,18 @@ import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.type.*;
 
 public class AccessSQLProducer extends SQLProducer {
-	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
-		return "DEFAULT " + defaultConstraint.getValue();
+	public String getValidName(Name name) {
+		String value = name.getObjectName();
+
+		//if (value.contains(" ")) {
+			value = "[" + value + "]";
+		//}
+
+		return value;
 	}
 
-	public String getValidName(Name name) {
-		return name.getObjectName();
+	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
+		return "DEFAULT " + defaultConstraint.getValue();
 	}
 
 	public String getType(StringType type) {
@@ -28,8 +34,13 @@ public class AccessSQLProducer extends SQLProducer {
 				return "memo";
 			case TEXT:
 			case TINYTEXT:
-				return null;
+				return "text";
 			case VARCHAR:
+				/*if (size > 255) {
+					return "memo";
+				} else {
+					return "text";
+				}*/
 				return "memo";
 			default:
 				return null;
@@ -91,7 +102,6 @@ public class AccessSQLProducer extends SQLProducer {
 			case INTEGER:
 				return "long";
 			case MEDIUMINT:
-			case NUMERIC:
 				return null;
 			case SMALLINT:
 				return "integer";
@@ -112,15 +122,18 @@ public class AccessSQLProducer extends SQLProducer {
 		}
 	}
 
-	public boolean outputTypeSize(Type type) {
-		return false;
+	public String getType(DecimalType type) {
+		return null;
+	}
+
+	public boolean outputTypeSize(Type type, String localname) {
+		return !localname.equals("memo");
 	}
 
 	public boolean supportsTableOption(TableOption option) {
 		switch(option) {
 			case TEMPORARY:
 				return true;
-			case IF_NOT_EXISTS:
 			case LOCAL:
 			case GLOBAL:
 				return false;

@@ -13,11 +13,13 @@ import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
+import com.googlecode.jsqlconverter.logging.LogLevel;
 
 import java.io.PrintStream;
 
-public abstract class SQLProducer implements Producer {
+public abstract class SQLProducer extends Producer {
 	// TODO: support quoting ([ ], ', ", `, etc)
+	// column quoting may be different to value quoting for inserts
 	private PrintStream out = System.out;
 
 	public void produce(Statement[] statements) {
@@ -38,7 +40,7 @@ public abstract class SQLProducer implements Producer {
 		out.print("INSERT INTO ");
 		out.print(getValidName(insert.getTableName()));
 		out.print(" ");
-		//out.print(" "); // columns
+		//out.print("(customer_id, order_id, price, etc) "); // TODO: support outputting column names
 		out.print("VALUES (");
 
 		for (int i=0; i<insert.getColumnCount(); i++) {
@@ -72,8 +74,6 @@ public abstract class SQLProducer implements Producer {
 		out.println(");");
 	}
 
-	// TODO: make sure correct type is being detected (use size / precision to calculate)
-	// TODO: support DEFAULT, PRIMARY KEY and UNIQUE
 	private void handleCreateTable(CreateTable table) {
 		out.print("CREATE ");
 
@@ -90,11 +90,6 @@ public abstract class SQLProducer implements Producer {
 		}
 
 		out.print("TABLE ");
-
-		if (table.containsOption(TableOption.IF_NOT_EXISTS) && supportsTableOption(TableOption.IF_NOT_EXISTS)) {
-			out.print("IF NOT EXISTS ");
-		}
-
 		out.print(getValidName(table.getName()));
 		out.println(" (");
 
@@ -108,9 +103,11 @@ public abstract class SQLProducer implements Producer {
 			out.print(" ");
 
 			// constraints
-			out.print(getType(column.getType()));
+			String typeName = getType(column.getType());
 
-			if (column.getSize() != 0 && outputTypeSize(column.getType())) {
+			out.print(typeName);
+
+			if (column.getSize() != 0 && outputTypeSize(column.getType(), typeName)) {
 				out.print("(" + column.getSize() + ")");
 			}
 
@@ -136,7 +133,7 @@ public abstract class SQLProducer implements Producer {
 						out.print(" PRIMARY KEY");
 					break;
 					default:
-						System.out.println("Unknown constraint: " + option);
+						log.log(LogLevel.UNHANDLED, "Unknown constraint: " + option);
 					break;
 				}
 			}
@@ -236,6 +233,8 @@ public abstract class SQLProducer implements Producer {
 			dataTypeString = getType((BooleanType)type);
 		} else if (type instanceof DateTimeType) {
 			dataTypeString = getType((DateTimeType)type);
+		} else if (type instanceof DecimalType) {
+			dataTypeString = getType((DecimalType)type);
 		} else if (type instanceof ExactNumericType) {
 			dataTypeString = getType((ExactNumericType)type);
 		} else if (type instanceof MonetaryType) {
@@ -271,15 +270,16 @@ public abstract class SQLProducer implements Producer {
 
 	public abstract String getDefaultConstraintString(DefaultConstraint defaultConstraint);
 
-	public abstract String getType(StringType type);
 	public abstract String getType(ApproximateNumericType type);
 	public abstract String getType(BinaryType type);
 	public abstract String getType(BooleanType type);
 	public abstract String getType(DateTimeType type);
+	public abstract String getType(DecimalType type);
 	public abstract String getType(ExactNumericType type);
 	public abstract String getType(MonetaryType type);
+	public abstract String getType(StringType type);
 
-	public abstract boolean outputTypeSize(Type type);
+	public abstract boolean outputTypeSize(Type type, String localname);
 
 	public abstract boolean supportsTableOption(TableOption option);
 	public abstract boolean supportsForeignKeyAction(ForeignKeyAction action);

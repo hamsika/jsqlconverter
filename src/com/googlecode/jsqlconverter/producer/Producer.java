@@ -1,7 +1,10 @@
 package com.googlecode.jsqlconverter.producer;
 
 import com.googlecode.jsqlconverter.definition.Statement;
+import com.googlecode.jsqlconverter.logging.MyLogger;
 
-public interface Producer {
-	public void produce(Statement[] statements);
+public abstract class Producer {
+	protected static MyLogger log = MyLogger.getLogger(Producer.class.getName());
+
+	public abstract void produce(Statement[] statements);
 }
