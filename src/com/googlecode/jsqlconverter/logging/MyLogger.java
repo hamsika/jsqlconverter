@@ -3,6 +3,7 @@ package com.googlecode.jsqlconverter.logging;
 import java.util.logging.Logger;
 import java.util.logging.LogManager;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 public class MyLogger extends Logger {
 	protected MyLogger(String name, String resourceBundleName) {
@@ -22,6 +23,6 @@ public class MyLogger extends Logger {
 	}
 
 	public void logApp(Level level, String msg) {
-		log(level, msg);
-    }
+		log(new LogRecord(level, msg));
+	}
 }

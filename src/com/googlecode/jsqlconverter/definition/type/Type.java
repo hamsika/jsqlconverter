@@ -4,7 +4,6 @@ public interface Type {
 	/*
 		// TODO: The following were taken from java.sql.Types and may need to be supported at some point
 
-		public final static int DECIMAL		=   3;
 		public final static int LONGVARCHAR 	=  -1;
 		public final static int DATE 		=  91;
 		public final static int TIME 		=  92;

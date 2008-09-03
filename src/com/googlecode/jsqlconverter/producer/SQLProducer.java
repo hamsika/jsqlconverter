@@ -3,6 +3,7 @@ package com.googlecode.jsqlconverter.producer;
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.Statement;
+import com.googlecode.jsqlconverter.definition.truncate.table.Truncate;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
@@ -18,44 +19,24 @@ import com.googlecode.jsqlconverter.logging.LogLevel;
 import java.io.PrintStream;
 
 public abstract class SQLProducer extends Producer {
-	// TODO: support quoting ([ ], ', ", `, etc)
-	// column quoting may be different to value quoting for inserts
+	// TODO: support quoting ([ ], ', ", `, etc). column quoting may be different to value quoting for inserts
+	// e.g:  insert into `bob` values('a', 'b');
 	private PrintStream out = System.out;
 
 	public void produce(Statement[] statements) {
 		for (Statement statement : statements) {
-			if (statement instanceof CreateTable) {
-				handleCreateTable((CreateTable)statement);
-			} else if (statement instanceof CreateIndex) {
+			if (statement instanceof CreateIndex) {
 				handleCreateIndex((CreateIndex)statement);
+			} else if (statement instanceof CreateTable) {
+				handleCreateTable((CreateTable)statement);
 			} else if (statement instanceof InsertFromValues) {
 				handleInsertFromValues((InsertFromValues)statement);
+			} else if (statement instanceof Truncate) {
+				handleTruncate((Truncate)statement);
 			} else {
 				System.out.print("unhandled statement type");
 			}
 		}
-	}
-
-	private void handleInsertFromValues(InsertFromValues insert) {
-		out.print("INSERT INTO ");
-		out.print(getValidName(insert.getTableName()));
-		out.print(" ");
-		//out.print("(customer_id, order_id, price, etc) "); // TODO: support outputting column names
-		out.print("VALUES (");
-
-		for (int i=0; i<insert.getColumnCount(); i++) {
-			if (i != 0) {
-				out.print(", ");
-			}
-
-			if (insert.isNumeric(i)) {
-				out.print(insert.getNumeric(i));
-			} else {
-				out.print(insert.getString(i));
-			}
-		}
-
-		out.println(");");
 	}
 
 	private void handleCreateIndex(CreateIndex createIndex) {
@@ -182,6 +163,42 @@ public abstract class SQLProducer extends Producer {
 		}
 
 		out.println(");");
+	}
+
+	private void handleInsertFromValues(InsertFromValues insert) {
+		out.print("INSERT INTO ");
+		out.print(getValidName(insert.getTableName()));
+		out.print(" ");
+
+		Name[] columns = insert.getColumns();
+
+		if (columns != null) {
+			out.print("(");
+			out.print(getColumnList(columns));
+			out.print(") ");
+		}
+
+		out.print("VALUES (");
+
+		for (int i=0; i<insert.getColumnCount(); i++) {
+			if (i != 0) {
+				out.print(", ");
+			}
+
+			if (insert.isNumeric(i)) {
+				out.print(insert.getNumeric(i));
+			} else {
+				out.print(insert.getString(i));
+			}
+		}
+
+		out.println(");");
+	}
+
+	private void handleTruncate(Truncate truncate) {
+		out.print("TRUNCATE TABLE ");
+		out.println(getValidName(truncate.getTableName()));
+		out.println(";");
 	}
 
 	private String getColumnList(Name[] names) {

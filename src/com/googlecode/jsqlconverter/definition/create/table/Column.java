@@ -8,7 +8,6 @@ import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultCo
 import java.util.ArrayList;
 
 public class Column {
-	// TODO: find out if a single column can have multiple references
 	private Name columnName;
 	private Type dataType;
 	private ArrayList<ColumnOption> options = new ArrayList<ColumnOption>();

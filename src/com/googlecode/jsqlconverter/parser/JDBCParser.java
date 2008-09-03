@@ -147,8 +147,8 @@ public class JDBCParser extends Parser {
 			try {
 				referencesRs = meta.getImportedKeys(catalog, tableSchema, currentTable);
 			} catch (SQLException sqle) {
-				// TODO: handle nicely for those RDBMS that do not support this
-				//sqle.printStackTrace();
+				log.logApp(LogLevel.WARNING, "Failed to get foreign key list");
+				log.log(LogLevel.WARNING, "", sqle);
 			}
 
 			if (referencesRs != null) {
@@ -221,8 +221,8 @@ public class JDBCParser extends Parser {
 		try {
 			primaryKey = getTablePrimaryKey(meta, createTable.getName());
 		} catch (SQLException sqle) {
-			// TODO: handle nicely for those RDBMS that do not support this
-			//sqle.printStackTrace();
+			log.logApp(LogLevel.WARNING, "Failed to get primary key list");
+			log.log(LogLevel.WARNING, "", sqle);
 		}
 
 		if (primaryKey != null) {
@@ -232,7 +232,7 @@ public class JDBCParser extends Parser {
 				if (column != null) {
 					column.addColumnOption(ColumnOption.PRIMARY_KEY);
 				} else {
-					log.log(LogLevel.ERROR, "couldn't find primary key column");
+					log.logApp(LogLevel.ERROR, "couldn't find primary key column");
 				}
 			} else {
 				createTable.setPrimaryCompoundKeyConstraint(new KeyConstraint(primaryKey.getColumns()));

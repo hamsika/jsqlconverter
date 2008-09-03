@@ -209,7 +209,7 @@ public class DelimitedParser extends Parser {
 
 					// TODO: next char must either be nothing, or delimiter
 					if (lineChars[i + 1] != delimiter) {
-						log.log(Level.WARNING, "Expected delimiter on next char.. not found, skipping row");
+						log.logApp(Level.WARNING, "Expected delimiter on next char.. not found, skipping row");
 						continue;
 					}
 
