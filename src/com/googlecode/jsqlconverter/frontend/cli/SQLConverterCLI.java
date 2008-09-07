@@ -4,11 +4,12 @@ import com.googlecode.jsqlconverter.parser.Parser;
 import com.googlecode.jsqlconverter.parser.DelimitedParser;
 import com.googlecode.jsqlconverter.parser.JDBCParser;
 import com.googlecode.jsqlconverter.parser.ParserException;
-import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
+import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.producer.PostgreSQLProducer;
 import com.googlecode.jsqlconverter.producer.Producer;
 import com.googlecode.jsqlconverter.producer.AccessSQLProducer;
+import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +18,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class SQLConverterCLI {
+public class SQLConverterCLI implements ParserCallback {
 	private InputOperation inputOp = null;
 	private OutputOperation outputOp = null;
 	private ArrayList<String> argList;
@@ -34,6 +35,7 @@ public class SQLConverterCLI {
 	private boolean hasHeaderRow = true;
 	private char delimiter = ',';
 	private char textQuantifier = '\0';
+	private Producer producer;
 
 	private enum InputOperation {
 		JDBC,
@@ -193,23 +195,13 @@ public class SQLConverterCLI {
 			break;
 		}
 
-
-		Statement[] statements = parser.parse();
-
-		if (statements == null) {
-			exitMessage("Parser returned no results");
-		}
-
-
 		// setup producer
-		Producer producer = null;
-
 		switch(outputOp) {
 			case POSTGRESQL:
-				 producer = new PostgreSQLProducer();
+				producer = new PostgreSQLProducer(System.out);
 			break;
 			case MSACCESS:
-				producer = new AccessSQLProducer();
+				producer = new AccessSQLProducer(System.out);
 			break;
 			default:
 				exitMessage("This output option hasn't been defined!");
@@ -217,7 +209,17 @@ public class SQLConverterCLI {
 			break;
 		}
 
-		producer.produce(statements);
+		long beforeMili = System.currentTimeMillis();
+
+		parser.parse(this);
+
+		long runTimeMili = System.currentTimeMillis() - beforeMili;
+
+		System.err.println("Runtime: " + runTimeMili + "ms");
+	}
+
+	public void produceStatement(Statement statement) {
+		producer.produce(statement);
 	}
 
 	private void exitMessage(String message) {

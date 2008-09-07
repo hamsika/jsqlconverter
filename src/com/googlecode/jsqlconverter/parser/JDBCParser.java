@@ -1,7 +1,6 @@
 package com.googlecode.jsqlconverter.parser;
 
 import com.googlecode.jsqlconverter.definition.type.*;
-import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.*;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
@@ -11,6 +10,7 @@ import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstr
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.logging.LogLevel;
+import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -25,9 +25,10 @@ public class JDBCParser extends Parser {
 	private String tableNamePattern;
 	private String columnNamePattern = null;
 	private boolean convertDataToInsert;
+	private ParserCallback callback;
 	private String[] types = { "TABLE" };	// TODO: support VIEW, GLOBAL TEMPORARY, LOCAL TEMPORARY
-											// h2: TABLE LINK
-											// postgres: TEMPORARY TABLE
+									// h2: TABLE LINK
+									// postgres: TEMPORARY TABLE
 
 	public JDBCParser(Connection con) {
 		this(con, null, null, null);
@@ -45,8 +46,8 @@ public class JDBCParser extends Parser {
 		this.convertDataToInsert = convertDataToInsert;
 	}
 
-	public Statement[] parse() throws ParserException {
-		ArrayList<Statement> statements = new ArrayList<Statement>();
+	public void parse(ParserCallback callback) throws ParserException {
+		this.callback = callback;
 
 		try {
 			DatabaseMetaData meta = con.getMetaData();
@@ -55,20 +56,12 @@ public class JDBCParser extends Parser {
 
 			while (tablesRs.next()) {
 				// find out what type the object returned is (it may be a table / view / other)
-				Statement[] generatedStatements = null;
 				String tableType = tablesRs.getString("TABLE_TYPE");
 
 				if (tableType.equals("TABLE")) {
-					generatedStatements = getTableStatements(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"), convertDataToInsert);
+					getTableStatements(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"), convertDataToInsert);
 				} else {
 					log.log(Level.WARNING, "Unhandled Table Type: " + tableType);
-				}
-
-				// add the statements to main list
-				if (generatedStatements != null) {
-					for (Statement statement : generatedStatements) {
-						statements.add(statement);
-					}
 				}
 			}
 
@@ -78,17 +71,9 @@ public class JDBCParser extends Parser {
 		} catch (SQLException sqle) {
 			throw new ParserException(sqle.getMessage(), sqle.getCause());
 		}
-
-		if (statements.size() == 0) {
-			return null;
-		}
-
-		// TODO: support ordering of tables, views, etc so they're in correct 'create' order. select should be ignored.
-
-		return statements.toArray(new Statement[] {});
 	}
 
-	private Statement[] getTableStatements(DatabaseMetaData meta, String catalog, String schema, String tableName, boolean convertDataToInsert) throws SQLException {
+	private void getTableStatements(DatabaseMetaData meta, String catalog, String schema, String tableName, boolean convertDataToInsert) throws SQLException {
 		ResultSet columnsRs = meta.getColumns(
 								catalog,
 								schema,
@@ -96,7 +81,6 @@ public class JDBCParser extends Parser {
 								columnNamePattern
 		);
 
-		ArrayList<Statement> statements = new ArrayList<Statement>();
 		CreateTable createTable = null;
 		Type dataType;
 
@@ -106,7 +90,6 @@ public class JDBCParser extends Parser {
 
 			if (createTable == null) {
 				createTable = new CreateTable(new Name(tableSchema, currentTable));
-				statements.add(createTable);
 			}
 
 			int dbType = columnsRs.getInt("DATA_TYPE");
@@ -210,8 +193,10 @@ public class JDBCParser extends Parser {
 		columnsRs.close();
 
 		if (createTable == null) {
-			return null;
+			return;
 		}
+
+		callback.produceStatement(createTable);
 
 		// query indexes and associate with table
 		CreateIndex[] indexes = getTableIndexes(meta, createTable.getName());
@@ -266,7 +251,7 @@ public class JDBCParser extends Parser {
 
 
 				// user created index
-				statements.add(index);
+				callback.produceStatement(index);
 
 				if (index.isUnique()) {
 					log.log(LogLevel.UNHANDLED, "possible implicit database index: " + index.getTableName().getObjectName() + " " + index.getIndexName().getObjectName() + " " + index.getColumns().length + " " + index.isUnique());
@@ -278,11 +263,9 @@ public class JDBCParser extends Parser {
 			InsertFromValues[] inserts = getTableData(createTable);
 
 			for (InsertFromValues insert : inserts) {
-				statements.add(insert);
+				callback.produceStatement(insert);
 			}
 		}
-
-		return statements.toArray(new Statement[] {});
 	}
 
 	private Column getTableColumn(CreateTable createTable, Name columnName) {
@@ -300,7 +283,7 @@ public class JDBCParser extends Parser {
 	private InsertFromValues[] getTableData(CreateTable tableName) throws SQLException {
 		// TODO: find better way of doing this (and remove the limit)
 		// some DBMS do not allow setting tablename as "?" for PreparedStatements
-		PreparedStatement dataPs = con.prepareStatement("SELECT * FROM \"" + tableName.getName().getObjectName() + "\" LIMIT 50");
+		PreparedStatement dataPs = con.prepareStatement("SELECT * FROM \"" + tableName.getName().getObjectName() + "\"");
 
 		ResultSet dataRs = dataPs.executeQuery();
 

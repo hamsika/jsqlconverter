@@ -21,21 +21,22 @@ import java.io.PrintStream;
 public abstract class SQLProducer extends Producer {
 	// TODO: support quoting ([ ], ', ", `, etc). column quoting may be different to value quoting for inserts
 	// e.g:  insert into `bob` values('a', 'b');
-	private PrintStream out = System.out;
 
-	public void produce(Statement[] statements) {
-		for (Statement statement : statements) {
-			if (statement instanceof CreateIndex) {
-				handleCreateIndex((CreateIndex)statement);
-			} else if (statement instanceof CreateTable) {
-				handleCreateTable((CreateTable)statement);
-			} else if (statement instanceof InsertFromValues) {
-				handleInsertFromValues((InsertFromValues)statement);
-			} else if (statement instanceof Truncate) {
-				handleTruncate((Truncate)statement);
-			} else {
-				System.out.print("unhandled statement type");
-			}
+	public SQLProducer(PrintStream out) {
+		super(out);
+	}
+
+	public void produce(Statement statement) {
+		if (statement instanceof CreateIndex) {
+			handleCreateIndex((CreateIndex)statement);
+		} else if (statement instanceof CreateTable) {
+			handleCreateTable((CreateTable)statement);
+		} else if (statement instanceof InsertFromValues) {
+			handleInsertFromValues((InsertFromValues)statement);
+		} else if (statement instanceof Truncate) {
+			handleTruncate((Truncate)statement);
+		} else {
+			System.out.print("unhandled statement type");
 		}
 	}
 
@@ -199,8 +200,10 @@ public abstract class SQLProducer extends Producer {
 				out.print("#");
 				out.print(insert.getString(i));
 				out.print("#");
+			} else if (type instanceof BooleanType) {
+				out.print(insert.getString(i));
 			} else {
-				log.log(LogLevel.UNHANDLED, "Datatype");
+				log.log(LogLevel.UNHANDLED, "Datatype: " + type);
 			}
 		}
 

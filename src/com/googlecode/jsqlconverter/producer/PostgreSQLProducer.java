@@ -8,7 +8,13 @@ import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.logging.LogLevel;
 
+import java.io.PrintStream;
+
 public class PostgreSQLProducer extends SQLProducer {
+	public PostgreSQLProducer(PrintStream out) {
+		super(out);
+	}
+
 	public String getValidName(Name name) {
 		if (name.getDatabaseName() != null) {
 			return name.getDatabaseName() + "." + name.getSchemaName() + "." + name.getObjectName();

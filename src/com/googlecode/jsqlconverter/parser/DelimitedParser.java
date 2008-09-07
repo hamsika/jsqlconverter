@@ -1,11 +1,11 @@
 package com.googlecode.jsqlconverter.parser;
 
-import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.type.*;
+import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -20,6 +20,7 @@ public class DelimitedParser extends Parser {
 	private boolean hasHeaders;
 	private char delimiter;
 	private char textQuantifier = '\0';
+	private int maxLineReads = 10;
 
 	private Column[] headers = null;
 
@@ -72,13 +73,16 @@ public class DelimitedParser extends Parser {
 		this.hasHeaders = hasHeaders;
 	}
 
-	public Statement[] parse() throws ParserException {
-		ArrayList<Statement> statements = new ArrayList<Statement>();
-
+	public void parse(ParserCallback callback) throws ParserException {
 		try {
 			// only 'detect' data types if headers are available
 			if (hasHeaders) {
 				detectDataTypes();
+			}
+			
+			if (!hasHeaders) {
+				// create some default headers here
+				// make create table statement
 			}
 
 			if (headers != null) {
@@ -88,13 +92,13 @@ public class DelimitedParser extends Parser {
 					table.addColumn(column);
 				}
 
-				statements.add(table);
+				callback.produceStatement(table);
 			}
 
 			// loop lines with detected types
 			for (String[] columns : lines) {
 				InsertFromValues insert = getInsertFromValues(columns);
-				statements.add(insert);
+				callback.produceStatement(insert);
 			}
 
 			// loop rest of data in file
@@ -103,17 +107,8 @@ public class DelimitedParser extends Parser {
 			String line;
 
 			while ((line = in.readLine()) != null) {
-				statements.add(getInsertFromValues(getColumns(line)));
+				callback.produceStatement(getInsertFromValues(getColumns(line)));
 			}
-
-			// TODO: create InsertFromValues statements
-
-			if (hasHeaders) {
-				// create some default headers here
-				// make create table statement
-			}
-
-			return statements.toArray(new Statement[] {});
 		} catch (IOException ioe) {
 			throw new ParserException(ioe.getMessage(), ioe.getCause());
 		}
@@ -190,6 +185,10 @@ public class DelimitedParser extends Parser {
 
 			// TODO: if all values are same length and TEXT set to CHAR
 			// TODO: find out correct types
+
+			if (lineNumber > maxLineReads) {
+				break;
+			}
 		}
 
 		// create column objects
@@ -219,8 +218,7 @@ public class DelimitedParser extends Parser {
 	}
 
 	private String[] getColumns(String line) {
-		//System.out.println(line);
-
+		// if there's no textQuantifier set it means that all columns are seperated by delimiter
 		if (textQuantifier == '\0') {
 			return line.split(String.valueOf(delimiter));
 		}

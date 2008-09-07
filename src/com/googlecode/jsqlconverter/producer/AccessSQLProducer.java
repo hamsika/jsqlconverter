@@ -7,7 +7,13 @@ import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.type.*;
 
+import java.io.PrintStream;
+
 public class AccessSQLProducer extends SQLProducer {
+	public AccessSQLProducer(PrintStream out) {
+		super(out);
+	}
+
 	public String getValidName(Name name) {
 		String value = name.getObjectName();
 
