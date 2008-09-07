@@ -15,10 +15,6 @@ public class Column {
 	private DefaultConstraint defaultConstraint = null;
 	private int size = 0;
 
-	public Column(Name columnName) {
-		this(columnName, null);
-	}
-
 	public Column(Name columnName, Type dataType) {
 		this.columnName = columnName;
 		this.dataType = dataType;

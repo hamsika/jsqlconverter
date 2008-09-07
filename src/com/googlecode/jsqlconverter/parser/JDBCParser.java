@@ -275,7 +275,7 @@ public class JDBCParser extends Parser {
 		}
 
 		if (convertDataToInsert) {
-			InsertFromValues[] inserts = getTableData(createTable.getName());
+			InsertFromValues[] inserts = getTableData(createTable);
 
 			for (InsertFromValues insert : inserts) {
 				statements.add(insert);
@@ -297,38 +297,28 @@ public class JDBCParser extends Parser {
 		return null;
 	}
 
-	private InsertFromValues[] getTableData(Name tableName) throws SQLException {
-		PreparedStatement dataPs = con.prepareStatement("SELECT * FROM \"" + tableName.getObjectName() + "\"");
+	private InsertFromValues[] getTableData(CreateTable tableName) throws SQLException {
+		// TODO: find better way of doing this (and remove the limit)
+		// some DBMS do not allow setting tablename as "?" for PreparedStatements
+		PreparedStatement dataPs = con.prepareStatement("SELECT * FROM \"" + tableName.getName().getObjectName() + "\" LIMIT 50");
 
 		ResultSet dataRs = dataPs.executeQuery();
 
 		ResultSetMetaData meta = dataRs.getMetaData();
 
-		boolean[] isNumeric = new boolean[meta.getColumnCount()];
-
-		for (int i=1; i<=meta.getColumnCount(); i++) {
-			Type type = getType(meta.getColumnType(i), meta.getPrecision(i), meta.getScale(i));
-
-			isNumeric[i - 1] = type instanceof NumericType;
-		}
-
 		ArrayList<InsertFromValues> inserts = new ArrayList<InsertFromValues>();
 
 		while (dataRs.next()) {
-			InsertFromValues insert = new InsertFromValues(tableName);
+			InsertFromValues insert = new InsertFromValues(tableName.getName(), tableName.getColumns());
 
 			for (int i=0; i<meta.getColumnCount(); i++) {
-				String col = dataRs.getString(i + 1);
+				String columnValue = dataRs.getString(i + 1);
 
-				if (col == null) {
+				if (columnValue == null) {
 					continue;
 				}
 
-				if (isNumeric[i]) {
-					insert.setNumeric(i, Double.parseDouble(col));
-				} else {
-					insert.setString(i, col);
-				}
+				insert.setValue(i, columnValue);
 			}
 
 			inserts.add(insert);

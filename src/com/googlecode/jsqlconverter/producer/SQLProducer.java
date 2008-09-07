@@ -170,7 +170,7 @@ public abstract class SQLProducer extends Producer {
 		out.print(getValidName(insert.getTableName()));
 		out.print(" ");
 
-		Name[] columns = insert.getColumns();
+		Column[] columns = insert.getColumns();
 
 		if (columns != null) {
 			out.print("(");
@@ -185,10 +185,22 @@ public abstract class SQLProducer extends Producer {
 				out.print(", ");
 			}
 
-			if (insert.isNumeric(i)) {
-				out.print(insert.getNumeric(i));
-			} else {
+			Type type = insert.getType(i);
+
+			// TODO: get proper quote values
+
+			if (type instanceof StringType) {
+				out.print("'");
 				out.print(insert.getString(i));
+				out.print("'");
+			} else if (type instanceof NumericType) {
+				out.print(insert.getString(i));
+			} else if (type instanceof DateTimeType) {
+				out.print("#");
+				out.print(insert.getString(i));
+				out.print("#");
+			} else {
+				log.log(LogLevel.UNHANDLED, "Datatype");
 			}
 		}
 
@@ -210,6 +222,20 @@ public abstract class SQLProducer extends Producer {
 			}
 
 			columnList.append(getValidName(columnName));
+		}
+
+		return columnList.toString();
+	}
+
+	private String getColumnList(Column[] columns) {
+		StringBuffer columnList = new StringBuffer();
+
+		for (Column column : columns) {
+			if (columnList.length() != 0) {
+				columnList.append(", ");
+			}
+
+			columnList.append(getValidName(column.getName()));
 		}
 
 		return columnList.toString();

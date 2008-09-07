@@ -2,6 +2,8 @@ package com.googlecode.jsqlconverter.parser;
 
 import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
+import com.googlecode.jsqlconverter.definition.create.table.Column;
+import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.type.*;
 
@@ -19,8 +21,7 @@ public class DelimitedParser extends Parser {
 	private char delimiter;
 	private char textQuantifier = '\0';
 
-	private String[] headers = null;
-	private HashMap<Integer, Type> types = new HashMap<Integer, Type>();
+	private Column[] headers = null;
 
 	// hold a copy of the lines read to detect data types
 	private ArrayList<String[]> lines = new ArrayList<String[]>();
@@ -72,42 +73,38 @@ public class DelimitedParser extends Parser {
 	}
 
 	public Statement[] parse() throws ParserException {
+		ArrayList<Statement> statements = new ArrayList<Statement>();
+
 		try {
-			String line;
-			int lineNumber = 1;
-
-			detectDataTypes();
-
-			if (headers != null) {
-				// TODO: make CreateTable statement
-
-				// lol
+			// only 'detect' data types if headers are available
+			if (hasHeaders) {
+				detectDataTypes();
 			}
 
-			ArrayList<InsertFromValues> inserts = new ArrayList<InsertFromValues>();
+			if (headers != null) {
+				CreateTable table = new CreateTable(tableName);
+
+				for (Column column : headers) {
+					table.addColumn(column);
+				}
+
+				statements.add(table);
+			}
 
 			// loop lines with detected types
 			for (String[] columns : lines) {
-				InsertFromValues insert;
-
-				if (headers == null) {
-					insert = new InsertFromValues(tableName);
-				} else {
-					insert = new InsertFromValues(tableName, null);
-				}
-
-				for (int i=0; i<columns.length; i++) {
-					if (types.get(i) instanceof NumericType) {
-						//insert.setNumeric(i, columns[i]);
-					} else {
-						insert.setString(i, columns[i]);
-					}
-				}
-
-				inserts.add(insert);
+				InsertFromValues insert = getInsertFromValues(columns);
+				statements.add(insert);
 			}
 
 			// loop rest of data in file
+			lines.clear();
+
+			String line;
+
+			while ((line = in.readLine()) != null) {
+				statements.add(getInsertFromValues(getColumns(line)));
+			}
 
 			// TODO: create InsertFromValues statements
 
@@ -116,15 +113,35 @@ public class DelimitedParser extends Parser {
 				// make create table statement
 			}
 
-			return inserts.toArray(new InsertFromValues[] {});
+			return statements.toArray(new Statement[] {});
 		} catch (IOException ioe) {
 			throw new ParserException(ioe.getMessage(), ioe.getCause());
 		}
 	}
 
+	private InsertFromValues getInsertFromValues(String[] columns) {
+		InsertFromValues insert;
+
+		if (headers == null) {
+			insert = new InsertFromValues(tableName);
+		} else {
+			insert = new InsertFromValues(tableName, headers);
+		}
+
+		for (int i=0; i<columns.length; i++) {
+			insert.setValue(i, columns[i]);
+		}
+
+		return insert;
+	}
+
 	private void detectDataTypes() throws IOException {
+		// TODO: set column size
 		String line;
 		int lineNumber = 0;
+
+		String[] headerNames = new String[] {};
+		HashMap<Integer, Type> types = new HashMap<Integer, Type>();
 
 		while ((line = in.readLine()) != null) {
 			++lineNumber;
@@ -132,7 +149,7 @@ public class DelimitedParser extends Parser {
 			String columns[] = getColumns(line);
 
 			if (lineNumber == 1 && hasHeaders) {
-				headers = columns;
+				headerNames = columns;
 				continue;
 			}
 
@@ -151,35 +168,54 @@ public class DelimitedParser extends Parser {
 				Matcher doubleMatcher = doublePattern.matcher(columns[i]);
 				Matcher integerMatcher = integerPattern.matcher(columns[i]);
 
+				Type type;
+
 				if (floatMatcher.matches()) {
 					//System.out.println("is float: " + columns[i]);
-					setColumnType(i, ApproximateNumericType.FLOAT);
+					type = getColumnType(types.get(i), ApproximateNumericType.FLOAT);
 				} else if (doubleMatcher.matches()) {
 					//System.out.println("is double: " + columns[i]);
-					setColumnType(i, ApproximateNumericType.DOUBLE);
+					type = getColumnType(types.get(i), ApproximateNumericType.DOUBLE);
 				} else if (integerMatcher.matches()) {
 					//System.out.println("is int: " + columns[i]);
 					// TODO: based on length set which int to use (bigint, smallint, etc)
-					setColumnType(i, ExactNumericType.INTEGER);
+					type = getColumnType(types.get(i), ExactNumericType.INTEGER);
 				} else {
-					setColumnType(i, StringType.VARCHAR);
+					type = getColumnType(types.get(i), StringType.VARCHAR);
 					//System.out.println("unknown column type: " + columns[i]);
 				}
 
-				// TODO: if all values are same length and TEXT set to CHAR
-
-				setColumnType(i, StringType.TEXT);
+				types.put(i, type);
 			}
 
+			// TODO: if all values are same length and TEXT set to CHAR
 			// TODO: find out correct types
 		}
+
+		// create column objects
+		ArrayList<Column> columnList = new ArrayList<Column>();
+
+		for (int i=0; i<headerNames.length; i++) {
+			Column column = new Column(new Name(headerNames[i]), types.get(i));
+
+			columnList.add(column);
+		}
+
+		headers = columnList.toArray(new Column[] {});
 	}
 
-	private void setColumnType(int column, Type type) {
+	private Type getColumnType(Type currentType, Type type) {
 		// TODO: take weakest type
 		// e.g.: double trumps float
 		// e.g: text trumps all
-		types.put(column, type);
+
+		//types.put(column, type);
+
+		if (currentType == null) {
+			// decide what to do
+		}
+
+		return type;
 	}
 
 	private String[] getColumns(String line) {
