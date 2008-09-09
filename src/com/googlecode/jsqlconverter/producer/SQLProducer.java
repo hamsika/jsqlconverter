@@ -190,18 +190,20 @@ public abstract class SQLProducer extends Producer {
 
 			// TODO: get proper quote values
 
+			String value = insert.getString(i);
+
 			if (type instanceof StringType) {
 				out.print("'");
-				out.print(insert.getString(i));
+				out.print(value);
 				out.print("'");
 			} else if (type instanceof NumericType) {
-				out.print(insert.getString(i));
+				out.print(value);
 			} else if (type instanceof DateTimeType) {
 				out.print("#");
-				out.print(insert.getString(i));
+				out.print(value);
 				out.print("#");
 			} else if (type instanceof BooleanType) {
-				out.print(insert.getString(i));
+				out.print(value);
 			} else {
 				log.log(LogLevel.UNHANDLED, "Datatype: " + type);
 			}
@@ -212,7 +214,7 @@ public abstract class SQLProducer extends Producer {
 
 	private void handleTruncate(Truncate truncate) {
 		out.print("TRUNCATE TABLE ");
-		out.println(getValidName(truncate.getTableName()));
+		out.print(getValidName(truncate.getTableName()));
 		out.println(";");
 	}
 

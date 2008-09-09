@@ -5,6 +5,7 @@
 	<property name="project_mainclass" value="com.googlecode.jsqlconverter.frontend.cli.SQLConverterCLI"/>
 
 	<property name="project_jar" value="${project_name}.jar"/>
+	<property name="project_exe" value="${project_name}.exe"/>
 	<property name="project_zip" value="${project_name}.zip"/>
 	<property name="project_src" value="src"/>
 	<property name="project_lib" value="lib"/>
@@ -13,10 +14,14 @@
 	<property name="build_bin" value="build/bin"/>
 	<property name="build_zip" value="build/zip"/>
 
+	<property name="launch4j_dir" value="launch4j"/>
+
 	<path id="class.path">
 		<pathelement location="./"/>
 
 		<pathelement path="${project_lib}/*.jar"/>
+
+		<pathelement path="${launch4j_dir}/*.jar"/>
 	</path>
 
 	<target name="compile">
@@ -34,7 +39,20 @@
 	<target name="jar" depends="compile">
 		<mkdir dir="${build_bin}"/>
 
-		<jar compress="true" jarfile="${build_temp}\${project_jar}">
+		<jar compress="true" jarfile="${build_temp}\${project_name}-lib.jar">
+			<manifest>
+				<attribute name="Implementation-Vendor" value="${project_author}"/>
+			</manifest>
+
+			<fileset dir="${build_temp}">
+				<patternset>
+					<include name="**/*.class"/>
+					<exclude name="**/cli/*.class"/>
+				</patternset>
+			</fileset>
+		</jar>
+
+		<jar compress="true" jarfile="${build_temp}\${project_name}-cli.jar">
 			<manifest>
 				<attribute name="Main-Class" value="${project_mainclass}"/>
 				<attribute name="Implementation-Vendor" value="${project_author}"/>
@@ -42,13 +60,13 @@
 
 			<fileset dir="${build_temp}">
 				<patternset>
-					<exclude name="**/*.java"/>
+					<include name="**/cli/*.class"/>
 				</patternset>
 			</fileset>
 		</jar>
 
 		<move todir="${build_bin}">
-			<fileset dir="${build_temp}" includes="${project_jar}"/>
+			<fileset dir="${build_temp}" includes="*.jar"/>
 		</move>
 	</target>
 
@@ -61,8 +79,16 @@
 			<fileset dir="${build_bin}" includes="*.jar"/>
 		</copy>
 
+		<copy todir="${build_zip}/${project_name}/bin">
+			<fileset dir="bin"/>
+		</copy>
+
+		<copy todir="${build_zip}/${project_name}">
+			<fileset dir="./" includes="logging.properties" />
+		</copy>
+
 		<zip destfile="${build_zip}/${project_zip}">
-			<zipfileset dir="${build_zip}/${project_name}" includes="**/*"/>
+			<zipfileset dir="${build_zip}/" includes="**/*"/>
 		</zip>
 	</target>
 
