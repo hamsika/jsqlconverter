@@ -1,14 +1,9 @@
 package com.googlecode.jsqlconverter.frontend.cli;
 
-import com.googlecode.jsqlconverter.parser.Parser;
-import com.googlecode.jsqlconverter.parser.DelimitedParser;
-import com.googlecode.jsqlconverter.parser.JDBCParser;
-import com.googlecode.jsqlconverter.parser.ParserException;
+import com.googlecode.jsqlconverter.parser.*;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.Statement;
-import com.googlecode.jsqlconverter.producer.PostgreSQLProducer;
-import com.googlecode.jsqlconverter.producer.Producer;
-import com.googlecode.jsqlconverter.producer.AccessSQLProducer;
+import com.googlecode.jsqlconverter.producer.*;
 import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
 import java.util.ArrayList;
@@ -23,6 +18,14 @@ public class SQLConverterCLI implements ParserCallback {
 	private OutputOperation outputOp = null;
 	private ArrayList<String> argList;
 
+	// input params
+	// delim
+	private String file; // this is also used by AccessMDBParser
+	private boolean hasHeaderRow = true;
+	private char delimiter = ',';
+	private char textQuantifier = '\0';
+	private Producer producer;
+
 	// jdbc params
 	private String driver;
 	private String url;
@@ -30,23 +33,23 @@ public class SQLConverterCLI implements ParserCallback {
 	private String pass;
 	private boolean doData = false;
 
-	// delim
-	private String file;
-	private boolean hasHeaderRow = true;
-	private char delimiter = ',';
-	private char textQuantifier = '\0';
-	private Producer producer;
+	// output params
+	// access mdb
+	private String outputFile;
 
 	private enum InputOperation {
-		JDBC,
-		DELIMITED
+		MSACCESS_MDB,
+		DELIMITED,
+		JDBC
 	}
 
 	private enum OutputOperation {
-		MSACCESS,
+		MSACCESS_MDB,
+		MSACCESS_SQL,
 		POSTGRESQL
 	}
 
+	// TODO: check if unknown / unneeded params were used
 	public SQLConverterCLI(String[] args) throws ParserException, SQLException, FileNotFoundException, ClassNotFoundException {
 		if (args.length == 0) {
 			printUsage();
@@ -61,14 +64,17 @@ public class SQLConverterCLI implements ParserCallback {
 		}
 
 		// detect operation
-		if (argList.contains("-jdbc")) {
-			setInputOperation(InputOperation.JDBC);
+		if (argList.contains("-access-mdb")) {
+			setInputOperation(InputOperation.MSACCESS_MDB);
 		}
 
 		if (argList.contains("-delim")) {
 			setInputOperation(InputOperation.DELIMITED);
 		}
 
+		if (argList.contains("-jdbc")) {
+			setInputOperation(InputOperation.JDBC);
+		}
 
 		if (inputOp == null) {
 			exitMessage("No input operation specified");
@@ -76,12 +82,8 @@ public class SQLConverterCLI implements ParserCallback {
 
 		// detect parser options
 		switch(inputOp) {
-			case JDBC:
-				driver = getRequiredParameter("-driver");
-				url = getRequiredParameter("-url");
-				user = getOptionalParameter("-user");
-				pass = getOptionalParameter("-pass");
-				doData = argList.contains("-data");
+			case MSACCESS_MDB:
+				file = getRequiredParameter("-file");
 			break;
 			case DELIMITED:
 				setStdInOrFile();
@@ -109,11 +111,22 @@ public class SQLConverterCLI implements ParserCallback {
 					}
 				}
 			break;
+			case JDBC:
+				driver = getRequiredParameter("-driver");
+				url = getRequiredParameter("-url");
+				user = getOptionalParameter("-user");
+				pass = getOptionalParameter("-pass");
+				doData = argList.contains("-data");
+			break;
 		}
 
 		// detect producer options
+		if (argList.contains("-out-access-mdb")) {
+			setOutputOperation(OutputOperation.MSACCESS_MDB);
+		}
+
 		if (argList.contains("-out-access")) {
-			setOutputOperation(OutputOperation.MSACCESS);
+			setOutputOperation(OutputOperation.MSACCESS_SQL);
 		}
 
 		if (argList.contains("-out-postgre")) {
@@ -122,6 +135,13 @@ public class SQLConverterCLI implements ParserCallback {
 
 		if (outputOp == null) {
 			exitMessage("No output operation specified");
+		}
+
+		// detect parser options
+		switch(outputOp) {
+			case MSACCESS_MDB:
+				outputFile = getRequiredParameter("-ofile");
+			break;
 		}
 
 		// run it! :)
@@ -136,7 +156,7 @@ public class SQLConverterCLI implements ParserCallback {
 		String value = getOptionalParameter(param);
 
 		if (value == null) {
-			exitMessage("Missing required parameter");
+			exitMessage("Missing required parameter: " + param);
 		}
 
 		return value;
@@ -177,11 +197,14 @@ public class SQLConverterCLI implements ParserCallback {
 		Parser parser = null;
 
 		switch(inputOp) {
+			case MSACCESS_MDB:
+				parser = new AccessMDBParser(new File(file));
+			break;
 			case DELIMITED:
 				if (file != null) {
-					parser = new DelimitedParser(new File(file), delimiter, textQuantifier, hasHeaderRow);
+					parser = new DelimitedParser(new File(file), delimiter, textQuantifier, hasHeaderRow, doData);
 				} else {
-					parser = new DelimitedParser(new BufferedReader(new InputStreamReader(System.in)), new Name("unknown"), delimiter, textQuantifier, hasHeaderRow);
+					parser = new DelimitedParser(new BufferedReader(new InputStreamReader(System.in)), new Name("unknown"), delimiter, textQuantifier, hasHeaderRow, doData);
 				}
 			break;
 			case JDBC:
@@ -197,11 +220,14 @@ public class SQLConverterCLI implements ParserCallback {
 
 		// setup producer
 		switch(outputOp) {
+			case MSACCESS_MDB:
+				producer = new AccessMDBProducer(new File(outputFile));
+			break;
+			case MSACCESS_SQL:
+				producer = new AccessSQLProducer(System.out);
+			break;
 			case POSTGRESQL:
 				producer = new PostgreSQLProducer(System.out);
-			break;
-			case MSACCESS:
-				producer = new AccessSQLProducer(System.out);
 			break;
 			default:
 				exitMessage("This output option hasn't been defined!");
@@ -230,15 +256,20 @@ public class SQLConverterCLI implements ParserCallback {
 
 	private void printUsage() {
 		System.out.println(
-			"jsqlparser <input options> <output options>\n" +
+			"jsqlparser <input options> <output options> [<additional options>]\n" +
 
 			"input options:\n" +
-			"\t-jdbc -driver <driver> -url <url> [-user <username>] [-pass <password>] [-data]\n" +
+			"\t-jdbc -driver <driver> -url <url> [-user <username>] [-pass <password>]\n" +
 			"\t-delim [ -file <filename> ] [-noheader] [-seperator <char>] [-quantifier <char>]\n" +
+			"\t-access-mdb -file <filename>\n" +
 			"\n" +
 			"output options:\n" +
 			"\t-out-access\n" +
-			"\t-out-postgre"
+			"\t-out-access-mdb -ofile <filename>\n" +
+			"\t-out-postgre\n" +
+			"\n" +
+			"additional options:\n" +
+			"\t-data"
 		);
 	}
 

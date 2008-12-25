@@ -36,7 +36,7 @@ public abstract class SQLProducer extends Producer {
 		} else if (statement instanceof Truncate) {
 			handleTruncate((Truncate)statement);
 		} else {
-			System.out.print("unhandled statement type");
+			log.log(LogLevel.UNHANDLED, "statement type");
 		}
 	}
 

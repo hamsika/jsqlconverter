@@ -6,6 +6,7 @@ import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.type.*;
+import com.googlecode.jsqlconverter.logging.LogLevel;
 
 import java.io.PrintStream;
 
@@ -144,7 +145,7 @@ public class AccessSQLProducer extends SQLProducer {
 			case GLOBAL:
 				return false;
 			default:
-				System.out.println("Unknown table option: " + option);
+				log.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
 				return false;
 		}
 	}
@@ -178,7 +179,7 @@ public class AccessSQLProducer extends SQLProducer {
 			case UNIQUE:
 				return true;
 			default:
-				System.out.println("Unknown column option: " + option);
+				log.log(LogLevel.UNHANDLED, "Unknown column option: " + option);
 				return false;
 		}
 	}

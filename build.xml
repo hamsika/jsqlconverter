@@ -14,14 +14,10 @@
 	<property name="build_bin" value="build/bin"/>
 	<property name="build_zip" value="build/zip"/>
 
-	<property name="launch4j_dir" value="launch4j"/>
-
 	<path id="class.path">
-		<pathelement location="./"/>
-
-		<pathelement path="${project_lib}/*.jar"/>
-
-		<pathelement path="${launch4j_dir}/*.jar"/>
+        <fileset dir="${project_lib}" >
+            <include name="*.jar" />
+        </fileset>
 	</path>
 
 	<target name="compile">
@@ -31,7 +27,7 @@
 			<fileset dir="${project_src}" includes="**/*.java"/>
 		</copy>
 
-		<javac srcdir="${build_temp}" destdir="${build_temp}">
+		<javac srcdir="${build_temp}" destdir="${build_temp}" debug="true">
 			<classpath refid="class.path"/>
 		</javac>
 	</target>

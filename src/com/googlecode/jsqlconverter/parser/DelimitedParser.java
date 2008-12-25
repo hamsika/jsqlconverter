@@ -6,6 +6,7 @@ import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
+import com.googlecode.jsqlconverter.logging.LogLevel;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ public class DelimitedParser extends Parser {
 	private Pattern doublePattern = Pattern.compile("[-+]?[0-9]*\\.[0-9]+");
 	// real
 	private Pattern integerPattern = Pattern.compile("[-+]?[0-9]*");
+	private boolean convertDataToInsert;
 
 	// BIGINT,		/* 8 byte -9223372036854775808 to 9223372036854775807 */
 	//INTEGER,	/* 4 byte -2147483648 to 2147483647 */
@@ -42,10 +44,10 @@ public class DelimitedParser extends Parser {
 
 
 	public DelimitedParser(File file, char delimiter, boolean hasHeaders) throws FileNotFoundException {
-		this(file, delimiter, '\0', hasHeaders);
+		this(file, delimiter, '\0', hasHeaders, false);
 	}
 
-	public DelimitedParser(File file, char delimiter, char textQuantifier, boolean hasHeaders) throws FileNotFoundException {
+	public DelimitedParser(File file, char delimiter, char textQuantifier, boolean hasHeaders, boolean convertDataToInsert) throws FileNotFoundException {
 		String filename = file.getName();
 
 		int dotIndex = filename.indexOf('.');
@@ -59,18 +61,20 @@ public class DelimitedParser extends Parser {
 		this.delimiter = delimiter;
 		this.textQuantifier = textQuantifier;
 		this.hasHeaders = hasHeaders;
+		this.convertDataToInsert = convertDataToInsert;
 	}
 
-	public DelimitedParser(BufferedReader in, Name tableName, char delimiter, boolean hasHeaders) {
-		this(in, tableName, delimiter, '\0', hasHeaders);
+	public DelimitedParser(BufferedReader in, Name tableName, char delimiter, boolean hasHeaders, boolean convertDataToInsert) {
+		this(in, tableName, delimiter, '\0', hasHeaders, false);
 	}
 
-	public DelimitedParser(BufferedReader in, Name tableName, char delimiter, char textQuantifier, boolean hasHeaders) {
+	public DelimitedParser(BufferedReader in, Name tableName, char delimiter, char textQuantifier, boolean hasHeaders, boolean convertDataToInsert) {
 		this.in = in;
 		this.tableName = tableName;
 		this.delimiter = delimiter;
 		this.textQuantifier = textQuantifier;
 		this.hasHeaders = hasHeaders;
+		this.convertDataToInsert = convertDataToInsert;
 	}
 
 	public void parse(ParserCallback callback) throws ParserException {
@@ -78,11 +82,6 @@ public class DelimitedParser extends Parser {
 			// only 'detect' data types if headers are available
 			if (hasHeaders) {
 				detectDataTypes();
-			}
-			
-			if (!hasHeaders) {
-				// create some default headers here
-				// make create table statement
 			}
 
 			if (headers != null) {
@@ -95,18 +94,28 @@ public class DelimitedParser extends Parser {
 				callback.produceStatement(table);
 			}
 
+			// if user hasn't requested data be converted to inserts then finish here. 
+			if (!convertDataToInsert) {
+				lines.clear();
+				return;
+			}
+
 			// loop lines with detected types
 			for (String[] columns : lines) {
 				InsertFromValues insert = getInsertFromValues(columns);
 				callback.produceStatement(insert);
 			}
 
-			// loop rest of data in file
+			// clear memory lines is using and loop through rest of the input
 			lines.clear();
 
 			String line;
 
 			while ((line = in.readLine()) != null) {
+				if (line.trim().isEmpty()) {
+					continue;
+				}
+
 				callback.produceStatement(getInsertFromValues(getColumns(line)));
 			}
 		} catch (IOException ioe) {
@@ -139,6 +148,10 @@ public class DelimitedParser extends Parser {
 		HashMap<Integer, Type> types = new HashMap<Integer, Type>();
 
 		while ((line = in.readLine()) != null) {
+			if (line.trim().isEmpty()) {
+				continue;
+			}
+
 			++lineNumber;
 
 			String columns[] = getColumns(line);
@@ -158,6 +171,11 @@ public class DelimitedParser extends Parser {
 				// time:			.
 				// date:			.
 				// datetime:		.
+
+				// if column value is null then don't detect data type
+				if (columns[i].equals("null")) {
+					continue;
+				}
 
 				Matcher floatMatcher = floatPattern.matcher(columns[i]);
 				Matcher doubleMatcher = doublePattern.matcher(columns[i]);
@@ -194,7 +212,14 @@ public class DelimitedParser extends Parser {
 		// create column objects
 		ArrayList<Column> columnList = new ArrayList<Column>();
 
+		// TODO: create some fake header names if headers were not provided
+
 		for (int i=0; i<headerNames.length; i++) {
+			if (types.get(i) == null) {
+				log.logApp(LogLevel.WARNING, "Datatype for column #" + (i + 1) + " was not detected");
+				types.put(i, StringType.VARCHAR);
+			}
+
 			Column column = new Column(new Name(headerNames[i]), types.get(i));
 
 			columnList.add(column);
@@ -217,9 +242,11 @@ public class DelimitedParser extends Parser {
 		return type;
 	}
 
+	// TODO: make sure this returns an array the same size of headers[]
 	private String[] getColumns(String line) {
 		// if there's no textQuantifier set it means that all columns are seperated by delimiter
 		if (textQuantifier == '\0') {
+			// note: if a line has empty columns they will not be included
 			return line.split(String.valueOf(delimiter));
 		}
 

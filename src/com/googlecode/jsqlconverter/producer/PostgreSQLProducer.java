@@ -28,7 +28,7 @@ public class PostgreSQLProducer extends SQLProducer {
 	}
 
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
-		return "DEFAULT " + defaultConstraint.getValue();
+		return "DEFAULT '" + defaultConstraint.getValue() + "'";
 	}
 
 	public String getType(StringType type) {
