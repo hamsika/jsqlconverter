@@ -134,4 +134,8 @@ public class InsertFromValues extends Insert {
 	public Timestamp getTimestamp(int columnIndex) {
 		return (Timestamp) values.get(columnIndex);
 	}
+
+	public Object getObject(int columnIndex) {
+		return values.get(columnIndex);
+	}
 }

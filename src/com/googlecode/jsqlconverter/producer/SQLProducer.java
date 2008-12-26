@@ -2,7 +2,6 @@ package com.googlecode.jsqlconverter.producer;
 
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.definition.Name;
-import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.truncate.table.Truncate;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
@@ -26,21 +25,7 @@ public abstract class SQLProducer extends Producer {
 		super(out);
 	}
 
-	public void produce(Statement statement) {
-		if (statement instanceof CreateIndex) {
-			handleCreateIndex((CreateIndex)statement);
-		} else if (statement instanceof CreateTable) {
-			handleCreateTable((CreateTable)statement);
-		} else if (statement instanceof InsertFromValues) {
-			handleInsertFromValues((InsertFromValues)statement);
-		} else if (statement instanceof Truncate) {
-			handleTruncate((Truncate)statement);
-		} else {
-			log.log(LogLevel.UNHANDLED, "statement type");
-		}
-	}
-
-	private void handleCreateIndex(CreateIndex createIndex) {
+	public void doCreateIndex(CreateIndex createIndex) {
 		out.print("CREATE ");
 
 		if (createIndex.isUnique()) {
@@ -56,7 +41,7 @@ public abstract class SQLProducer extends Producer {
 		out.println(");");
 	}
 
-	private void handleCreateTable(CreateTable table) {
+	public void doCreateTable(CreateTable table) {
 		out.print("CREATE ");
 
 		if (table.containsOption(TableOption.GLOBAL) && supportsTableOption(TableOption.GLOBAL)) {
@@ -153,11 +138,7 @@ public abstract class SQLProducer extends Producer {
 		}
 
 		// indexes
-		KeyConstraint[] keys = table.getUniqueCompoundKeyConstraint();
-
-		for (int i=0; i<keys.length; i++) {
-			KeyConstraint key = keys[i];
-
+		for (KeyConstraint key : table.getUniqueCompoundKeyConstraint()) {
 			out.print("\tUNIQUE (");
 			out.print(getColumnList(key.getColumns()));
 			out.println(")");
@@ -166,7 +147,7 @@ public abstract class SQLProducer extends Producer {
 		out.println(");");
 	}
 
-	private void handleInsertFromValues(InsertFromValues insert) {
+	public void doInsertFromValues(InsertFromValues insert) {
 		out.print("INSERT INTO ");
 		out.print(getValidName(insert.getTableName()));
 		out.print(" ");
@@ -190,7 +171,7 @@ public abstract class SQLProducer extends Producer {
 
 			// TODO: get proper quote values
 
-			String value = insert.getString(i);
+			Object value = insert.getObject(i);
 
 			if (type instanceof StringType) {
 				out.print("'");
@@ -212,7 +193,7 @@ public abstract class SQLProducer extends Producer {
 		out.println(");");
 	}
 
-	private void handleTruncate(Truncate truncate) {
+	public void doTruncate(Truncate truncate) {
 		out.print("TRUNCATE TABLE ");
 		out.print(getValidName(truncate.getTableName()));
 		out.println(";");

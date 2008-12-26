@@ -116,9 +116,11 @@ public class SQLConverterCLI implements ParserCallback {
 				url = getRequiredParameter("-url");
 				user = getOptionalParameter("-user");
 				pass = getOptionalParameter("-pass");
-				doData = argList.contains("-data");
 			break;
 		}
+
+		// detect global optional params
+		doData = argList.contains("-data");
 
 		// detect producer options
 		if (argList.contains("-out-access-mdb")) {
@@ -198,7 +200,7 @@ public class SQLConverterCLI implements ParserCallback {
 
 		switch(inputOp) {
 			case MSACCESS_MDB:
-				parser = new AccessMDBParser(new File(file));
+				parser = new AccessMDBParser(new File(file), doData);
 			break;
 			case DELIMITED:
 				if (file != null) {

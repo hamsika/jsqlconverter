@@ -15,6 +15,6 @@ public enum ApproximateNumericType implements NumericType {
 			*/
 	REAL	/*
 				4 byte
-				6 dp accuracy			
+				6dp accuracy			
 			*/
 }

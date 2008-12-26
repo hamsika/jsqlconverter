@@ -7,6 +7,7 @@ import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstr
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.Name;
+import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.logging.LogLevel;
 import com.healthmarketscience.jackcess.*;
@@ -14,14 +15,15 @@ import com.healthmarketscience.jackcess.Column;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 public class AccessMDBParser extends Parser {
 	private File mdbFile;
+	private boolean convertDataToInsert;
 
-	public AccessMDBParser(File mdbPath) {
+	public AccessMDBParser(File mdbPath, boolean convertDataToInsert) {
 		this.mdbFile = mdbPath;
+		this.convertDataToInsert = convertDataToInsert;
 	}
 
 	public void parse(ParserCallback callback) throws ParserException {
@@ -46,7 +48,7 @@ public class AccessMDBParser extends Parser {
 			ArrayList<CreateIndex> createIndexes = new ArrayList<CreateIndex>(); // normal non-unique indexes
 
 			for (Column column : table.getColumns()) {
-				com.googlecode.jsqlconverter.definition.create.table.Column col = new com.googlecode.jsqlconverter.definition.create.table.Column(new Name(column.getName()), getMyDataType(column.getType()));
+				com.googlecode.jsqlconverter.definition.create.table.Column col = new com.googlecode.jsqlconverter.definition.create.table.Column(new Name(column.getName()), getDataType(column.getType()));
 
 				ct.addColumn(col);
 			}
@@ -98,6 +100,36 @@ public class AccessMDBParser extends Parser {
 			for (CreateIndex ci : createIndexes) {
 				callback.produceStatement(ci);
 			}
+
+
+			// get data inserts
+			if (convertDataToInsert) {
+				doData(callback, ct, table);
+			}
+		}
+	}
+
+	private void doData(ParserCallback callback, CreateTable ct, Table table) {
+		Name tableName = new Name(table.getName());
+
+		for (Map<String, Object> row : table) {
+			InsertFromValues insert = new InsertFromValues(tableName, ct.getColumns());
+
+			int i = 0;
+
+			if (row.values().size() != ct.getColumns().length) {
+				System.out.println(row);
+
+				System.exit(0);
+			}
+
+			for (Object value : row.values()) {
+				insert.setValue(i, value);
+
+				++i;
+			}
+
+			callback.produceStatement(insert);
 		}
 	}
 
@@ -111,45 +143,40 @@ public class AccessMDBParser extends Parser {
 		return null;
 	}
 
-	private Type getMyDataType(DataType type) {
+	private Type getDataType(DataType type) {
 		switch (type) {
 			case BINARY:
 				return BinaryType.BINARY;
 			case BOOLEAN:
 				return BooleanType.BOOLEAN;
 			case BYTE:
-
-			break;
+				return ExactNumericType.TINYINT;
 			case DOUBLE:
 				return ApproximateNumericType.DOUBLE;
 			case FLOAT:
 				return ApproximateNumericType.FLOAT;
 			case GUID:
-
-			break;
+				// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+				return StringType.VARCHAR;
 			case INT:
-				// TODO: check this is right
 				return ExactNumericType.SMALLINT;
 			case LONG:
-				// TODO: check this is right
 				return ExactNumericType.INTEGER;
 			case MEMO:
-				// TODO: check this is right
-				return StringType.LONGTEXT;
+				return StringType.MEDIUMTEXT;
 			case MONEY:
-
+				return MonetaryType.MONEY;
 			case NUMERIC:
-
+				return new DecimalType(type.getDefaultPrecision(), type.getDefaultScale());
 			case OLE:
-
+				return BinaryType.VARBINARY;
 			case SHORT_DATE_TIME:
-				
-			break;
+				return DateTimeType.DATETIME;
 			case TEXT:
-				// TODO: check this is right
-				return StringType.TEXT;
+				return StringType.VARCHAR;
 			case UNKNOWN_0D:
-				
+				// "Unknown data.  Handled like BINARY."
+				return BinaryType.BINARY;
 		}
 
 		log.log(LogLevel.UNHANDLED, "Unhandled type: " + type);
