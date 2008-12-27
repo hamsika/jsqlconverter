@@ -36,11 +36,13 @@ public class SQLConverterCLI implements ParserCallback {
 	// output params
 	// access mdb
 	private String outputFile;
+	private PrintStream out = System.out;
 
 	private enum InputOperation {
 		MSACCESS_MDB,
 		DELIMITED,
-		JDBC
+		JDBC,
+		TURBINE_XML
 	}
 
 	private enum OutputOperation {
@@ -74,6 +76,10 @@ public class SQLConverterCLI implements ParserCallback {
 
 		if (argList.contains("-jdbc")) {
 			setInputOperation(InputOperation.JDBC);
+		}
+
+		if (argList.contains("-turbine")) {
+			setInputOperation(InputOperation.TURBINE_XML);
 		}
 
 		if (inputOp == null) {
@@ -116,6 +122,9 @@ public class SQLConverterCLI implements ParserCallback {
 				url = getRequiredParameter("-url");
 				user = getOptionalParameter("-user");
 				pass = getOptionalParameter("-pass");
+			break;
+			case TURBINE_XML:
+				file = getRequiredParameter("-file");
 			break;
 		}
 
@@ -214,6 +223,9 @@ public class SQLConverterCLI implements ParserCallback {
 				Connection con = DriverManager.getConnection(url, user, pass);
 				parser = new JDBCParser(con, null, null, null, doData);
 			break;
+			case TURBINE_XML:
+				parser = new TurbineXMLParser(new FileInputStream(file));
+			break;
 			default:
 				exitMessage("This input option hasn't been defined!");
 				System.exit(0);
@@ -226,10 +238,10 @@ public class SQLConverterCLI implements ParserCallback {
 				producer = new AccessMDBProducer(new File(outputFile));
 			break;
 			case MSACCESS_SQL:
-				producer = new AccessSQLProducer(System.out);
+				producer = new AccessSQLProducer(out);
 			break;
 			case POSTGRESQL:
-				producer = new PostgreSQLProducer(System.out);
+				producer = new PostgreSQLProducer(out);
 			break;
 			default:
 				exitMessage("This output option hasn't been defined!");
@@ -261,9 +273,10 @@ public class SQLConverterCLI implements ParserCallback {
 			"jsqlparser <input options> <output options> [<additional options>]\n" +
 
 			"input options:\n" +
-			"\t-jdbc -driver <driver> -url <url> [-user <username>] [-pass <password>]\n" +
-			"\t-delim [ -file <filename> ] [-noheader] [-seperator <char>] [-quantifier <char>]\n" +
 			"\t-access-mdb -file <filename>\n" +
+			"\t-delim [ -file <filename> ] [-noheader] [-seperator <char>] [-quantifier <char>]\n" +
+			"\t-jdbc -driver <driver> -url <url> [-user <username>] [-pass <password>]\n" +
+			"\t-turbine -file <filename>\n" +
 			"\n" +
 			"output options:\n" +
 			"\t-out-access\n" +
