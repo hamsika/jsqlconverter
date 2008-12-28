@@ -21,8 +21,7 @@ public class DelimitedParser extends Parser {
 	private boolean hasHeaders;
 	private char delimiter;
 	private char textQuantifier = '\0';
-	private int maxLineReads = 10;
-
+	private int maxLineReads = 50;
 	private Column[] headers = null;
 
 	// hold a copy of the lines read to detect data types
@@ -32,15 +31,8 @@ public class DelimitedParser extends Parser {
 	private Pattern floatPattern = Pattern.compile("[-+]?[0-9]*\\.[0-9]{0,9}+");
 	private Pattern doublePattern = Pattern.compile("[-+]?[0-9]*\\.[0-9]+");
 	// real
-	private Pattern integerPattern = Pattern.compile("[-+]?[0-9]*");
+	private Pattern integerPattern = Pattern.compile("[-+]?[0-9]+");
 	private boolean convertDataToInsert;
-
-	// BIGINT,		/* 8 byte -9223372036854775808 to 9223372036854775807 */
-	//INTEGER,	/* 4 byte -2147483648 to 2147483647 */
-	//MEDIUMINT,	/* 3 byte -8388608 to 8388607 */
-	//NUMERIC,
-	//SMALLINT,	/* 2 byte -32768 to 32767 */
-	//TINYINT		/* 1 byte -128 to 127 */
 
 
 	public DelimitedParser(File file, char delimiter, boolean hasHeaders) throws FileNotFoundException {
@@ -65,7 +57,7 @@ public class DelimitedParser extends Parser {
 	}
 
 	public DelimitedParser(BufferedReader in, Name tableName, char delimiter, boolean hasHeaders, boolean convertDataToInsert) {
-		this(in, tableName, delimiter, '\0', hasHeaders, false);
+		this(in, tableName, delimiter, '\0', hasHeaders, convertDataToInsert);
 	}
 
 	public DelimitedParser(BufferedReader in, Name tableName, char delimiter, char textQuantifier, boolean hasHeaders, boolean convertDataToInsert) {
@@ -133,19 +125,23 @@ public class DelimitedParser extends Parser {
 		}
 
 		for (int i=0; i<columns.length; i++) {
-			insert.setValue(i, columns[i]);
+			if (columns[i].equals("") || columns[i].equals("null")) {
+				insert.setValue(i, null);
+			} else {
+				insert.setValue(i, columns[i]);
+			}
 		}
 
 		return insert;
 	}
 
 	private void detectDataTypes() throws IOException {
-		// TODO: set column size
 		String line;
 		int lineNumber = 0;
 
 		String[] headerNames = new String[] {};
 		HashMap<Integer, Type> types = new HashMap<Integer, Type>();
+		HashMap<Integer, Integer> sizes = new HashMap<Integer, Integer>();
 
 		while ((line = in.readLine()) != null) {
 			if (line.trim().isEmpty()) {
@@ -154,16 +150,17 @@ public class DelimitedParser extends Parser {
 
 			++lineNumber;
 
-			String columns[] = getColumns(line);
+			String values[] = getColumns(line);
 
+			// if this is the first line and we are reading headers then set this row as headers
 			if (lineNumber == 1 && hasHeaders) {
-				headerNames = columns;
+				headerNames = values;
 				continue;
 			}
 
-			lines.add(columns);
+			lines.add(values);
 
-			for (int i=0; i<columns.length; i++) {
+			for (int i=0; i< values.length; i++) {
 				// text, number (INT, FLOAT, DOUBLE), date, time, date+time, currency, percentage, fraction
 				// float / double:	[-+]?[0-9]*\.?[0-9]+
 				// int:				\d+
@@ -173,32 +170,58 @@ public class DelimitedParser extends Parser {
 				// datetime:		.
 
 				// if column value is null then don't detect data type
-				if (columns[i].equals("null")) {
+				if (values[i].equals("null")) {
+					continue;
+				} else if (values[i].equals("")) {
 					continue;
 				}
 
-				Matcher floatMatcher = floatPattern.matcher(columns[i]);
-				Matcher doubleMatcher = doublePattern.matcher(columns[i]);
-				Matcher integerMatcher = integerPattern.matcher(columns[i]);
+				Matcher floatMatcher = floatPattern.matcher(values[i]);
+				Matcher doubleMatcher = doublePattern.matcher(values[i]);
+				Matcher integerMatcher = integerPattern.matcher(values[i]);
 
 				Type type;
 
 				if (floatMatcher.matches()) {
-					//System.out.println("is float: " + columns[i]);
+					//System.out.println("is float: " + values[i]);
 					type = getColumnType(types.get(i), ApproximateNumericType.FLOAT);
 				} else if (doubleMatcher.matches()) {
-					//System.out.println("is double: " + columns[i]);
+					//System.out.println("is double: " + values[i]);
 					type = getColumnType(types.get(i), ApproximateNumericType.DOUBLE);
 				} else if (integerMatcher.matches()) {
-					//System.out.println("is int: " + columns[i]);
-					// TODO: based on length set which int to use (bigint, smallint, etc)
-					type = getColumnType(types.get(i), ExactNumericType.INTEGER);
+					//System.out.println("is int: " + values[i]);
+					try {
+						long value = Long.parseLong(integerMatcher.group(0));
+
+						if (value >= -128 && value <= 127) {
+							type = getColumnType(types.get(i), ExactNumericType.TINYINT);
+						} else if (value >= -32768 && value <= 32767) {
+							type = getColumnType(types.get(i), ExactNumericType.SMALLINT);
+						} else if (value >= -8388608 && value <= 8388607) {
+							type = getColumnType(types.get(i), ExactNumericType.MEDIUMINT);
+						} else if (value >= -2147483648 && value <= 2147483647) {
+							type = getColumnType(types.get(i), ExactNumericType.INTEGER);
+						} else {
+							type = getColumnType(types.get(i), ExactNumericType.BIGINT);
+						}
+					} catch (NumberFormatException nfe) {
+						type = getColumnType(types.get(i), ExactNumericType.BIGINT);
+					}
 				} else {
+					//System.out.println("unknown column type for value: " + values[i]);
 					type = getColumnType(types.get(i), StringType.VARCHAR);
-					//System.out.println("unknown column type: " + columns[i]);
 				}
 
 				types.put(i, type);
+
+				// check sizes
+				if (sizes.get(i) == null) {
+					sizes.put(i, 0);
+				}
+
+				if (values[i].length() > sizes.get(i)) {
+					sizes.put(i, values[i].length());
+				}
 			}
 
 			// TODO: if all values are same length and TEXT set to CHAR
@@ -217,10 +240,16 @@ public class DelimitedParser extends Parser {
 		for (int i=0; i<headerNames.length; i++) {
 			if (types.get(i) == null) {
 				log.logApp(LogLevel.WARNING, "Datatype for column #" + (i + 1) + " was not detected");
+
 				types.put(i, StringType.VARCHAR);
+				sizes.put(i, 255);
 			}
 
 			Column column = new Column(new Name(headerNames[i]), types.get(i));
+
+			if (!(column.getType() instanceof NumericType)) {
+				column.setSize(sizes.get(i));
+			}
 
 			columnList.add(column);
 		}
@@ -229,17 +258,67 @@ public class DelimitedParser extends Parser {
 	}
 
 	private Type getColumnType(Type currentType, Type type) {
-		// TODO: take weakest type
+		// this is the first type we've found, so use whatever this is
+		if (currentType == null) {
+			return type;
+		}
+
+		if (getTypeRating(type) > getTypeRating(currentType)) {
+			return type;
+		} else {
+			return currentType;
+		}
+	}
+
+	private int getTypeRating(Type type) {
+		// TODO: complete this. weakest type should be taken
 		// e.g.: double trumps float
 		// e.g: text trumps all
 
-		//types.put(column, type);
+		/*} else if (type instanceof BinaryType) {
+			dataTypeString = getType((BinaryType)type);*/
+		/*} else if (type instanceof BooleanType) {
+			dataTypeString = getType((BooleanType)type);*/
+		/*} else if (type instanceof DateTimeType) {
+			dataTypeString = getType((DateTimeType)type);
+		} else if (type instanceof DecimalType) {
+			dataTypeString = getType((DecimalType)type);*/
+		if (type instanceof StringType) {
+			switch((StringType)type) {
+				case VARCHAR:
+					return 9;
+			}
+		} else if (type instanceof ApproximateNumericType) {
+			switch((ApproximateNumericType)type) {
+				case DOUBLE:
+					return 8;
+				case FLOAT:
+					return 7;
+				case REAL:
+					return 6;
+			}
+		} else if (type instanceof ExactNumericType) {
+			switch((ExactNumericType)type) {
+				case BIGINT:
+					return 5;
+				case INTEGER:
+					return 4;
+				case MEDIUMINT:
+					return 3;
+				case SMALLINT:
+					return 2;
+				case TINYINT:
+					return 1;
+			}
+		/*} else if (type instanceof MonetaryType) {
+			switch((MonetaryType)type) {
+				case MONEY:
 
-		if (currentType == null) {
-			// decide what to do
+				case SMALLMONEY:
+			}*/
 		}
 
-		return type;
+		return 0;
 	}
 
 	// TODO: make sure this returns an array the same size of headers[]
@@ -268,7 +347,7 @@ public class DelimitedParser extends Parser {
 						continue;
 					}
 
-					// TODO: next char must either be nothing, or delimiter
+					// it's possible this could be the end of the line so no more delims will be present
 					if (lineChars[i + 1] != delimiter) {
 						log.logApp(Level.WARNING, "Expected delimiter on next char.. not found, skipping row");
 						continue;
