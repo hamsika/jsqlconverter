@@ -6,12 +6,10 @@ import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
-import com.googlecode.jsqlconverter.logging.LogLevel;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -73,7 +71,7 @@ public class DelimitedParser extends Parser {
 		try {
 			// only 'detect' data types if headers are available
 			if (hasHeaders) {
-				detectDataTypes();
+				detectDataTypes(callback);
 			}
 
 			if (headers != null) {
@@ -108,7 +106,7 @@ public class DelimitedParser extends Parser {
 					continue;
 				}
 
-				callback.produceStatement(getInsertFromValues(getColumns(line)));
+				callback.produceStatement(getInsertFromValues(getColumns(callback, line)));
 			}
 		} catch (IOException ioe) {
 			throw new ParserException(ioe.getMessage(), ioe.getCause());
@@ -135,7 +133,7 @@ public class DelimitedParser extends Parser {
 		return insert;
 	}
 
-	private void detectDataTypes() throws IOException {
+	private void detectDataTypes(ParserCallback callback) throws IOException {
 		String line;
 		int lineNumber = 0;
 
@@ -150,7 +148,7 @@ public class DelimitedParser extends Parser {
 
 			++lineNumber;
 
-			String values[] = getColumns(line);
+			String values[] = getColumns(callback, line);
 
 			// if this is the first line and we are reading headers then set this row as headers
 			if (lineNumber == 1 && hasHeaders) {
@@ -239,7 +237,7 @@ public class DelimitedParser extends Parser {
 
 		for (int i=0; i<headerNames.length; i++) {
 			if (types.get(i) == null) {
-				log.logApp(LogLevel.WARNING, "Datatype for column #" + (i + 1) + " was not detected");
+				callback.log("Datatype for column #" + (i + 1) + " was not detected");
 
 				types.put(i, StringType.VARCHAR);
 				sizes.put(i, 255);
@@ -322,7 +320,7 @@ public class DelimitedParser extends Parser {
 	}
 
 	// TODO: make sure this returns an array the same size of headers[]
-	private String[] getColumns(String line) {
+	private String[] getColumns(ParserCallback callback, String line) {
 		// if there's no textQuantifier set it means that all columns are seperated by delimiter
 		if (textQuantifier == '\0') {
 			// note: if a line has empty columns they will not be included
@@ -349,7 +347,7 @@ public class DelimitedParser extends Parser {
 
 					// it's possible this could be the end of the line so no more delims will be present
 					if (lineChars[i + 1] != delimiter) {
-						log.logApp(Level.WARNING, "Expected delimiter on next char.. not found, skipping row");
+						callback.log("Expected delimiter on next char.. not found, skipping row");
 						continue;
 					}
 

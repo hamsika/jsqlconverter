@@ -6,6 +6,8 @@ import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.producer.*;
 import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.io.*;
@@ -48,10 +50,10 @@ public class SQLConverterCLI implements ParserCallback {
 	private enum OutputOperation {
 		MSACCESS_MDB,
 		MSACCESS_SQL,
-		POSTGRESQL
+		POSTGRESQL,
+		TURBINE_XML
 	}
 
-	// TODO: check if unknown / unneeded params were used
 	public SQLConverterCLI(String[] args) throws ParserException, SQLException, FileNotFoundException, ClassNotFoundException {
 		if (args.length == 0) {
 			printUsage();
@@ -144,6 +146,10 @@ public class SQLConverterCLI implements ParserCallback {
 			setOutputOperation(OutputOperation.POSTGRESQL);
 		}
 
+		if (argList.contains("-out-turbine")) {
+			setOutputOperation(OutputOperation.TURBINE_XML);
+		}
+
 		if (outputOp == null) {
 			exitMessage("No output operation specified");
 		}
@@ -228,21 +234,33 @@ public class SQLConverterCLI implements ParserCallback {
 			break;
 			default:
 				exitMessage("This input option hasn't been defined!");
-				System.exit(0);
 			break;
 		}
 
 		// setup producer
 		switch(outputOp) {
 			case MSACCESS_MDB:
-				producer = new AccessMDBProducer(new File(outputFile));
-			break;
+				try {
+					producer = new AccessMDBProducer(new File(outputFile));
+				} catch (IOException e) {
+					exitMessage(e.getMessage(), e.getCause());
+				}
+				break;
 			case MSACCESS_SQL:
 				producer = new AccessSQLProducer(out);
 			break;
 			case POSTGRESQL:
 				producer = new PostgreSQLProducer(out);
 			break;
+			case TURBINE_XML:
+				try {
+					producer = new TurbineXMLProducer(out);
+				} catch (ParserConfigurationException e) {
+					exitMessage(e.getMessage(), e.getCause());
+				} catch (TransformerException e) {
+					exitMessage(e.getMessage(), e.getCause());
+				}
+				break;
 			default:
 				exitMessage("This output option hasn't been defined!");
 				System.exit(0);
@@ -253,17 +271,39 @@ public class SQLConverterCLI implements ParserCallback {
 
 		parser.parse(this);
 
+		try {
+			producer.end();
+		} catch (ProducerException e) {
+			exitMessage(e.getMessage(), e.getCause());
+		}
+
 		long runTimeMili = System.currentTimeMillis() - beforeMili;
 
 		System.err.println("Runtime: " + runTimeMili + "ms");
 	}
 
 	public void produceStatement(Statement statement) {
-		producer.produce(statement);
+		try {
+			producer.produce(statement);
+		} catch (ProducerException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void log(String message) {
+		System.err.println(message);
 	}
 
 	private void exitMessage(String message) {
+		exitMessage(message, null);
+	}
+
+	private void exitMessage(String message, Throwable cause) {
 		System.out.println(message);
+
+		if (cause != null) {
+			cause.printStackTrace();
+		}
 
 		System.exit(0);
 	}
@@ -282,6 +322,7 @@ public class SQLConverterCLI implements ParserCallback {
 			"\t-out-access\n" +
 			"\t-out-access-mdb -ofile <filename>\n" +
 			"\t-out-postgre\n" +
+			"\t-out-turbine\n" +
 			"\n" +
 			"additional options:\n" +
 			"\t-data"

@@ -130,7 +130,7 @@ public class JDBCParser extends Parser {
 			try {
 				referencesRs = meta.getImportedKeys(catalog, tableSchema, currentTable);
 			} catch (SQLException sqle) {
-				log.logApp(LogLevel.WARNING, "Failed to get foreign key list");
+				callback.log("Failed to get foreign key list");
 				log.log(LogLevel.WARNING, "", sqle);
 			}
 
@@ -206,7 +206,7 @@ public class JDBCParser extends Parser {
 		try {
 			primaryKey = getTablePrimaryKey(meta, createTable.getName());
 		} catch (SQLException sqle) {
-			log.logApp(LogLevel.WARNING, "Failed to get primary key list");
+			callback.log("Failed to get primary key list");
 			log.log(LogLevel.WARNING, "", sqle);
 		}
 
@@ -217,7 +217,7 @@ public class JDBCParser extends Parser {
 				if (column != null) {
 					column.addColumnOption(ColumnOption.PRIMARY_KEY);
 				} else {
-					log.logApp(LogLevel.ERROR, "couldn't find primary key column");
+					callback.log("couldn't find primary key column");
 				}
 			} else {
 				createTable.setPrimaryCompoundKeyConstraint(new KeyConstraint(primaryKey.getColumns()));
@@ -281,7 +281,7 @@ public class JDBCParser extends Parser {
 	}
 
 	private InsertFromValues[] getTableData(CreateTable tableName) throws SQLException {
-		// TODO: find better way of doing this (and remove the limit)
+		// TODO: find better way of doing this
 		// some DBMS do not allow setting tablename as "?" for PreparedStatements
 		PreparedStatement dataPs = con.prepareStatement("SELECT * FROM \"" + tableName.getName().getObjectName() + "\"");
 

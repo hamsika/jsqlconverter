@@ -11,27 +11,32 @@ import com.healthmarketscience.jackcess.Column;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class AccessMDBProducer extends Producer {
 	private Database db;
 
-	public AccessMDBProducer(File mdbFile) {
+	public AccessMDBProducer(File mdbFile) throws IOException {
+		// TODO: check if the file already exists, if it does then 'open' it instead of creating new db
+		// TODO: check if we should 'auto sync' or not
+		db = Database.create(mdbFile, false);
+	}
+
+	public void doCreateIndex(CreateIndex index) throws ProducerException {
+		/*Table table;
+
 		try {
-			// TODO: check if the file already exists, if it does then 'open' it instead of creating new db
-			db = Database.create(mdbFile);
+			table = db.getTable(index.getTableName().getObjectName());
 		} catch (IOException e) {
-			//throw new ProducerException(e.getMessage(), e.getCause());
-			// TODO: complete this
-			e.printStackTrace();
-		}
+			throw new ProducerException(e.getMessage(), e.getCause());
+		}*/
+
+		//Cursor.createIndexCursor(table, new Index.FIRST_ENTRY)
+		//new CursorBuilder(table).setIndexByColumns()
+
+		//new SimpleIndex(table, uniqueentrycount, uniqueentrycountoffset).is
 	}
 
-	public void doCreateIndex(CreateIndex index) {
-		
-	}
-
-	public void doCreateTable(CreateTable table) {
+	public void doCreateTable(CreateTable table) throws ProducerException {
 		TableBuilder tb = new TableBuilder(table.getName().getObjectName());
 
 		for (com.googlecode.jsqlconverter.definition.create.table.Column column : table.getColumns()) {
@@ -39,44 +44,44 @@ public class AccessMDBProducer extends Producer {
 
 			jcol.setName(column.getName().getObjectName());
 			jcol.setType(getType(column.getType()));
-
-			// TODO: setType, setSize
+			jcol.setLength((short)column.getSize()); // TODO: check this
 
 			tb.addColumn(jcol);
 		}
 
+		// TODO: relationships
+
 		try {
 			tb.toTable(db);
 		} catch (IOException e) {
-			// TODO: complete this
-			//throw new ProducerException(e.getMessage(), e.getCause());
-			e.printStackTrace();
+			throw new ProducerException(e.getMessage(), e.getCause());
 		}
 
 		// TODO: indexes
 	}
 
-	public void doInsertFromValues(InsertFromValues insert) {
+	public void doInsertFromValues(InsertFromValues insert) throws ProducerException {
 		Table table;
 
 		try {
 			table = db.getTable(insert.getTableName().getObjectName());
 		} catch (IOException e) {
-			e.printStackTrace();  // TODO: complete this
-			System.exit(0);
-			return;
+			throw new ProducerException(e.getMessage(), e.getCause());
 		}
 
 		try {
 			table.addRow(getRowData(insert));
 		} catch (IOException e) {
-			e.printStackTrace(); // TODO: complete this
-			System.exit(0);
+			throw new ProducerException(e.getMessage(), e.getCause());
 		}
 	}
 
-	public void doTruncate(Truncate truncate) {
-		
+	public void doTruncate(Truncate truncate) throws ProducerException {
+		// NA
+	}
+
+	public void end() throws ProducerException {
+		// NA
 	}
 
 	private Object getRowData(InsertFromValues insert) {

@@ -9,22 +9,45 @@ import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.logging.LogLevel;
 
 import java.io.PrintStream;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class PostgreSQLProducer extends SQLProducer {
 	public PostgreSQLProducer(PrintStream out) {
 		super(out);
 	}
 
+	public char getLeftQuote() {
+		return '"';
+	}
+
+	public char getRightQuote() {
+		return '"';
+	}
+
 	public String getValidName(Name name) {
+		StringBuffer nameBuffer = new StringBuffer();
+
 		if (name.getDatabaseName() != null) {
-			return name.getDatabaseName() + "." + name.getSchemaName() + "." + name.getObjectName();
+			nameBuffer.append(name.getDatabaseName());
+			nameBuffer.append(".");
 		}
 
 		if (name.getSchemaName() != null) {
-			return name.getSchemaName() + "." + name.getObjectName();
+			nameBuffer.append(name.getSchemaName());
+			nameBuffer.append(".");
 		}
 
-		return name.getObjectName();
+		nameBuffer.append(name.getObjectName());
+
+		return nameBuffer.toString();
+	}
+
+	public boolean isValidIdentifier(Name name) {
+		Pattern pattern = Pattern.compile("^([:alpha:_](\\w|_|\\$){0,62})$");
+		Matcher matcher = pattern.matcher(name.getObjectName());
+
+		return matcher.find();
 	}
 
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
@@ -57,7 +80,7 @@ public class PostgreSQLProducer extends SQLProducer {
 			case DOUBLE:
 				return "float8";
 			case FLOAT:
-				return null;
+				return "float4";
 			case REAL:
 				return "real";
 			default:
@@ -110,11 +133,12 @@ public class PostgreSQLProducer extends SQLProducer {
 			case INTEGER:
 				return "integer";
 			case MEDIUMINT:
-				return null;
+				return "integer";
 			case SMALLINT:
 				return "smallint";
 			case TINYINT:
-				return null;
+				// double check this is best
+				return "smallint";
 			default:
 				return null;
 		}

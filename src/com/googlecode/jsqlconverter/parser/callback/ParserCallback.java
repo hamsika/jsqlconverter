@@ -4,4 +4,6 @@ import com.googlecode.jsqlconverter.definition.Statement;
 
 public interface ParserCallback {
 	public void produceStatement(Statement statement);
+
+	public void log(String message);
 }

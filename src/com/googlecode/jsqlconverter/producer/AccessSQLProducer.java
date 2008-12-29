@@ -15,14 +15,16 @@ public class AccessSQLProducer extends SQLProducer {
 		super(out);
 	}
 
+	public char getLeftQuote() {
+		return '[';
+	}
+
+	public char getRightQuote() {
+		return ']';
+	}
+
 	public String getValidName(Name name) {
-		String value = name.getObjectName();
-
-		//if (value.contains(" ")) {
-			value = "[" + value + "]";
-		//}
-
-		return value;
+		return name.getObjectName();
 	}
 
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {

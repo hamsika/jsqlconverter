@@ -5,13 +5,13 @@ import com.googlecode.jsqlconverter.definition.truncate.table.Truncate;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
-import com.googlecode.jsqlconverter.logging.MyLogger;
 import com.googlecode.jsqlconverter.logging.LogLevel;
 
 import java.io.PrintStream;
+import java.util.logging.Logger;
 
 public abstract class Producer {
-	protected static MyLogger log = MyLogger.getLogger(Producer.class.getName());
+	protected static Logger log = Logger.getLogger(Producer.class.getName());
 	protected PrintStream out = System.out;
 
 	// don't force the use of a specific constructor
@@ -23,7 +23,7 @@ public abstract class Producer {
 		this.out = out;
 	}
 
-	public final void produce(Statement statement) {
+	public final void produce(Statement statement) throws ProducerException {
 		if (statement instanceof CreateIndex) {
 			doCreateIndex((CreateIndex)statement);
 		} else if (statement instanceof CreateTable) {
@@ -37,8 +37,10 @@ public abstract class Producer {
 		}
 	}
 
-	public abstract void doCreateIndex(CreateIndex index);
-	public abstract void doCreateTable(CreateTable table);
-	public abstract void doInsertFromValues(InsertFromValues insert);
-	public abstract void doTruncate(Truncate truncate);
+	public abstract void doCreateIndex(CreateIndex index) throws ProducerException;
+	public abstract void doCreateTable(CreateTable table) throws ProducerException;
+	public abstract void doInsertFromValues(InsertFromValues insert) throws ProducerException;
+	public abstract void doTruncate(Truncate truncate) throws ProducerException;
+
+	public abstract void end() throws ProducerException;
 }

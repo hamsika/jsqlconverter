@@ -164,13 +164,19 @@ public class TurbineXMLParser extends Parser {
 	}
 
 	private Column getColumn(Element columnElement) {
-		Column column = new Column(new Name(columnElement.getAttribute("name")), getType(columnElement.getAttribute("type")));
-
 		String isPrimaryKey = columnElement.getAttribute("primaryKey");
 		String isAutoIncr = columnElement.getAttribute("autoIncrement");
 		String isRequired = columnElement.getAttribute("required");
 		String colSize = columnElement.getAttribute("size");
 		String defaultValue = columnElement.getAttribute("defaultValue");
+		int size = 0;
+
+		if (!colSize.equals("")) {
+			size = Integer.parseInt(colSize);
+		}
+
+		Column column = new Column(new Name(columnElement.getAttribute("name")), getType(columnElement.getAttribute("type"), size));
+		column.setSize(size);
 
 		if (isPrimaryKey.equals("true")) {
 			column.addColumnOption(ColumnOption.PRIMARY_KEY);
@@ -184,11 +190,7 @@ public class TurbineXMLParser extends Parser {
 			column.addColumnOption(ColumnOption.NOT_NULL);
 		}
 
-		if (!colSize.equals("")) {
-			int size = Integer.parseInt(colSize);
 
-			column.setSize(size);
-		}
 
 		if (!defaultValue.equals("")) {
 			column.setDefaultConstraint(new DefaultConstraint(defaultValue));
@@ -197,7 +199,7 @@ public class TurbineXMLParser extends Parser {
 		return column;
 	}
 
-	private Type getType(String type) {
+	private Type getType(String type, int size) {
 		if (type.equals("ARRAY")) {
 		} else if (type.equals("BIGINT")) {
 			return ExactNumericType.BIGINT;
@@ -206,7 +208,9 @@ public class TurbineXMLParser extends Parser {
 		} else if (type.equals("BLOB")) {
 			return BinaryType.BLOB;
 		} else if (type.equals("BOOLEANCHAR")) {
+			return BooleanType.BOOLEAN; // TODO: check this
 		} else if (type.equals("BOOLEANINT")) {
+			return BooleanType.BOOLEAN; // TODO: check this
 		} else if (type.equals("BIT")) {
 			return BinaryType.BIT;
 		} else if (type.equals("CHAR")) {
@@ -216,7 +220,7 @@ public class TurbineXMLParser extends Parser {
 		} else if (type.equals("DATE")) {
 
 		} else if (type.equals("DECIMAL")) {
-
+			return new DecimalType(size);
 		} else if (type.equals("DISTINCT")) {
 		} else if (type.equals("DOUBLE")) {
 			return ApproximateNumericType.DOUBLE;

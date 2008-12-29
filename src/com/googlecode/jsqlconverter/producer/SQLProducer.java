@@ -25,7 +25,7 @@ public abstract class SQLProducer extends Producer {
 		super(out);
 	}
 
-	public void doCreateIndex(CreateIndex createIndex) {
+	public void doCreateIndex(CreateIndex createIndex) throws ProducerException {
 		out.print("CREATE ");
 
 		if (createIndex.isUnique()) {
@@ -33,15 +33,15 @@ public abstract class SQLProducer extends Producer {
 		}
 
 		out.print("INDEX ");
-		out.print(getValidName(createIndex.getIndexName()));
+		out.print(getQuotedName(createIndex.getIndexName()));
 		out.print(" ON ");
-		out.print(getValidName(createIndex.getTableName()));
+		out.print(getQuotedName(createIndex.getTableName()));
 		out.print(" (");
 		out.print(getColumnList(createIndex.getColumns()));
 		out.println(");");
 	}
 
-	public void doCreateTable(CreateTable table) {
+	public void doCreateTable(CreateTable table) throws ProducerException {
 		out.print("CREATE ");
 
 		if (table.containsOption(TableOption.GLOBAL) && supportsTableOption(TableOption.GLOBAL)) {
@@ -57,7 +57,7 @@ public abstract class SQLProducer extends Producer {
 		}
 
 		out.print("TABLE ");
-		out.print(getValidName(table.getName()));
+		out.print(getQuotedName(table.getName()));
 		out.println(" (");
 
 		Column[] columns = table.getColumns();
@@ -66,7 +66,7 @@ public abstract class SQLProducer extends Producer {
 			Column column = columns[i];
 
 			out.print("\t");
-			out.print(getValidName(column.getName()));
+			out.print(getQuotedName(column.getName()));
 			out.print(" ");
 
 			// constraints
@@ -147,9 +147,9 @@ public abstract class SQLProducer extends Producer {
 		out.println(");");
 	}
 
-	public void doInsertFromValues(InsertFromValues insert) {
+	public void doInsertFromValues(InsertFromValues insert) throws ProducerException {
 		out.print("INSERT INTO ");
-		out.print(getValidName(insert.getTableName()));
+		out.print(getQuotedName(insert.getTableName()));
 		out.print(" ");
 
 		Column[] columns = insert.getColumns();
@@ -174,9 +174,13 @@ public abstract class SQLProducer extends Producer {
 			Object value = insert.getObject(i);
 
 			if (type instanceof StringType) {
-				out.print("'");
-				out.print(value);
-				out.print("'");
+				if (value == null) {
+					out.print("null");
+				} else {
+					out.print(getLeftQuote());
+					out.print(value);
+					out.print(getRightQuote());
+				}
 			} else if (type instanceof NumericType) {
 				out.print(value);
 			} else if (type instanceof DateTimeType) {
@@ -193,10 +197,14 @@ public abstract class SQLProducer extends Producer {
 		out.println(");");
 	}
 
-	public void doTruncate(Truncate truncate) {
+	public void doTruncate(Truncate truncate) throws ProducerException {
 		out.print("TRUNCATE TABLE ");
-		out.print(getValidName(truncate.getTableName()));
+		out.print(getQuotedName(truncate.getTableName()));
 		out.println(";");
+	}
+
+	public void end() throws ProducerException {
+		// NA
 	}
 
 	private String getColumnList(Name[] names) {
@@ -207,10 +215,20 @@ public abstract class SQLProducer extends Producer {
 				columnList.append(", ");
 			}
 
-			columnList.append(getValidName(columnName));
+			columnList.append(getQuotedName(columnName));
 		}
 
 		return columnList.toString();
+	}
+
+	private String getQuotedName(Name name) {
+		StringBuffer sb = new StringBuffer();
+
+		sb.append(getLeftQuote());
+		sb.append(getValidName(name));
+		sb.append(getRightQuote());
+
+		return sb.toString();
 	}
 
 	private String getColumnList(Column[] columns) {
@@ -221,7 +239,7 @@ public abstract class SQLProducer extends Producer {
 				columnList.append(", ");
 			}
 
-			columnList.append(getValidName(column.getName()));
+			columnList.append(getQuotedName(column.getName()));
 		}
 
 		return columnList.toString();
@@ -231,9 +249,9 @@ public abstract class SQLProducer extends Producer {
 		StringBuffer sb = new StringBuffer();
 
 		sb.append("REFERENCES ");
-		sb.append(getValidName(reference.getTableName()));
+		sb.append(getQuotedName(reference.getTableName()));
 		sb.append(" (");
-		sb.append(getValidName(reference.getColumnName()));
+		sb.append(getQuotedName(reference.getColumnName()));
 		sb.append(")");
 
 		if (reference.getUpdateAction() != null && supportsForeignKeyAction(reference.getUpdateAction())) {
@@ -295,6 +313,9 @@ public abstract class SQLProducer extends Producer {
 	}
 
 	// other
+	public abstract char getLeftQuote();
+	public abstract char getRightQuote();
+
 	public abstract String getValidName(Name name);
 
 	public abstract String getDefaultConstraintString(DefaultConstraint defaultConstraint);
