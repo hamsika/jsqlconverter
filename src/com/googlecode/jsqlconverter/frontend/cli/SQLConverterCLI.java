@@ -28,6 +28,9 @@ public class SQLConverterCLI implements ParserCallback {
 	private char textQuantifier = '\0';
 	private Producer producer;
 
+	// sql fairy
+	private String prefix = null;
+
 	// jdbc params
 	private String driver;
 	private String url;
@@ -40,10 +43,12 @@ public class SQLConverterCLI implements ParserCallback {
 	private String outputFile;
 	private PrintStream out = System.out;
 
+
 	private enum InputOperation {
 		MSACCESS_MDB,
 		DELIMITED,
 		JDBC,
+		SQLFAIRY_XML,
 		TURBINE_XML
 	}
 
@@ -78,6 +83,10 @@ public class SQLConverterCLI implements ParserCallback {
 
 		if (argList.contains("-jdbc")) {
 			setInputOperation(InputOperation.JDBC);
+		}
+
+		if (argList.contains("-sqlfairy")) {
+			setInputOperation(InputOperation.SQLFAIRY_XML);
 		}
 
 		if (argList.contains("-turbine")) {
@@ -124,6 +133,10 @@ public class SQLConverterCLI implements ParserCallback {
 				url = getRequiredParameter("-url");
 				user = getOptionalParameter("-user");
 				pass = getOptionalParameter("-pass");
+			break;
+			case SQLFAIRY_XML:
+				file = getRequiredParameter("-file");
+				prefix = getOptionalParameter("-prefix");
 			break;
 			case TURBINE_XML:
 				file = getRequiredParameter("-file");
@@ -229,6 +242,9 @@ public class SQLConverterCLI implements ParserCallback {
 				Connection con = DriverManager.getConnection(url, user, pass);
 				parser = new JDBCParser(con, null, null, null, doData);
 			break;
+			case SQLFAIRY_XML:
+				parser = new SQLFairyXMLParser(new FileInputStream(file), prefix);
+			break;
 			case TURBINE_XML:
 				parser = new TurbineXMLParser(new FileInputStream(file));
 			break;
@@ -316,6 +332,7 @@ public class SQLConverterCLI implements ParserCallback {
 			"\t-access-mdb -file <filename>\n" +
 			"\t-delim [ -file <filename> ] [-noheader] [-seperator <char>] [-quantifier <char>]\n" +
 			"\t-jdbc -driver <driver> -url <url> [-user <username>] [-pass <password>]\n" +
+			"\t-sqlfairy -file <filename> [-prefix <prefix>]\n" +
 			"\t-turbine -file <filename>\n" +
 			"\n" +
 			"output options:\n" +
