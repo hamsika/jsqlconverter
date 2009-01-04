@@ -43,7 +43,6 @@ public class SQLConverterCLI implements ParserCallback {
 	private String outputFile;
 	private PrintStream out = System.out;
 
-
 	private enum InputOperation {
 		MSACCESS_MDB,
 		DELIMITED,
@@ -56,7 +55,8 @@ public class SQLConverterCLI implements ParserCallback {
 		MSACCESS_MDB,
 		MSACCESS_SQL,
 		POSTGRESQL,
-		TURBINE_XML
+		TURBINE_XML,
+		XHTML
 	}
 
 	public SQLConverterCLI(String[] args) throws ParserException, SQLException, FileNotFoundException, ClassNotFoundException {
@@ -161,6 +161,10 @@ public class SQLConverterCLI implements ParserCallback {
 
 		if (argList.contains("-out-turbine")) {
 			setOutputOperation(OutputOperation.TURBINE_XML);
+		}
+
+		if (argList.contains("-out-xhtml")) {
+			setOutputOperation(OutputOperation.XHTML);
 		}
 
 		if (outputOp == null) {
@@ -276,7 +280,10 @@ public class SQLConverterCLI implements ParserCallback {
 				} catch (TransformerException e) {
 					exitMessage(e.getMessage(), e.getCause());
 				}
-				break;
+			break;
+			case XHTML:
+				producer = new XHTMLProducer(out);
+			break;
 			default:
 				exitMessage("This output option hasn't been defined!");
 				System.exit(0);
@@ -340,6 +347,7 @@ public class SQLConverterCLI implements ParserCallback {
 			"\t-out-access-mdb -ofile <filename>\n" +
 			"\t-out-postgre\n" +
 			"\t-out-turbine\n" +
+			"\t-out-xhtml\n" +
 			"\n" +
 			"additional options:\n" +
 			"\t-data"
