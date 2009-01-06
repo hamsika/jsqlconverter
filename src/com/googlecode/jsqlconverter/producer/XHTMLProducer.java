@@ -1,55 +1,40 @@
 package com.googlecode.jsqlconverter.producer;
 
-import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
-import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
-import com.googlecode.jsqlconverter.definition.truncate.table.Truncate;
+import com.googlecode.jsqlconverter.producer.interfaces.CreateTableInterface;
+import com.googlecode.jsqlconverter.producer.interfaces.FinalInterface;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 
-public class XHTMLProducer extends Producer {
+// TODO: create index
+public class XHTMLProducer extends Producer implements CreateTableInterface, FinalInterface {
 	private ArrayList<CreateTable> tableStatements = new ArrayList<CreateTable>();
-	//private ArrayList<CreateIndex> indexStatements = new ArrayList<CreateIndex>();
 
 	public XHTMLProducer(PrintStream out) {
 		super(out);
-	}
-
-	public void doCreateIndex(CreateIndex index) throws ProducerException {
-		//indexStatements.add(index);
 	}
 
 	public void doCreateTable(CreateTable table) throws ProducerException {
 		tableStatements.add(table);
 	}
 
-	public void doInsertFromValues(InsertFromValues insert) throws ProducerException {
-
-	}
-
-	public void doTruncate(Truncate truncate) throws ProducerException {
-
-	}
-
-	public void end() throws ProducerException {
+	public void doFinal() throws ProducerException {
 		printHeader();
 
-		printSummary();
+		// sort table list
+		Collections.sort(tableStatements);
 
-		orderTables();
+		printSummary();
 
 		printTables();
 
 		printFooter();
-	}
-
-	private void orderTables() {
-		// TODO: take table list and order by foreign keys
 	}
 
 	private void printSummary() {
@@ -88,7 +73,7 @@ public class XHTMLProducer extends Producer {
 			String tableName = table.getName().getObjectName();
 
 			out.println("	<h3 id=\"" + tableName + "\">" + tableName + "</h3>\n");
-			out.println("	<table border=1>");
+			out.println("	<table>");
 			out.println("		<tr>");
 			out.println("			<th>Name</th>");
 			out.println("			<th>Type</th>");
@@ -116,13 +101,7 @@ public class XHTMLProducer extends Producer {
 			}
 
 			out.println("	</table>\n\n");
-
-			printIndexes(tableName);
 		}
-	}
-
-	private void printIndexes(String tableName) {
-		// TODO: print tables based on table name
 	}
 
 	private String getDefaultValue(DefaultConstraint defaultConstraint) {
@@ -151,6 +130,16 @@ public class XHTMLProducer extends Producer {
 			"  <head>\n" +
 			"    <title>XHTML Database Schema - jsqlconverter</title>\n" +
 			"    <meta http-equiv=\"Content-Type\" content=\"application/xhtml+xml; charset=utf-8\" />\n" +
+			"    <style type=\"text/css\">\n" +
+			"	td, th {\n" +
+			"		border: 1px solid black;\n" +
+			"	}\n" +
+			"\n" +
+			"	th {\n" +
+			"		text-align: left;\n" +
+			"		background: lightgrey;\n" +
+			"	}\n" +
+			"    </style>" +
 			"  </head>\n" +
 			"  <body>\n"
 		);

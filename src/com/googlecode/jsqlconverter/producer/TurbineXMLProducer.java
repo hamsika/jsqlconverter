@@ -1,12 +1,11 @@
 package com.googlecode.jsqlconverter.producer;
 
-import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
-import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
-import com.googlecode.jsqlconverter.definition.truncate.table.Truncate;
 import com.googlecode.jsqlconverter.definition.type.*;
+import com.googlecode.jsqlconverter.producer.interfaces.CreateTableInterface;
+import com.googlecode.jsqlconverter.producer.interfaces.FinalInterface;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
@@ -21,7 +20,7 @@ import java.io.UnsupportedEncodingException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-public class TurbineXMLProducer extends Producer {
+public class TurbineXMLProducer extends Producer implements CreateTableInterface, FinalInterface {
 	private Document document;
 	private Element databaseElement;
 
@@ -39,21 +38,20 @@ public class TurbineXMLProducer extends Producer {
 		document.appendChild(databaseElement);
 	}
 
-	public void doCreateIndex(CreateIndex index) {
+	/*public void doCreateIndex(CreateIndex index) {
 		// TODO: support adding indexes to existing <table> elements.
 		// should this support unique indexes also?
 
-		/*
-		<index name="book_author_title">
-			<index-column name="author_id"/>
-			<index-column name="title_id"/>
-		</index>
 
-		<unique>
-			<unique-column name="TABLE_NAME"/>
-		</unique>
-		 */
-	}
+		//<index name="book_author_title">
+		//	<index-column name="author_id"/>
+		//	<index-column name="title_id"/>
+		//</index>
+
+		//<unique>
+		//	<unique-column name="TABLE_NAME"/>
+		//</unique>
+	}*/
 
 	public void doCreateTable(CreateTable table) {
 		Element tableElement = document.createElement("table");
@@ -94,14 +92,6 @@ public class TurbineXMLProducer extends Producer {
 		// TODO: unique columns
 
 		databaseElement.appendChild(tableElement);
-	}
-
-	public void doInsertFromValues(InsertFromValues insert) {
-		// NA
-	}
-
-	public void doTruncate(Truncate truncate) {
-		// NA
 	}
 
 	private String getType(Type type) {
@@ -179,7 +169,7 @@ public class TurbineXMLProducer extends Producer {
 		return "OTHER";
 	}
 
-	public void end() throws ProducerException {
+	public void doFinal() throws ProducerException {
 		DOMSource source = new DOMSource(document);
 		Result result;
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();

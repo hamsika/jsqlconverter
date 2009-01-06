@@ -1,10 +1,10 @@
 package com.googlecode.jsqlconverter.producer;
 
-import com.googlecode.jsqlconverter.definition.truncate.table.Truncate;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.definition.create.table.*;
-import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
+import com.googlecode.jsqlconverter.producer.interfaces.CreateTableInterface;
+import com.googlecode.jsqlconverter.producer.interfaces.InsertFromValuesInterface;
 import com.healthmarketscience.jackcess.*;
 import com.healthmarketscience.jackcess.Column;
 
@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class AccessMDBProducer extends Producer {
+public class AccessMDBProducer extends Producer implements CreateTableInterface, InsertFromValuesInterface {
 	private Database db;
 
 	public AccessMDBProducer(File mdbFile) throws IOException {
@@ -21,20 +21,20 @@ public class AccessMDBProducer extends Producer {
 		db = Database.create(mdbFile, false);
 	}
 
-	public void doCreateIndex(CreateIndex index) throws ProducerException {
-		/*Table table;
+	/*public void doCreateIndex(CreateIndex index) throws ProducerException {
+		Table table;
 
 		try {
 			table = db.getTable(index.getTableName().getObjectName());
 		} catch (IOException e) {
 			throw new ProducerException(e.getMessage(), e.getCause());
-		}*/
+		}
 
 		//Cursor.createIndexCursor(table, new Index.FIRST_ENTRY)
 		//new CursorBuilder(table).setIndexByColumns()
 
 		//new SimpleIndex(table, uniqueentrycount, uniqueentrycountoffset).is
-	}
+	}*/
 
 	public void doCreateTable(CreateTable table) throws ProducerException {
 		TableBuilder tb = new TableBuilder(table.getName().getObjectName());
@@ -76,14 +76,6 @@ public class AccessMDBProducer extends Producer {
 		}
 	}
 
-	public void doTruncate(Truncate truncate) throws ProducerException {
-		// NA
-	}
-
-	public void end() throws ProducerException {
-		// NA
-	}
-
 	private Object getRowData(InsertFromValues insert) {
 		ArrayList<Object> objectArray = new ArrayList<Object>();
 
@@ -93,7 +85,7 @@ public class AccessMDBProducer extends Producer {
 			objectArray.add(value);
 		}
 
-		return objectArray.toArray(new Object[] {});
+		return objectArray.toArray(new Object[objectArray.size()]);
 	}
 
 	private DataType getType(Type type) {

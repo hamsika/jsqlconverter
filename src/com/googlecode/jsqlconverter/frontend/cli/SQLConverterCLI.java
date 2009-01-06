@@ -4,6 +4,7 @@ import com.googlecode.jsqlconverter.parser.*;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.producer.*;
+import com.googlecode.jsqlconverter.producer.interfaces.FinalInterface;
 import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -40,7 +41,7 @@ public class SQLConverterCLI implements ParserCallback {
 
 	// output params
 	// access mdb
-	private String outputFile;
+	private File outputFile;
 	private PrintStream out = System.out;
 
 	private enum InputOperation {
@@ -52,9 +53,12 @@ public class SQLConverterCLI implements ParserCallback {
 	}
 
 	private enum OutputOperation {
+		GRAPHWIZ_DOT,
 		MSACCESS_MDB,
 		MSACCESS_SQL,
+		MYSQL,
 		POSTGRESQL,
+		SQLSERVER,
 		TURBINE_XML,
 		XHTML
 	}
@@ -147,6 +151,10 @@ public class SQLConverterCLI implements ParserCallback {
 		doData = argList.contains("-data");
 
 		// detect producer options
+		if (argList.contains("-out-graphwizdot")) {
+			setOutputOperation(OutputOperation.GRAPHWIZ_DOT);
+		}
+
 		if (argList.contains("-out-access-mdb")) {
 			setOutputOperation(OutputOperation.MSACCESS_MDB);
 		}
@@ -155,8 +163,16 @@ public class SQLConverterCLI implements ParserCallback {
 			setOutputOperation(OutputOperation.MSACCESS_SQL);
 		}
 
-		if (argList.contains("-out-postgre")) {
+		if (argList.contains("-out-mysql")) {
+			setOutputOperation(OutputOperation.MYSQL);
+		}
+
+		if (argList.contains("-out-postgresql")) {
 			setOutputOperation(OutputOperation.POSTGRESQL);
+		}
+
+		if (argList.contains("-out-sqlserver")) {
+			setOutputOperation(OutputOperation.SQLSERVER);
 		}
 
 		if (argList.contains("-out-turbine")) {
@@ -174,7 +190,7 @@ public class SQLConverterCLI implements ParserCallback {
 		// detect parser options
 		switch(outputOp) {
 			case MSACCESS_MDB:
-				outputFile = getRequiredParameter("-ofile");
+				outputFile = new File(getRequiredParameter("-ofile"));
 			break;
 		}
 
@@ -259,9 +275,12 @@ public class SQLConverterCLI implements ParserCallback {
 
 		// setup producer
 		switch(outputOp) {
+			case GRAPHWIZ_DOT:
+				producer = new GraphwizDotProducer(out);
+			break;
 			case MSACCESS_MDB:
 				try {
-					producer = new AccessMDBProducer(new File(outputFile));
+					producer = new AccessMDBProducer(outputFile);
 				} catch (IOException e) {
 					exitMessage(e.getMessage(), e.getCause());
 				}
@@ -269,8 +288,14 @@ public class SQLConverterCLI implements ParserCallback {
 			case MSACCESS_SQL:
 				producer = new AccessSQLProducer(out);
 			break;
+			case MYSQL:
+				producer = new MySQLProducer(out);
+			break;
 			case POSTGRESQL:
 				producer = new PostgreSQLProducer(out);
+			break;
+			case SQLSERVER:
+				producer = new SQLServerProducer(out);
 			break;
 			case TURBINE_XML:
 				try {
@@ -294,10 +319,12 @@ public class SQLConverterCLI implements ParserCallback {
 
 		parser.parse(this);
 
-		try {
-			producer.end();
-		} catch (ProducerException e) {
-			exitMessage(e.getMessage(), e.getCause());
+		if (producer instanceof FinalInterface) {
+			try {
+				((FinalInterface)producer).doFinal();
+			} catch (ProducerException e) {
+				exitMessage(e.getMessage(), e.getCause());
+			}
 		}
 
 		long runTimeMili = System.currentTimeMillis() - beforeMili;
@@ -345,7 +372,9 @@ public class SQLConverterCLI implements ParserCallback {
 			"output options:\n" +
 			"\t-out-access\n" +
 			"\t-out-access-mdb -ofile <filename>\n" +
-			"\t-out-postgre\n" +
+			"\t-out-graphwizdot\n" +
+			"\t-out-mysql\n" +
+			"\t-out-postgresql\n" +
 			"\t-out-turbine\n" +
 			"\t-out-xhtml\n" +
 			"\n" +

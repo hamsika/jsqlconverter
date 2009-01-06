@@ -14,10 +14,14 @@ import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.logging.LogLevel;
+import com.googlecode.jsqlconverter.producer.interfaces.CreateIndexInterface;
+import com.googlecode.jsqlconverter.producer.interfaces.CreateTableInterface;
+import com.googlecode.jsqlconverter.producer.interfaces.TruncateInterface;
+import com.googlecode.jsqlconverter.producer.interfaces.InsertFromValuesInterface;
 
 import java.io.PrintStream;
 
-public abstract class SQLProducer extends Producer {
+public abstract class SQLProducer extends Producer implements CreateIndexInterface, CreateTableInterface, InsertFromValuesInterface, TruncateInterface {
 	// TODO: support quoting ([ ], ', ", `, etc). column quoting may be different to value quoting for inserts
 	// e.g:  insert into `bob` values('a', 'b');
 
@@ -203,10 +207,6 @@ public abstract class SQLProducer extends Producer {
 		out.println(";");
 	}
 
-	public void end() throws ProducerException {
-		// NA
-	}
-
 	private String getColumnList(Name[] names) {
 		StringBuffer columnList = new StringBuffer();
 
@@ -324,7 +324,7 @@ public abstract class SQLProducer extends Producer {
 	public abstract String getType(BinaryType type);
 	public abstract String getType(BooleanType type);
 	public abstract String getType(DateTimeType type);
-	public abstract String getType(DecimalType type);
+	public abstract String getType(DecimalType type); // TODO: precision / scale
 	public abstract String getType(ExactNumericType type);
 	public abstract String getType(MonetaryType type);
 	public abstract String getType(StringType type);

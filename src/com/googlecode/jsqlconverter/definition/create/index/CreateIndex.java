@@ -55,7 +55,7 @@ public class CreateIndex extends Statement {
 	}
 
 	public Name[] getColumns() {
-		return columns.toArray(new Name[] {});
+		return columns.toArray(new Name[columns.size()]);
 	}
 
 	public SortSequence getSortSequence() {

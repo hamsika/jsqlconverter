@@ -34,7 +34,7 @@ public class Column {
 	}
 
 	public ColumnOption[] getOptions() {
-		return options.toArray(new ColumnOption[] {});
+		return options.toArray(new ColumnOption[options.size()]);
 	}
 
 	public ForeignKeyConstraint getForeignKeyConstraint() {

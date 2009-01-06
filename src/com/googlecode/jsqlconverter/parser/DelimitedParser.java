@@ -19,7 +19,7 @@ public class DelimitedParser extends Parser {
 	private boolean hasHeaders;
 	private char delimiter;
 	private char textQuantifier = '\0';
-	private int maxLineReads = 50;
+	private int maxLineReads = 20;
 	private Column[] headers = null;
 
 	// hold a copy of the lines read to detect data types
@@ -252,7 +252,7 @@ public class DelimitedParser extends Parser {
 			columnList.add(column);
 		}
 
-		headers = columnList.toArray(new Column[] {});
+		headers = columnList.toArray(new Column[columnList.size()]);
 	}
 
 	private Type getColumnType(Type currentType, Type type) {
@@ -384,6 +384,6 @@ public class DelimitedParser extends Parser {
 
 		log.fine("-----------");
 
-		return columns.toArray(new String[] {});
+		return columns.toArray(new String[columns.size()]);
 	}
 }

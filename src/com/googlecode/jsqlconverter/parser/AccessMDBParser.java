@@ -70,7 +70,7 @@ public class AccessMDBParser extends Parser {
 							columnNames.add(new Name(cd.getName()));
 						}
 
-						ct.setPrimaryCompoundKeyConstraint(new KeyConstraint(columnNames.toArray(new Name[] {})));
+						ct.setPrimaryCompoundKeyConstraint(new KeyConstraint(columnNames.toArray(new Name[columnNames.size()])));
 					} else {
 						// single column index
 						// may need some additional error checking / message to ensure that the PRIMARY_KEY constraint was added

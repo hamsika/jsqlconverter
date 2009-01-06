@@ -6,6 +6,10 @@ import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.logging.LogLevel;
+import com.googlecode.jsqlconverter.producer.interfaces.CreateIndexInterface;
+import com.googlecode.jsqlconverter.producer.interfaces.CreateTableInterface;
+import com.googlecode.jsqlconverter.producer.interfaces.InsertFromValuesInterface;
+import com.googlecode.jsqlconverter.producer.interfaces.TruncateInterface;
 
 import java.io.PrintStream;
 import java.util.logging.Logger;
@@ -25,22 +29,27 @@ public abstract class Producer {
 
 	public final void produce(Statement statement) throws ProducerException {
 		if (statement instanceof CreateIndex) {
-			doCreateIndex((CreateIndex)statement);
+			if (this instanceof CreateIndexInterface) {
+				CreateIndexInterface cii = (CreateIndexInterface)this;
+				cii.doCreateIndex((CreateIndex)statement);
+			}
 		} else if (statement instanceof CreateTable) {
-			doCreateTable((CreateTable)statement);
+			if (this instanceof CreateTableInterface) {
+				CreateTableInterface cti = (CreateTableInterface)this;
+				cti.doCreateTable((CreateTable)statement);
+			}
 		} else if (statement instanceof InsertFromValues) {
-			doInsertFromValues((InsertFromValues)statement);
+			if (this instanceof InsertFromValuesInterface) {
+				InsertFromValuesInterface ifvi = (InsertFromValuesInterface)this;
+				ifvi.doInsertFromValues((InsertFromValues)statement);
+			}
 		} else if (statement instanceof Truncate) {
-			doTruncate((Truncate)statement);
+			if (this instanceof TruncateInterface) {
+				TruncateInterface ti = (TruncateInterface)this;
+				ti.doTruncate((Truncate)statement);
+			}
 		} else {
-			log.log(LogLevel.UNHANDLED, "statement type");
+			log.log(LogLevel.UNHANDLED, "statement type: " + statement.getClass().getName());
 		}
 	}
-
-	public abstract void doCreateIndex(CreateIndex index) throws ProducerException;
-	public abstract void doCreateTable(CreateTable table) throws ProducerException;
-	public abstract void doInsertFromValues(InsertFromValues insert) throws ProducerException;
-	public abstract void doTruncate(Truncate truncate) throws ProducerException;
-
-	public abstract void end() throws ProducerException;
 }

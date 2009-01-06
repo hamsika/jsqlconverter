@@ -118,9 +118,9 @@ public class PostgreSQLProducer extends SQLProducer {
 	public String getType(DateTimeType type) {
 		switch(type) {
 			case DATETIME:
-				return "timstamp"; // according to some docs TIMESTAMP is eqiv to DATETIME aparantly
+				return "timestamp"; // according to some docs TIMESTAMP is eqiv to DATETIME aparantly
 			case TIMESTAMP:
-				return "timstamp"; // TODO find out if this can have a time zone
+				return "timestamp"; // TODO find out if this can have a time zone
 			default:
 				return null;
 		}

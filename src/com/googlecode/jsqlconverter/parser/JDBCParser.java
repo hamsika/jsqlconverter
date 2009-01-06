@@ -307,7 +307,7 @@ public class JDBCParser extends Parser {
 			inserts.add(insert);
 		}
 
-		return inserts.toArray(new InsertFromValues[] {});
+		return inserts.toArray(new InsertFromValues[inserts.size()]);
 	}
 
 	private CreateIndex[] getTableIndexes(DatabaseMetaData meta, Name tableName) throws SQLException {
@@ -388,7 +388,7 @@ public class JDBCParser extends Parser {
 			return null;
 		}
 
-		return indexes.toArray(new CreateIndex[] {});
+		return indexes.toArray(new CreateIndex[indexes.size()]);
 	}
 
 	private CreateIndex getTablePrimaryKey(DatabaseMetaData meta, Name tableName) throws SQLException {

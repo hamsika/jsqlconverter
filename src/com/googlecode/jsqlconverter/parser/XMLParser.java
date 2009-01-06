@@ -176,7 +176,7 @@ public abstract class XMLParser extends Parser {
 			indexList.add(ci);
 		}
 
-		return indexList.toArray(new CreateIndex[] {});
+		return indexList.toArray(new CreateIndex[indexList.size()]);
 	}
 
 	private void doIndexes(ParserCallback callback, Name tableName, NodeList indexNodes) {
