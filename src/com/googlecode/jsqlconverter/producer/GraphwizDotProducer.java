@@ -6,53 +6,50 @@ import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.io.*;
 
 public class GraphwizDotProducer extends Producer implements CreateTableInterface, FinalInterface {
-	private ArrayList<CreateTable> tableStatements = new ArrayList<CreateTable>();
+	// TODO: point out primary key, point out uniques
+	private StringBuffer relationshipBuffer = new StringBuffer();
 
 	public GraphwizDotProducer(PrintStream out) {
 		super(out);
-	}
-
-	public void doCreateTable(CreateTable table) throws ProducerException {
-		tableStatements.add(table);
-	}
-
-	public void doFinal() throws ProducerException {
-		// sort table list
-		Collections.sort(tableStatements);
 
 		out.println("digraph G {");
 		out.println("	node [");
 		out.println("		shape = \"record\"");
 		out.println("	]");
+	}
 
-		// create the nodes
-		for (CreateTable table : tableStatements) {
-			String tableName = table.getName().getObjectName();
+	public void doCreateTable(CreateTable table) throws ProducerException {
+		String tableName = table.getName().getObjectName();
 
-			out.println();
-			out.println("	" + tableName + " [");
-			out.println("		label = \"{" + tableName + "|" + getColumnList(table) + "}\"");
-			out.println("	]");
-		}
+		out.println();
+		out.println("	" + tableName + " [");
+		out.println("		label = \"{" + tableName + "|" + getColumnList(table) + "}\"");
+		out.println("	]");
 
-		// create the links
-		for (CreateTable table : tableStatements) {
-			for (Column column : table.getColumns()) {
-				ForeignKeyConstraint fkey = column.getForeignKeyConstraint();
+		for (Column column : table.getColumns()) {
+			ForeignKeyConstraint fkey = column.getForeignKeyConstraint();
 
-				// TODO: check target table exists and output warning if it does not
-				if (fkey != null) {
-					out.println("	" + table.getName().getObjectName() + " -> " + fkey.getTableName().getObjectName());
-				}
+			// if target table doesn't exist then an empty table will be created.
+			// should probably output a warning if thatis the case
+			if (fkey != null) {
+				relationshipBuffer.append("\t");
+				relationshipBuffer.append(tableName);
+				relationshipBuffer.append(" -> ");
+				relationshipBuffer.append(fkey.getTableName().getObjectName());
+				relationshipBuffer.append("\n");
 			}
 		}
+	}
 
-		out.println("}");
+	public void doFinal() throws ProducerException {
+		out.println();
+
+		out.print(relationshipBuffer);
+
+		out.print("}");
 	}
 
 	private String getColumnList(CreateTable table) {

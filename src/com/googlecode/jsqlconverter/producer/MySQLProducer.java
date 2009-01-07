@@ -24,8 +24,16 @@ public class MySQLProducer extends SQLProducer {
 	}
 
 	public String getValidName(Name name) {
-		// TODO
-		return name.getObjectName();
+		StringBuffer nameBuffer = new StringBuffer();
+
+		if (name.getSchemaName() != null) {
+			nameBuffer.append(name.getSchemaName());
+			nameBuffer.append(".");
+		}
+
+		nameBuffer.append(name.getObjectName());
+
+		return nameBuffer.toString();
 	}
 
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
