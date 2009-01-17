@@ -8,11 +8,11 @@ import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKe
 
 import java.io.*;
 
-public class GraphwizDotProducer extends Producer implements CreateTableInterface, FinalInterface {
+public class GraphvizDotProducer extends Producer implements CreateTableInterface, FinalInterface {
 	// TODO: point out primary key, point out uniques
 	private StringBuffer relationshipBuffer = new StringBuffer();
 
-	public GraphwizDotProducer(PrintStream out) {
+	public GraphvizDotProducer(PrintStream out) {
 		super(out);
 
 		out.println("digraph G {");
