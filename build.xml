@@ -1,46 +1,59 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project basedir=".">
-	<property name="project_name" value="jsqlconverter"/>
-	<property name="project_author" value="James Carter"/>
-	<property name="project_mainclass" value="com.googlecode.jsqlconverter.frontend.cli.SQLConverterCLI"/>
+	<property name="project.name" value="jsqlconverter"/>
+	<property name="project.author" value="James Carter"/>
+	<property name="project.mainclass" value="com.googlecode.jsqlconverter.frontend.cli.SQLConverterCLI"/>
 
-	<property name="project_jar" value="${project_name}.jar"/>
-	<property name="project_exe" value="${project_name}.exe"/>
-	<property name="project_zip" value="${project_name}.zip"/>
-	<property name="project_src" value="src"/>
-	<property name="project_lib" value="lib"/>
+	<property name="project.jar" value="${project.name}.jar"/>
+	<property name="project.zip" value="${project.name}.zip"/>
+	<property name="project.src" value="src"/>
+	<property name="project.tests" value="test-src"/>
+	<property name="project.lib" value="lib"/>
 
-	<property name="build_temp" value="build/temp"/>
-	<property name="build_bin" value="build/bin"/>
-	<property name="build_zip" value="build/zip"/>
+	<property name="build.temp" value="build/temp"/>
+	<property name="build.bin" value="build/bin"/>
+	<property name="build.zip" value="build/zip"/>
 
-	<path id="class.path">
-        <fileset dir="${project_lib}" >
-            <include name="*.jar" />
-        </fileset>
+	<property name="build.compiler" value="modern"/>
+	<property name="build.debug" value="on"/>
+
+	<property name="ant.build.javac.target" value="1.6"/>
+
+	<path id="classpath.lib">
+		<fileset dir="${project.lib}" >
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<path id="classpath.tests">
+		<pathelement location="${build.temp}" />
 	</path>
 
 	<target name="compile">
-		<mkdir dir="${build_temp}"/>
+		<mkdir dir="${build.temp}"/>
 
-		<copy todir="${build_temp}/">
-			<fileset dir="${project_src}" includes="**/*.java"/>
-		</copy>
+		<javac srcdir="${project.src}" destdir="${build.temp}" debug="${build.debug}">
+			<classpath refid="classpath.lib"/>
+		</javac>
+	</target>
 
-		<javac srcdir="${build_temp}" destdir="${build_temp}" debug="true">
-			<classpath refid="class.path"/>
+	<target name="compile-tests" depends="compile">
+		<mkdir dir="${build.temp}"/>
+
+		<javac srcdir="${project.tests}" destdir="${build.temp}" debug="${build.debug}">
+			<classpath refid="classpath.lib"/>
 		</javac>
 	</target>
 
 	<target name="jar" depends="compile">
-		<mkdir dir="${build_bin}"/>
+		<mkdir dir="${build.bin}"/>
 
-		<jar compress="true" jarfile="${build_temp}\${project_name}-lib.jar">
+		<jar compress="true" jarfile="${build.temp}\${project.name}-lib.jar">
 			<manifest>
-				<attribute name="Implementation-Vendor" value="${project_author}"/>
+				<attribute name="Implementation-Vendor" value="${project.author}"/>
 			</manifest>
 
-			<fileset dir="${build_temp}">
+			<fileset dir="${build.temp}">
 				<patternset>
 					<include name="**/*.class"/>
 					<exclude name="**/cli/*.class"/>
@@ -48,47 +61,58 @@
 			</fileset>
 		</jar>
 
-		<jar compress="true" jarfile="${build_temp}\${project_name}-cli.jar">
+		<jar compress="true" jarfile="${build.temp}\${project.name}-cli.jar">
 			<manifest>
-				<attribute name="Main-Class" value="${project_mainclass}"/>
-				<attribute name="Implementation-Vendor" value="${project_author}"/>
+				<attribute name="Main-Class" value="${project.mainclass}"/>
+				<attribute name="Implementation-Vendor" value="${project.author}"/>
 			</manifest>
 
-			<fileset dir="${build_temp}">
+			<fileset dir="${build.temp}">
 				<patternset>
 					<include name="**/cli/*.class"/>
 				</patternset>
 			</fileset>
 		</jar>
 
-		<move todir="${build_bin}">
-			<fileset dir="${build_temp}" includes="*.jar"/>
+		<move todir="${build.bin}">
+			<fileset dir="${build.temp}" includes="*.jar"/>
 		</move>
 	</target>
 
 	<target name="zip" depends="jar">
-		<mkdir dir="${build_zip}"/>
-		<mkdir dir="${build_zip}/${project_name}"/>
-		<mkdir dir="${build_zip}/${project_name}/lib"/>
+		<mkdir dir="${build.zip}"/>
+		<mkdir dir="${build.zip}/${project.name}"/>
+		<mkdir dir="${build.zip}/${project.name}/lib"/>
 
-		<copy todir="${build_zip}/${project_name}/lib">
-			<fileset dir="${build_bin}" includes="*.jar"/>
+		<copy todir="${build.zip}/${project.name}/lib">
+			<fileset dir="${build.bin}" includes="*.jar"/>
 		</copy>
 
-		<copy todir="${build_zip}/${project_name}/bin">
+		<copy todir="${build.zip}/${project.name}/bin">
 			<fileset dir="bin"/>
 		</copy>
 
-		<copy todir="${build_zip}/${project_name}">
+		<copy todir="${build.zip}/${project.name}">
 			<fileset dir="./" includes="logging.properties" />
 		</copy>
 
-		<zip destfile="${build_zip}/${project_zip}">
-			<zipfileset dir="${build_zip}/" includes="**/*"/>
+		<zip destfile="${build.zip}/${project.zip}">
+			<zipfileset dir="${build.zip}/" includes="**/*"/>
 		</zip>
 	</target>
 
-	<target name="clean" description="Delete build files, etc.">
+	<target name="junit" depends="compile-tests">
+		<junit printsummary="yes" fork="yes" haltonfailure="yes" showoutput="yes">
+			<classpath refid="classpath.lib"/>
+			<classpath refid="classpath.tests"/>
+
+			<formatter type="plain"/>
+
+			<test name="com.googlecode.jsqlconverter.AllTests"/>
+		</junit>
+	</target>
+
+	<target name="clean">
 		<delete dir="build"/>
 	</target>
 </project>

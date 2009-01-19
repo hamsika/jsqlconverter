@@ -53,7 +53,7 @@ public class SQLConverterCLI implements ParserCallback {
 	}
 
 	private enum OutputOperation {
-		GRAPHVIZ_DOT,
+		DOT,
 		MSACCESS_MDB,
 		MSACCESS_SQL,
 		MYSQL,
@@ -151,8 +151,8 @@ public class SQLConverterCLI implements ParserCallback {
 		doData = argList.contains("-data");
 
 		// detect producer options
-		if (argList.contains("-out-graphvizdot")) {
-			setOutputOperation(OutputOperation.GRAPHVIZ_DOT);
+		if (argList.contains("-out-dot")) {
+			setOutputOperation(OutputOperation.DOT);
 		}
 
 		if (argList.contains("-out-access-mdb")) {
@@ -275,8 +275,8 @@ public class SQLConverterCLI implements ParserCallback {
 
 		// setup producer
 		switch(outputOp) {
-			case GRAPHVIZ_DOT:
-				producer = new GraphvizDotProducer(out);
+			case DOT:
+				producer = new DOTProducer(out);
 			break;
 			case MSACCESS_MDB:
 				try {
@@ -372,7 +372,7 @@ public class SQLConverterCLI implements ParserCallback {
 			"output options:\n" +
 			"\t-out-access\n" +
 			"\t-out-access-mdb -ofile <filename>\n" +
-			"\t-out-graphvizdot\n" +
+			"\t-out-dot\n" +
 			"\t-out-mysql\n" +
 			"\t-out-postgresql\n" +
 			"\t-out-turbine\n" +
