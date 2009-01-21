@@ -360,7 +360,7 @@ public class SQLConverterCLI implements ParserCallback {
 
 	private void printUsage() {
 		System.out.println(
-			"jsqlparser <input options> <output options> [<additional options>]\n" +
+			"jsqlparser <input options> <output options> [<global input options>]\n" +
 
 			"input options:\n" +
 			"\t-access-mdb -file <filename>\n" +
@@ -370,15 +370,13 @@ public class SQLConverterCLI implements ParserCallback {
 			"\t-turbine -file <filename>\n" +
 			"\n" +
 			"output options:\n" +
-			"\t-out-access\n" +
+			"\t-out-{access | mysql | postgresql | sqlserver}\n" +
 			"\t-out-access-mdb -ofile <filename>\n" +
 			"\t-out-dot\n" +
-			"\t-out-mysql\n" +
-			"\t-out-postgresql\n" +
 			"\t-out-turbine\n" +
 			"\t-out-xhtml\n" +
 			"\n" +
-			"additional options:\n" +
+			"global input options:\n" +
 			"\t-data"
 		);
 	}

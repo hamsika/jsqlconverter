@@ -37,9 +37,9 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		}
 
 		out.print("INDEX ");
-		out.print(getQuotedName(createIndex.getIndexName()));
+		out.print(getQuotedName(createIndex.getIndexName(), QuoteType.INSERT));
 		out.print(" ON ");
-		out.print(getQuotedName(createIndex.getTableName()));
+		out.print(getQuotedName(createIndex.getTableName(), QuoteType.INSERT));
 		out.print(" (");
 		out.print(getColumnList(createIndex.getColumns()));
 		out.println(");");
@@ -61,7 +61,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		}
 
 		out.print("TABLE ");
-		out.print(getQuotedName(table.getName()));
+		out.print(getQuotedName(table.getName(), QuoteType.TABLE));
 		out.println(" (");
 
 		Column[] columns = table.getColumns();
@@ -70,7 +70,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 			Column column = columns[i];
 
 			out.print("\t");
-			out.print(getQuotedName(column.getName()));
+			out.print(getQuotedName(column.getName(), QuoteType.TABLE));
 			out.print(" ");
 
 			// constraints
@@ -153,14 +153,14 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 
 	public void doInsertFromValues(InsertFromValues insert) throws ProducerException {
 		out.print("INSERT INTO ");
-		out.print(getQuotedName(insert.getTableName()));
+		out.print(getQuotedName(insert.getTableName(), QuoteType.INSERT));
 		out.print(" ");
 
 		Column[] columns = insert.getColumns();
 
 		if (columns != null) {
 			out.print("(");
-			out.print(getColumnList(columns));
+			out.print(getColumnList(columns, QuoteType.INSERT));
 			out.print(") ");
 		}
 
@@ -181,9 +181,9 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 				if (value == null) {
 					out.print("null");
 				} else {
-					out.print(getLeftQuote());
+					out.print(getLeftQuote(QuoteType.INSERT));
 					out.print(value);
-					out.print(getRightQuote());
+					out.print(getRightQuote(QuoteType.INSERT));
 				}
 			} else if (type instanceof NumericType) {
 				out.print(value);
@@ -203,7 +203,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 
 	public void doTruncate(Truncate truncate) throws ProducerException {
 		out.print("TRUNCATE TABLE ");
-		out.print(getQuotedName(truncate.getTableName()));
+		out.print(getQuotedName(truncate.getTableName(), QuoteType.TRUNCATE));
 		out.println(";");
 	}
 
@@ -215,23 +215,37 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 				columnList.append(", ");
 			}
 
-			columnList.append(getQuotedName(columnName));
+			columnList.append(getQuotedName(columnName, QuoteType.TRUNCATE));
 		}
 
 		return columnList.toString();
 	}
 
-	private String getQuotedName(Name name) {
+	private String getQuotedName(Name name, QuoteType type) {
 		StringBuffer sb = new StringBuffer();
 
-		sb.append(getLeftQuote());
-		sb.append(getValidName(name));
-		sb.append(getRightQuote());
+		if (supportsIdentifier(IdentifierType.SCHEMA) && name.getSchemaName() != null) {
+			sb.append(getLeftQuote(type));
+			sb.append(getValidIdentifier(name.getSchemaName()));
+			sb.append(getRightQuote(type));
+			sb.append(".");
+		}
+
+		if (supportsIdentifier(IdentifierType.DATABASE) && name.getDatabaseName() != null) {
+			sb.append(getLeftQuote(type));
+			sb.append(getValidIdentifier(name.getDatabaseName()));
+			sb.append(getRightQuote(type));
+			sb.append(".");
+		}
+
+		sb.append(getLeftQuote(type));
+		sb.append(getValidIdentifier(name.getObjectName()));
+		sb.append(getRightQuote(type));
 
 		return sb.toString();
 	}
 
-	private String getColumnList(Column[] columns) {
+	private String getColumnList(Column[] columns, QuoteType type) {
 		StringBuffer columnList = new StringBuffer();
 
 		for (Column column : columns) {
@@ -239,7 +253,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 				columnList.append(", ");
 			}
 
-			columnList.append(getQuotedName(column.getName()));
+			columnList.append(getQuotedName(column.getName(), type));
 		}
 
 		return columnList.toString();
@@ -249,9 +263,9 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		StringBuffer sb = new StringBuffer();
 
 		sb.append("REFERENCES ");
-		sb.append(getQuotedName(reference.getTableName()));
+		sb.append(getQuotedName(reference.getTableName(), QuoteType.TABLE));
 		sb.append(" (");
-		sb.append(getQuotedName(reference.getColumnName()));
+		sb.append(getQuotedName(reference.getColumnName(), QuoteType.TABLE));
 		sb.append(")");
 
 		if (reference.getUpdateAction() != null && supportsForeignKeyAction(reference.getUpdateAction())) {
@@ -313,10 +327,10 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 	}
 
 	// other
-	public abstract char getLeftQuote();
-	public abstract char getRightQuote();
+	public abstract char getLeftQuote(QuoteType type);
+	public abstract char getRightQuote(QuoteType type);
 
-	public abstract String getValidName(Name name);
+	public abstract String getValidIdentifier(String name);
 
 	public abstract String getDefaultConstraintString(DefaultConstraint defaultConstraint);
 
@@ -331,7 +345,22 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 
 	public abstract boolean outputTypeSize(Type type, String localname);
 
+	public abstract boolean isValidIdentifier(String name);
+
+	public abstract boolean supportsIdentifier(IdentifierType type);
 	public abstract boolean supportsTableOption(TableOption option);
 	public abstract boolean supportsForeignKeyAction(ForeignKeyAction action);
 	public abstract boolean supportsColumnOption(ColumnOption option);
+
+	public enum IdentifierType {
+		SCHEMA,
+		DATABASE
+	}
+
+	public enum QuoteType {
+		TABLE,
+		INSERT,
+		INDEX,
+		TRUNCATE
+	}
 }

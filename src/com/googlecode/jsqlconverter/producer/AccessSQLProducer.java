@@ -4,7 +4,6 @@ import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultCo
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
-import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.logging.LogLevel;
 
@@ -15,16 +14,16 @@ public class AccessSQLProducer extends SQLProducer {
 		super(out);
 	}
 
-	public char getLeftQuote() {
+	public char getLeftQuote(QuoteType type) {
 		return '[';
 	}
 
-	public char getRightQuote() {
+	public char getRightQuote(QuoteType type) {
 		return ']';
 	}
 
-	public String getValidName(Name name) {
-		return name.getObjectName();
+	public String getValidIdentifier(String name) {
+		return name;
 	}
 
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
@@ -137,6 +136,15 @@ public class AccessSQLProducer extends SQLProducer {
 
 	public boolean outputTypeSize(Type type, String localname) {
 		return !localname.equals("memo");
+	}
+
+	public boolean isValidIdentifier(String name) {
+		// TODO: do some regex here
+		return false;
+	}
+
+	public boolean supportsIdentifier(IdentifierType type) {
+		return false;
 	}
 
 	public boolean supportsTableOption(TableOption option) {

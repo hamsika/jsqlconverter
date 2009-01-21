@@ -1,6 +1,5 @@
 package com.googlecode.jsqlconverter.producer;
 
-import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
@@ -15,25 +14,21 @@ public class MySQLProducer extends SQLProducer {
 		super(out);
 	}
 
-	public char getLeftQuote() {
-		return '`';
-	}
-
-	public char getRightQuote() {
-		return '`';
-	}
-
-	public String getValidName(Name name) {
-		StringBuffer nameBuffer = new StringBuffer();
-
-		if (name.getSchemaName() != null) {
-			nameBuffer.append(name.getSchemaName());
-			nameBuffer.append(".");
+	public char getLeftQuote(QuoteType type) {
+		switch(type) {
+			case TABLE:
+				return '`';
+			default:
+				return '\'';
 		}
+	}
 
-		nameBuffer.append(name.getObjectName());
+	public char getRightQuote(QuoteType type) {
+		return getLeftQuote(type);
+	}
 
-		return nameBuffer.toString();
+	public String getValidIdentifier(String name) {
+		return name;
 	}
 
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
@@ -149,6 +144,23 @@ public class MySQLProducer extends SQLProducer {
 
 	public boolean outputTypeSize(Type type, String localname) {
 		return true;
+	}
+
+	public boolean isValidIdentifier(String name) {
+		// TODO: do some regex here
+		return false;
+	}
+
+	public boolean supportsIdentifier(IdentifierType type) {
+		switch (type) {
+			case SCHEMA:
+				return false;
+			case DATABASE:
+				return true;
+			default:
+				log.log(LogLevel.UNHANDLED, "Unknown identifier type: " + type);
+				return false;
+		}
 	}
 
 	public boolean supportsTableOption(TableOption option) {

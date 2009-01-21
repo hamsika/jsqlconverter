@@ -1,7 +1,6 @@
 package com.googlecode.jsqlconverter.producer;
 
 import com.googlecode.jsqlconverter.definition.type.*;
-import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
@@ -17,37 +16,16 @@ public class PostgreSQLProducer extends SQLProducer {
 		super(out);
 	}
 
-	public char getLeftQuote() {
-		return '"';
+	public char getLeftQuote(QuoteType type) {
+		return '\'';
 	}
 
-	public char getRightQuote() {
-		return '"';
+	public char getRightQuote(QuoteType type) {
+		return '\'';
 	}
 
-	public String getValidName(Name name) {
-		StringBuffer nameBuffer = new StringBuffer();
-
-		if (name.getDatabaseName() != null) {
-			nameBuffer.append(name.getDatabaseName());
-			nameBuffer.append(".");
-		}
-
-		if (name.getSchemaName() != null) {
-			nameBuffer.append(name.getSchemaName());
-			nameBuffer.append(".");
-		}
-
-		nameBuffer.append(name.getObjectName());
-
-		return nameBuffer.toString();
-	}
-
-	public boolean isValidIdentifier(Name name) {
-		Pattern pattern = Pattern.compile("^([:alpha:_](\\w|_|\\$){0,62})$");
-		Matcher matcher = pattern.matcher(name.getObjectName());
-
-		return matcher.find();
+	public String getValidIdentifier(String name) {
+		return name;
 	}
 
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
@@ -161,6 +139,17 @@ public class PostgreSQLProducer extends SQLProducer {
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {
+		return true;
+	}
+
+	public boolean isValidIdentifier(String name) {
+		Pattern pattern = Pattern.compile("^([:alpha:_](\\w|_|\\$){0,62})$");
+		Matcher matcher = pattern.matcher(name);
+
+		return matcher.find();
+	}
+
+	public boolean supportsIdentifier(IdentifierType type) {
 		return true;
 	}
 
