@@ -1,0 +1,22 @@
+Please note that this project is likely to have major errors with output.
+Please report any bugs / feature requests to http://code.google.com/p/jsqlconverter/issues/list
+
+
+From ./bin folder run the relevant script:
+-- Linux --
+$ ./jsqlconverter -h
+
+-- Windows --
+> jsqlconverter.bat -h
+
+
+
+-- EXAMPLES --
+-- Delimited file to PostgreSQL --
+$ ./jsqlconverter -delim -file input.csv -out-postgre
+
+
+-- JDBC PostgreSQL to PostgreSQL --
+Note: JDBC Driver must be in ./lib folder
+
+$ ./jsqlconverter -jdbc -driver org.postgresql.Driver -url "jdbc:postgresql://db_host/db_name" -user db_user -pass db_pass -out-postgre

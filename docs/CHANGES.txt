@@ -1,0 +1,20 @@
+0.0.1.34 2009-01-21
+	Feature improvements
+	* Added Turbine XML Producer
+	* Added SQL Fairy XML Producer (basic)
+	* Added XHTML Producer
+	* Added DOT Producer (GraphWiz)
+	* Added MySQL Producer
+	* Added SQLServer Producer
+	* Both Parser and Producer constructors can now throw exceptions
+	* Producers now only need to implement methods for statements they support
+	* Started adding unit tests
+
+	Bug fixes
+	- Delimited parser
+	* Fixed support for null / empty columns
+	* Added support for setting column size
+	* Added better support for choosing column type
+
+	- SQL Producer
+	* Fixed quoted identifier output
