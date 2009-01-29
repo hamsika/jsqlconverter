@@ -56,6 +56,10 @@ public class SQLFairyXMLParser extends XMLParser {
 		return false;
 	}
 
+	public boolean supportsConstraintTag() {
+		return true;
+	}
+
 	public boolean supportsUniqueKeyTag() {
 		return false;
 	}

@@ -59,7 +59,7 @@ public class AccessMDBParser extends Parser {
 					// TODO: this probably doesn't work right. the column in "our" ct may not be the same column name in the referenced table
 					String colName = index.getColumns().get(0).getName();
 
-					getColumn(ct, colName).setForeignKeyConstraint(new ForeignKeyConstraint(new Name(index.getTable().getName()), new Name(colName)));
+					ct.getColumn(colName).setForeignKeyConstraint(new ForeignKeyConstraint(new Name(index.getTable().getName()), new Name(colName)));
 				} else if (index.isPrimaryKey()) {
 					List<Index.ColumnDescriptor> indexes = index.getColumns();
 
@@ -76,11 +76,11 @@ public class AccessMDBParser extends Parser {
 						// may need some additional error checking / message to ensure that the PRIMARY_KEY constraint was added
 						String indexColumn = indexes.get(0).getName();
 
-						getColumn(ct, indexColumn).addColumnOption(ColumnOption.PRIMARY_KEY);
+						ct.getColumn(indexColumn).addColumnOption(ColumnOption.PRIMARY_KEY);
 					}
 				} else if (index.isUnique()) {
 					// add column constraint
-					getColumn(ct, index.getName()).addColumnOption(ColumnOption.UNIQUE);
+					ct.getColumn(index.getName()).addColumnOption(ColumnOption.UNIQUE);
 				} else {
 					// just output it! lol
 					CreateIndex ci = new CreateIndex(new Name(index.getName()), ct.getName());
@@ -120,6 +120,8 @@ public class AccessMDBParser extends Parser {
 			if (row.values().size() != ct.getColumns().length) {
 				System.out.println(row);
 
+				// TODO: handle this
+
 				System.exit(0);
 			}
 
@@ -131,16 +133,6 @@ public class AccessMDBParser extends Parser {
 
 			callback.produceStatement(insert);
 		}
-	}
-
-	private com.googlecode.jsqlconverter.definition.create.table.Column getColumn(CreateTable ct, String columnName) {
-		for (com.googlecode.jsqlconverter.definition.create.table.Column column : ct.getColumns()) {
-			if (columnName.equals(column.getName().getObjectName())) {
-				return column;
-			}
-		}
-
-		return null;
 	}
 
 	private Type getDataType(DataType type) {

@@ -321,7 +321,11 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 				return "SET DEFAULT";
 			case SET_NULL:
 				return "SET NULL";
+			case NO_ACTION:
+				return "NO ACTION";
 		}
+
+		log.warning("Unknown action value: " + action);
 
 		return null;
 	}

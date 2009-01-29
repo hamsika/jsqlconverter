@@ -46,6 +46,10 @@ public class TurbineXMLParser extends XMLParser {
 		return true;
 	}
 
+	public boolean supportsConstraintTag() {
+		return false;
+	}
+
 	public boolean supportsUniqueKeyTag() {
 		return true;
 	}

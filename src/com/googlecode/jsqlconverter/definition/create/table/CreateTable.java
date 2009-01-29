@@ -30,6 +30,16 @@ public class CreateTable extends Statement implements Comparable<CreateTable> {
 		return columns.get(index);
 	}
 
+	public Column getColumn(String name) {
+		for (Column column : columns) {
+			if (column.getName().getObjectName().equals(name)) {
+				return column;
+			}
+		}
+
+		return null;
+	}
+
 	public int getColumnCount() {
 		return columns.size();
 	}

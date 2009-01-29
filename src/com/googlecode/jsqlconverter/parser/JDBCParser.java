@@ -23,7 +23,7 @@ public class JDBCParser extends Parser {
 	private String catalog;
 	private String schemaPattern;
 	private String tableNamePattern;
-	private String columnNamePattern = null;
+	private static final String columnNamePattern = null; // currently unused
 	private boolean convertDataToInsert;
 	private ParserCallback callback;
 	private String[] types = { "TABLE" };	// TODO: support VIEW, GLOBAL TEMPORARY, LOCAL TEMPORARY
@@ -306,6 +306,9 @@ public class JDBCParser extends Parser {
 
 			inserts.add(insert);
 		}
+
+		dataRs.close();
+		dataPs.close();
 
 		return inserts.toArray(new InsertFromValues[inserts.size()]);
 	}

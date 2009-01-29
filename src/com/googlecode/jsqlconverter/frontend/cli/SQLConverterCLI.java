@@ -58,6 +58,7 @@ public class SQLConverterCLI implements ParserCallback {
 		MSACCESS_SQL,
 		MYSQL,
 		POSTGRESQL,
+		SQLFAIRY_XML,
 		SQLSERVER,
 		TURBINE_XML,
 		XHTML
@@ -169,6 +170,10 @@ public class SQLConverterCLI implements ParserCallback {
 
 		if (argList.contains("-out-postgresql")) {
 			setOutputOperation(OutputOperation.POSTGRESQL);
+		}
+
+		if (argList.contains("-out-sqlfairy")) {
+			setOutputOperation(OutputOperation.SQLFAIRY_XML);
 		}
 
 		if (argList.contains("-out-sqlserver")) {
@@ -284,7 +289,7 @@ public class SQLConverterCLI implements ParserCallback {
 				} catch (IOException e) {
 					exitMessage(e.getMessage(), e.getCause());
 				}
-				break;
+			break;
 			case MSACCESS_SQL:
 				producer = new AccessSQLProducer(out);
 			break;
@@ -293,6 +298,15 @@ public class SQLConverterCLI implements ParserCallback {
 			break;
 			case POSTGRESQL:
 				producer = new PostgreSQLProducer(out);
+			break;
+			case SQLFAIRY_XML:
+				try {
+					producer = new SQLFairyXMLProducer(out);
+				} catch (TransformerException e) {
+					exitMessage(e.getMessage(), e.getCause());
+				} catch (ParserConfigurationException e) {
+					exitMessage(e.getMessage(), e.getCause());
+				}
 			break;
 			case SQLSERVER:
 				producer = new SQLServerProducer(out);
@@ -373,6 +387,7 @@ public class SQLConverterCLI implements ParserCallback {
 			"\t-out-{access | mysql | postgresql | sqlserver}\n" +
 			"\t-out-access-mdb -ofile <filename>\n" +
 			"\t-out-dot\n" +
+			"\t-out-sqlfairy\n" +
 			"\t-out-turbine\n" +
 			"\t-out-xhtml\n" +
 			"\n" +

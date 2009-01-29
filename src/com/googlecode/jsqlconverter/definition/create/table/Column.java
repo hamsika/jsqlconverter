@@ -65,6 +65,8 @@ public class Column {
 
 	// adders
 	public void addColumnOption(ColumnOption option) {
-		options.add(option);
+		if (!options.contains(option)) {
+			options.add(option);
+		}
 	}
 }

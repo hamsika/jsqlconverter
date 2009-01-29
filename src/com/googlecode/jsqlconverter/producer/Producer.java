@@ -15,7 +15,7 @@ import java.io.PrintStream;
 import java.util.logging.Logger;
 
 public abstract class Producer {
-	protected static Logger log = Logger.getLogger(Producer.class.getName());
+	protected static final Logger log = Logger.getLogger(Producer.class.getName());
 	protected PrintStream out = System.out;
 
 	// don't force the use of a specific constructor

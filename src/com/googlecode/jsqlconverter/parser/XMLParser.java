@@ -6,6 +6,8 @@ import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyMatch;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.type.*;
@@ -74,11 +76,17 @@ public abstract class XMLParser extends Parser {
 			ct.addColumn(column);
 		}
 
-		// detect foreign-keys
+		// detect foreign-keys (turbine only)
 		if (supportsForeignKeyTag()) {
 			NodeList fkeyNodes = table.getElementsByTagName("foreign-key");
 
 			setForeignKeys(ct, fkeyNodes);
+		}
+
+		if (supportsConstraintTag()) {
+			NodeList constraintNodes = table.getElementsByTagName("constraint");
+
+			setConstraints(ct, constraintNodes);
 		}
 
 		// detect unique columns
@@ -125,15 +133,94 @@ public abstract class XMLParser extends Parser {
 
 				String localColumn = referenceElement.getAttribute("local");
 
-				// TODO: may need to add some checking / error message to make sure that the column was def found
-				for (Column column : ct.getColumns()) {
-					if (column.getName().getObjectName().equals(localColumn)) {
-						column.setForeignKeyConstraint(fkey);
-						break;
-					}
+				Column column = ct.getColumn(localColumn);
+
+				if (column == null) {
+					log.warning("Column '" + localColumn + "' was not found");
+					continue;
 				}
+
+				column.setForeignKeyConstraint(fkey);
 			}
 		}
+	}
+
+	private void setConstraints(CreateTable ct, NodeList constraintNodes) {
+		for (int i=0; i<constraintNodes.getLength(); i++) {
+			Element constraintElement = (Element)constraintNodes.item(i);
+
+			String type = constraintElement.getAttribute("type");
+			String fields = constraintElement.getAttribute("fields");
+
+			Column column = ct.getColumn(fields);
+
+			if (column == null) {
+				log.warning("Column '" + fields + "' was not found");
+				continue;
+			}
+
+			if (type.equals("NOT NULL")) {
+				column.addColumnOption(ColumnOption.NOT_NULL);
+			} else if (type.equals("UNIQUE")) {
+				column.addColumnOption(ColumnOption.UNIQUE);
+			} else if (type.equals("FOREIGN KEY")) {
+				String referenceTable = constraintElement.getAttribute("reference_table");
+				String referenceFields = constraintElement.getAttribute("reference_fields");
+				String onDelete = constraintElement.getAttribute("on_delete");
+				String onUpdate = constraintElement.getAttribute("on_update");
+				String matchType = constraintElement.getAttribute("match_type");
+
+				ForeignKeyConstraint fkey = new ForeignKeyConstraint(new Name(referenceTable), new Name(referenceFields));
+
+				ForeignKeyAction deleteAction = getAction(onDelete);
+				ForeignKeyAction updateAction = getAction(onUpdate);
+				ForeignKeyMatch match = getMatch(matchType);
+
+				if (deleteAction != null) {
+					fkey.setDelete(deleteAction);
+				}
+
+				if (updateAction != null) {
+					fkey.setUpdate(updateAction);
+				}
+
+				if (matchType != null) {
+					fkey.setMatch(match);
+				}
+
+				column.setForeignKeyConstraint(fkey);
+			} else {
+				log.warning("Unhandled constraint type: " + type);
+			}
+		}
+	}
+
+	private ForeignKeyAction getAction(String action) {
+		if (action.equals("cascade")) {
+			return ForeignKeyAction.CASCADE;
+		} else if (action.equals("set null")) {
+			return ForeignKeyAction.SET_NULL;
+		} else if (action.equals("set default")) {
+			return ForeignKeyAction.SET_DEFAULT;
+		} else if (action.equals("restrict")) {
+			return ForeignKeyAction.RESTRICT;
+		} else if (action.equals("no_action")) {
+			return ForeignKeyAction.NO_ACTION;
+		}
+
+		return null;
+	}
+
+	private ForeignKeyMatch getMatch(String match) {
+		if (match.equals("full")) {
+			return ForeignKeyMatch.FULL;
+		} else if (match.equals("partial")) {
+			return ForeignKeyMatch.PARTIAL;
+		} else if (match.equals("simple")) {
+			return ForeignKeyMatch.SIMPLE;
+		}
+
+		return null;
 	}
 
 	private void setUniques(CreateTable ct, NodeList uniqueNodes) {
@@ -147,13 +234,14 @@ public abstract class XMLParser extends Parser {
 
 				String indexColumn = referenceElement.getAttribute("name");
 
-				// TODO: may need to add some checking / error message to make sure that the column was def found
-				for (Column column : ct.getColumns()) {
-					if (column.getName().getObjectName().equals(indexColumn)) {
-						column.addColumnOption(ColumnOption.UNIQUE);
-						break;
-					}
+				Column column = ct.getColumn(indexColumn);
+
+				if (column == null) {
+					log.warning("Column '" + indexColumn + "' was not found");
+					continue;
 				}
+
+				column.addColumnOption(ColumnOption.UNIQUE);
 			}
 		}
 	}
@@ -246,6 +334,7 @@ public abstract class XMLParser extends Parser {
 	public abstract String getSizeAttributeName();
 
 	public abstract boolean supportsForeignKeyTag();
+	public abstract boolean supportsConstraintTag();
 	public abstract boolean supportsUniqueKeyTag();
 	public abstract boolean supportsIndexKeyTag();
 	public abstract boolean supportsIndicesKeyTag();
