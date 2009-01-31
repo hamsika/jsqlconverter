@@ -50,9 +50,6 @@ public class SQLServerProducer extends SQLProducer {
 			case BIT:
 				return "bit";
 			case BLOB:
-			case LONGBLOB:
-			case MEDIUMBLOB:
-			case TINYBLOB:
 				return "image";
 			case VARBINARY:
 				return "varbinary";
@@ -72,10 +69,12 @@ public class SQLServerProducer extends SQLProducer {
 
 	public String getType(DateTimeType type) {
 		switch(type) {
+			case DATE:
 			case DATETIME:
-				return "datetime"; // according to some docs TIMESTAMP is eqiv to DATETIME aparantly
+				return "datetime"; // according to some docs TIMESTAMP is eqiv to DATETIME
+			case TIME:
 			case TIMESTAMP:
-				return "smalldatetime"; // TODO find out if this can have a time zone
+				return "smalldatetime";
 			default:
 				return null;
 		}
@@ -126,9 +125,6 @@ public class SQLServerProducer extends SQLProducer {
 			case NVARCHAR:
 				return "nvarchar";
 			case TEXT:
-			case LONGTEXT:
-			case MEDIUMTEXT:
-			case TINYTEXT:
 				return "text";
 			case VARCHAR:
 				return "varchar";
@@ -138,7 +134,7 @@ public class SQLServerProducer extends SQLProducer {
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {
-		return true;
+		return !(type instanceof NumericType) && !(type instanceof BooleanType) && !(type instanceof DateTimeType);
 	}
 
 	public boolean isValidIdentifier(String name) {

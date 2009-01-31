@@ -190,7 +190,7 @@ public class SQLFairyXMLProducer extends Producer implements CreateTableInterfac
 		return null;
 	}
 
-	private String getType(Type type) {
+	public String getType(Type type) {
 		// TODO: convert to SQL Fairy types
 		return type.toString();
 	}

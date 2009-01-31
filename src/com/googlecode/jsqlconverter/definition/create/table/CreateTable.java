@@ -6,6 +6,7 @@ import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstr
 
 import java.util.ArrayList;
 
+// TODO: support non-unique keys, compound or otherwise
 public class CreateTable extends Statement implements Comparable<CreateTable> {
 	private Name tableName;
 	private ArrayList<Column> columns = new ArrayList<Column>();

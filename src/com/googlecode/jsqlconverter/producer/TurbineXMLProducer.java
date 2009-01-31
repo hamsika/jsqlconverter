@@ -94,7 +94,7 @@ public class TurbineXMLProducer extends Producer implements CreateTableInterface
 		databaseElement.appendChild(tableElement);
 	}
 
-	private String getType(Type type) {
+	public String getType(Type type) {
 		if (type instanceof ApproximateNumericType) {
 			switch ((ApproximateNumericType)type) {
 				case DOUBLE:
@@ -111,9 +111,6 @@ public class TurbineXMLProducer extends Producer implements CreateTableInterface
 				case BIT:
 					return "BIT";
 				case BLOB:
-				case LONGBLOB:
-				case MEDIUMBLOB:
-				case TINYBLOB:
 					return "BLOB";
 				case VARBINARY:
 					return "VARBINARY";
@@ -125,8 +122,10 @@ public class TurbineXMLProducer extends Producer implements CreateTableInterface
 			}
 		} else if (type instanceof DateTimeType) {
 			switch ((DateTimeType)type) {
+				case DATE:
 				case DATETIME:
 					return "DATE";
+				case TIME:
 				case TIMESTAMP:
 					return "TIMESTAMP";
 			}
@@ -155,11 +154,8 @@ public class TurbineXMLProducer extends Producer implements CreateTableInterface
 				case CHAR:
 				case NCHAR:
 					return "CHAR";
-				case LONGTEXT:
-				case MEDIUMTEXT:
 				case NTEXT:
 				case TEXT:
-				case TINYTEXT:
 				case NVARCHAR:
 				case VARCHAR:
 					return "VARCHAR";

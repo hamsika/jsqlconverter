@@ -36,16 +36,12 @@ public class PostgreSQLProducer extends SQLProducer {
 		switch(type) {
 			case CHAR:
 				return "char";
-			case LONGTEXT:
-			case MEDIUMTEXT:
 			case NCHAR:
 			case NTEXT:
 			case NVARCHAR:
 				return null;
 			case TEXT:
 				return "text";
-			case TINYTEXT:
-				return null;
 			case VARCHAR:
 				return "varchar";
 			default:
@@ -74,9 +70,6 @@ public class PostgreSQLProducer extends SQLProducer {
 				return "bit";
 			// TODO: confirm 'bytea' is correct to return for blob / binary types
 			case BLOB:
-			case LONGBLOB:
-			case MEDIUMBLOB:
-			case TINYBLOB:
 			case VARBINARY:
 				return "bytea";
 			default:
@@ -95,8 +88,11 @@ public class PostgreSQLProducer extends SQLProducer {
 
 	public String getType(DateTimeType type) {
 		switch(type) {
+			case DATE:
+				return "date";
+			case TIME:
+				return "time";
 			case DATETIME:
-				return "timestamp"; // according to some docs TIMESTAMP is eqiv to DATETIME aparantly
 			case TIMESTAMP:
 				return "timestamp"; // TODO find out if this can have a time zone
 			default:
@@ -139,7 +135,7 @@ public class PostgreSQLProducer extends SQLProducer {
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {
-		return true;
+		return !(type instanceof NumericType) && !(type instanceof BooleanType) && !(type instanceof DateTimeType);
 	}
 
 	public boolean isValidIdentifier(String name) {

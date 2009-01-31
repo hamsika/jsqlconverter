@@ -155,7 +155,7 @@ public class AccessMDBParser extends Parser {
 			case LONG:
 				return ExactNumericType.INTEGER;
 			case MEMO:
-				return StringType.MEDIUMTEXT;
+				return StringType.TEXT;
 			case MONEY:
 				return MonetaryType.MONEY;
 			case NUMERIC:
@@ -167,7 +167,7 @@ public class AccessMDBParser extends Parser {
 			case TEXT:
 				return StringType.VARCHAR;
 			case UNKNOWN_0D:
-				// "Unknown data.  Handled like BINARY."
+				// "Unknown data. Handled like BINARY."
 				return BinaryType.BINARY;
 		}
 

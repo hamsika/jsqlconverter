@@ -33,15 +33,12 @@ public class AccessSQLProducer extends SQLProducer {
 	public String getType(StringType type) {
 		switch(type) {
 			case CHAR:
-			case LONGTEXT:
-			case MEDIUMTEXT:
 			case NCHAR:
 			case NTEXT:
 				return null;
 			case NVARCHAR:
 				return "memo";
 			case TEXT:
-			case TINYTEXT:
 				return "text";
 			case VARCHAR:
 				/*if (size > 255) {
@@ -74,9 +71,6 @@ public class AccessSQLProducer extends SQLProducer {
 				return "binary";
 			case BIT:
 			case BLOB:
-			case LONGBLOB:
-			case MEDIUMBLOB:
-			case TINYBLOB:
 				return null;
 			case VARBINARY:
 				return "longbinary";
@@ -96,8 +90,10 @@ public class AccessSQLProducer extends SQLProducer {
 
 	public String getType(DateTimeType type) {
 		switch(type) {
+			case DATE:
 			case DATETIME:
 				return "date";
+			case TIME:
 			case TIMESTAMP:
 			default:
 				return null;
@@ -135,7 +131,7 @@ public class AccessSQLProducer extends SQLProducer {
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {
-		return !localname.equals("memo");
+		return !localname.equals("memo") && !(type instanceof NumericType) && !(type instanceof BooleanType);
 	}
 
 	public boolean isValidIdentifier(String name) {

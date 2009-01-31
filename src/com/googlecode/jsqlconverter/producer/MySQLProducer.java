@@ -32,7 +32,7 @@ public class MySQLProducer extends SQLProducer {
 	}
 
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
-		return "DEFAULT `" + defaultConstraint.getValue() + "`";
+		return "DEFAULT '" + defaultConstraint.getValue() + "'";
 	}
 
 	public String getType(ApproximateNumericType type) {
@@ -55,9 +55,6 @@ public class MySQLProducer extends SQLProducer {
 			case BIT:
 				return "bit";
 			case BLOB:
-			case LONGBLOB:
-			case MEDIUMBLOB:
-			case TINYBLOB:
 				return "blob";
 			case VARBINARY:
 				return "varbinary";
@@ -77,8 +74,12 @@ public class MySQLProducer extends SQLProducer {
 
 	public String getType(DateTimeType type) {
 		switch(type) {
+			case DATE:
+				return "date";
 			case DATETIME:
 				return "datetime"; // according to some docs TIMESTAMP is eqiv to DATETIME aparantly
+			case TIME:
+				return "time";
 			case TIMESTAMP:
 				return "timestamp"; // TODO find out if this can have a time zone
 			default:
@@ -131,9 +132,6 @@ public class MySQLProducer extends SQLProducer {
 			case NVARCHAR:
 				return "nvarchar";
 			case TEXT:
-			case LONGTEXT:
-			case MEDIUMTEXT:
-			case TINYTEXT:
 				return "text";
 			case VARCHAR:
 				return "varchar";
@@ -143,7 +141,7 @@ public class MySQLProducer extends SQLProducer {
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {
-		return true;
+		return !(type instanceof DateTimeType);
 	}
 
 	public boolean isValidIdentifier(String name) {

@@ -99,9 +99,7 @@ public class JDBCParser extends Parser {
 
 			Column col = new Column(new Name(columnsRs.getString("COLUMN_NAME")), dataType);
 
-			if (!(dataType instanceof NumericType) && !(dataType instanceof BooleanType)) {
-				col.setSize(colSize);
-			}
+			col.setSize(colSize);
 
 			if (columnsRs.getString("IS_NULLABLE").equals("NO")) {
 				col.addColumnOption(ColumnOption.NOT_NULL);
@@ -196,8 +194,6 @@ public class JDBCParser extends Parser {
 			return;
 		}
 
-		callback.produceStatement(createTable);
-
 		// query indexes and associate with table
 		CreateIndex[] indexes = getTableIndexes(meta, createTable.getName());
 
@@ -212,7 +208,7 @@ public class JDBCParser extends Parser {
 
 		if (primaryKey != null) {
 			if (primaryKey.getColumns().length == 1) {
-				Column column = getTableColumn(createTable, primaryKey.getColumns()[0]);
+				Column column = createTable.getColumn(primaryKey.getColumns()[0].getObjectName());
 
 				if (column != null) {
 					column.addColumnOption(ColumnOption.PRIMARY_KEY);
@@ -223,6 +219,8 @@ public class JDBCParser extends Parser {
 				createTable.setPrimaryCompoundKeyConstraint(new KeyConstraint(primaryKey.getColumns()));
 			}
 		}
+
+		ArrayList<CreateIndex> userIndexes = new ArrayList<CreateIndex>();
 
 		if (indexes != null) {
 			for (CreateIndex index : indexes) {
@@ -236,7 +234,7 @@ public class JDBCParser extends Parser {
 				// any unique indexes are considers to be part of the table and not user generated
 				if (index.isUnique()) {
 					if (index.getColumns().length == 1) {
-						Column column = getTableColumn(createTable, index.getColumns()[0]);
+						Column column = createTable.getColumn(index.getColumns()[0].getObjectName());
 
 						if (column != null) {
 							column.addColumnOption(ColumnOption.UNIQUE);
@@ -249,14 +247,20 @@ public class JDBCParser extends Parser {
 					}
 				}
 
-
-				// user created index
-				callback.produceStatement(index);
+				// user created index. add it to userIndexes to make sure it's output ater create table is send to be produced
+				userIndexes.add(index);
 
 				if (index.isUnique()) {
 					log.log(LogLevel.UNHANDLED, "possible implicit database index: " + index.getTableName().getObjectName() + " " + index.getIndexName().getObjectName() + " " + index.getColumns().length + " " + index.isUnique());
 				}
 			}
+		}
+
+		callback.produceStatement(createTable);
+
+		// output any user generated indexes
+		for (CreateIndex index : userIndexes) {
+			callback.produceStatement(index);
 		}
 
 		if (convertDataToInsert) {
@@ -266,18 +270,6 @@ public class JDBCParser extends Parser {
 				callback.produceStatement(insert);
 			}
 		}
-	}
-
-	private Column getTableColumn(CreateTable createTable, Name columnName) {
-		for (int i=0; i<createTable.getColumnCount(); i++) {
-			Column column = createTable.getColumn(i);
-
-			if (column.getName().getObjectName().equals(columnName.getObjectName())) {
-				return column;
-			}
-		}
-
-		return null;
 	}
 
 	private InsertFromValues[] getTableData(CreateTable tableName) throws SQLException {
@@ -445,8 +437,7 @@ public class JDBCParser extends Parser {
 
 			break;*/
 			case Types.DATE:
-				// TODO: make sure JDBC DATE is same as our DATETIME
-				dataType = DateTimeType.DATETIME;
+				dataType = DateTimeType.DATE;
 			break;
 			case Types.DECIMAL:
 			case Types.NUMERIC:
@@ -511,7 +502,7 @@ public class JDBCParser extends Parser {
 
 			break;*/
 			case Types.TIME:
-
+				dataType = DateTimeType.TIME;
 			break;
 			case Types.TIMESTAMP:
 				// TODO: is JDBC timestamp the same as our timestamp?
@@ -529,13 +520,19 @@ public class JDBCParser extends Parser {
 			default:
 				// This should only happen if new types are added in newer JDBC versions
 				log.log(LogLevel.UNHANDLED, "unknown data type - this needs to be fixed: " + dbType);
-				dataType = new UnhandledType(String.valueOf(dbType));
 			break;
 		}
 
 		if (dataType == null) {
 			log.log(LogLevel.UNHANDLED, "Unhandled type from database: " + dbType);
 			dataType = StringType.VARCHAR;
+		}
+
+		// correct certain types based on size
+		if (dataType == StringType.VARCHAR) {
+			if (columnSize > 255) {
+				dataType = StringType.TEXT;
+			}
 		}
 
 		return dataType;
