@@ -27,26 +27,22 @@ public class AccessSQLProducer extends SQLProducer {
 	}
 
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
-		return "DEFAULT " + defaultConstraint.getValue();
+		return "DEFAULT [" + defaultConstraint.getValue() + "]";
 	}
 
 	public String getType(StringType type) {
 		switch(type) {
 			case CHAR:
+			case LONGTEXT:
+			case MEDIUMTEXT:
 			case NCHAR:
-			case NTEXT:
-				return null;
 			case NVARCHAR:
 				return "memo";
+			case NTEXT:
 			case TEXT:
-				return "text";
+			case TINYTEXT:
 			case VARCHAR:
-				/*if (size > 255) {
-					return "memo";
-				} else {
-					return "text";
-				}*/
-				return "memo";
+				return "text";
 			default:
 				return null;
 		}
@@ -70,8 +66,12 @@ public class AccessSQLProducer extends SQLProducer {
 			case BINARY:
 				return "binary";
 			case BIT:
+				return "binary";
 			case BLOB:
-				return null;
+			case LONGBLOB:
+			case MEDIUMBLOB:
+			case TINYBLOB:
+				return "ole"; // TODO: check this.. this might be LONGBINARY
 			case VARBINARY:
 				return "longbinary";
 			default:
@@ -91,10 +91,12 @@ public class AccessSQLProducer extends SQLProducer {
 	public String getType(DateTimeType type) {
 		switch(type) {
 			case DATE:
-			case DATETIME:
 				return "date";
+			case DATETIME:
+				return "datetime";
 			case TIME:
 			case TIMESTAMP:
+				return "datetime";
 			default:
 				return null;
 		}
@@ -104,9 +106,8 @@ public class AccessSQLProducer extends SQLProducer {
 		switch(type) {
 			case BIGINT:
 			case INTEGER:
-				return "long";
 			case MEDIUMINT:
-				return null;
+				return "long";
 			case SMALLINT:
 				return "integer";
 			case TINYINT:
@@ -127,7 +128,7 @@ public class AccessSQLProducer extends SQLProducer {
 	}
 
 	public String getType(DecimalType type) {
-		return null;
+		return "decimal";
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {

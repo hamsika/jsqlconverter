@@ -50,6 +50,9 @@ public class SQLServerProducer extends SQLProducer {
 			case BIT:
 				return "bit";
 			case BLOB:
+			case LONGBLOB:
+			case MEDIUMBLOB:
+			case TINYBLOB:
 				return "image";
 			case VARBINARY:
 				return "varbinary";
@@ -125,6 +128,9 @@ public class SQLServerProducer extends SQLProducer {
 			case NVARCHAR:
 				return "nvarchar";
 			case TEXT:
+			case LONGTEXT:
+			case MEDIUMTEXT:
+			case TINYTEXT:
 				return "text";
 			case VARCHAR:
 				return "varchar";

@@ -135,7 +135,7 @@ public class AccessMDBParser extends Parser {
 		}
 	}
 
-	private Type getDataType(DataType type) {
+	public Type getDataType(DataType type) {
 		switch (type) {
 			case BINARY:
 				return BinaryType.BINARY;
@@ -167,12 +167,13 @@ public class AccessMDBParser extends Parser {
 			case TEXT:
 				return StringType.VARCHAR;
 			case UNKNOWN_0D:
+			case UNKNOWN_11:
 				// "Unknown data. Handled like BINARY."
 				return BinaryType.BINARY;
 		}
 
 		log.log(LogLevel.UNHANDLED, "Unhandled type: " + type);
 
-		return StringType.VARCHAR;
+		return null;
 	}
 }

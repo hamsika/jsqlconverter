@@ -8,6 +8,7 @@ public class AllTests {
 		TestSuite suite = new TestSuite("all parser tests");
 
 		suite.addTestSuite(DelimitedParserTest.class);
+		suite.addTestSuite(TypeMappingHandledTest.class);
 
 		return suite;
 	}

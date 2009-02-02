@@ -71,34 +71,34 @@ public class TypeMappingHandledTest extends TestCase {
 
 	public void testSQLFairy() {
 		for (ApproximateNumericType type : ApproximateNumericType.values()) {
-			assertNotSame(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type), type.toString());
+			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
 		}
 
 		for (BinaryType type : BinaryType.values()) {
-			assertNotSame(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type), type.toString());
+			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
 		}
 
 		for (BooleanType type : BooleanType.values()) {
-			assertNotSame(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type), type.toString());
+			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
 		}
 
 		for (DateTimeType type : DateTimeType.values()) {
-			assertNotSame(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type), type.toString());
+			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
 		}
 
 		for (ExactNumericType type : ExactNumericType.values()) {
-			assertNotSame(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type), type.toString());
+			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
 		}
 
 		for (MonetaryType type : MonetaryType.values()) {
-			assertNotSame(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type), type.toString());
+			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
 		}
 
 		for (StringType type : StringType.values()) {
-			assertNotSame(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type), type.toString());
+			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
 		}
 
-		assertNotSame(sqlfairyProducer.getClass().getName() + " does not handle DecimalType", sqlfairyProducer.getType(decimalType), decimalType.toString());
+		assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle DecimalType", sqlfairyProducer.getType(decimalType));
 	}
 
 	public void testSQLProducers() {

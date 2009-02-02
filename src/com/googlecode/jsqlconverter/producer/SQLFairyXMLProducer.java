@@ -28,13 +28,8 @@ public class SQLFairyXMLProducer extends Producer implements CreateTableInterfac
 	private Document document;
 	private Element schemaElement;
 	private Element tablesElement;
-	private String prefix = "";
 
-	public SQLFairyXMLProducer(PrintStream out) throws TransformerException, ParserConfigurationException {
-		this(out, "sqlf");
-	}
-
-	public SQLFairyXMLProducer(PrintStream out, String prefix) throws ParserConfigurationException, TransformerException {
+	public SQLFairyXMLProducer(PrintStream out) throws ParserConfigurationException, TransformerException {
 		super(out);
 
 		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -46,8 +41,6 @@ public class SQLFairyXMLProducer extends Producer implements CreateTableInterfac
 		schemaElement.setAttribute("name", "");
 		schemaElement.setAttribute("database", "");
 		schemaElement.setAttribute("xmlns", "http://sqlfairy.sourceforge.net/sqlfairy.xml");
-
-		this.prefix = prefix;
 
 		document.appendChild(schemaElement);
 	}
@@ -190,9 +183,147 @@ public class SQLFairyXMLProducer extends Producer implements CreateTableInterfac
 		return null;
 	}
 
-	public String getType(Type type) {
-		// TODO: convert to SQL Fairy types
-		return type.toString();
+	private String getType(Type type) {
+		String dataTypeString = null;
+
+		if (type instanceof ApproximateNumericType) {
+			dataTypeString = getType((ApproximateNumericType)type);
+		} else if (type instanceof BinaryType) {
+			dataTypeString = getType((BinaryType)type);
+		} else if (type instanceof BooleanType) {
+			dataTypeString = getType((BooleanType)type);
+		} else if (type instanceof DateTimeType) {
+			dataTypeString = getType((DateTimeType)type);
+		} else if (type instanceof DecimalType) {
+			dataTypeString = getType((DecimalType)type);
+		} else if (type instanceof ExactNumericType) {
+			dataTypeString = getType((ExactNumericType)type);
+		} else if (type instanceof MonetaryType) {
+			dataTypeString = getType((MonetaryType)type);
+		} else if (type instanceof StringType) {
+			dataTypeString = getType((StringType)type);
+		}
+
+		if (dataTypeString == null) {
+			dataTypeString = type.toString();
+		}
+
+		return dataTypeString;
+	}
+
+	public String getType(ApproximateNumericType type) {
+		switch (type) {
+			case DOUBLE:
+				return "double";
+			case FLOAT:
+				return "float";
+			case REAL:
+				return "real";
+			default:
+				return null;
+		}
+	}
+
+	public String getType(BinaryType type) {
+		switch(type) {
+			case BINARY:
+				return "binary";
+			case BIT:
+				return "bit";
+			case BLOB:
+				return "blob";
+			case LONGBLOB:
+				return "longblob";
+			case MEDIUMBLOB:
+				return "mediumblob";
+			case TINYBLOB:
+				return "tinyblob";
+			case VARBINARY:
+				return "varbinary";
+			default:
+				return null;
+		}
+	}
+
+	public String getType(BooleanType type) {
+		switch(type) {
+			case BOOLEAN:
+				return "boolean";
+			default:
+				return null;
+		}
+	}
+
+	public String getType(DateTimeType type) {
+		switch(type) {
+			case DATE:
+				return "date";
+			case DATETIME:
+				return "datetime";
+			case TIME:
+				return "time";
+			case TIMESTAMP:
+				return "timestamp";
+			default:
+				return null;
+		}
+	}
+
+	public String getType(DecimalType type) {
+		return "numeric";
+	}
+
+	public String getType(ExactNumericType type) {
+		switch(type) {
+			case BIGINT:
+				return "bigint";
+			case INTEGER:
+				return "int";
+			case MEDIUMINT:
+				return "mediumint";
+			case SMALLINT:
+				return "smallint";
+			case TINYINT:
+				return "tinyint";
+			default:
+				return null;
+		}
+	}
+
+	public String getType(MonetaryType type) {
+		switch(type) {
+			case MONEY:
+				return "money";
+			case SMALLMONEY:
+				return "smallmoney";
+			default:
+				return null;
+		}
+	}
+
+	public String getType(StringType type) {
+		switch(type) {
+			case CHAR:
+				return "char";
+			case LONGTEXT:
+				return "longtext";
+			case MEDIUMTEXT:
+				return "mediumtext";
+			case NCHAR:
+				return "nchar";
+			case NTEXT:
+				return "ntext";
+			case NVARCHAR:
+				return "nvarchar";
+			case TEXT:
+				return "text";
+			case TINYTEXT:
+				return "tinytext";
+			case VARCHAR:
+				return "varchar";
+			default:
+				return null;
+		}
 	}
 
 	public void doFinal() throws ProducerException {

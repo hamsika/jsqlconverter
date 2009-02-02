@@ -118,8 +118,11 @@ public class AccessMDBProducer extends Producer implements CreateTableInterface,
 
 	public DataType getType(StringType type) {
 		switch(type) {
+			case LONGTEXT:
+			case MEDIUMTEXT:
 			case NTEXT:
 			case TEXT:
+			case TINYTEXT:
 			case VARCHAR:
 				return DataType.TEXT;
 			case CHAR:
@@ -149,6 +152,9 @@ public class AccessMDBProducer extends Producer implements CreateTableInterface,
 			case BINARY:
 				return DataType.BINARY;
 			case BLOB:
+			case LONGBLOB:
+			case MEDIUMBLOB:
+			case TINYBLOB:
 			case VARBINARY:
 				return DataType.OLE;
 			default:
@@ -167,7 +173,9 @@ public class AccessMDBProducer extends Producer implements CreateTableInterface,
 
 	public DataType getType(DateTimeType type) {
 		switch(type) {
+			case DATE:
 			case DATETIME:
+			case TIME:
 			case TIMESTAMP:
 				return DataType.SHORT_DATE_TIME;
 			default:

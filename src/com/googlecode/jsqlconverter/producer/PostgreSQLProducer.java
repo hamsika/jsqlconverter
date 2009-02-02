@@ -35,14 +35,16 @@ public class PostgreSQLProducer extends SQLProducer {
 	public String getType(StringType type) {
 		switch(type) {
 			case CHAR:
-				return "char";
 			case NCHAR:
-			case NTEXT:
-			case NVARCHAR:
-				return null;
+				return "char";
+			case LONGTEXT:
+			case MEDIUMTEXT:
 			case TEXT:
+			case NTEXT:
 				return "text";
+			case TINYTEXT:
 			case VARCHAR:
+			case NVARCHAR:
 				return "varchar";
 			default:
 				return null;
@@ -70,6 +72,9 @@ public class PostgreSQLProducer extends SQLProducer {
 				return "bit";
 			// TODO: confirm 'bytea' is correct to return for blob / binary types
 			case BLOB:
+			case LONGBLOB:
+			case MEDIUMBLOB:
+			case TINYBLOB:
 			case VARBINARY:
 				return "bytea";
 			default:
@@ -121,7 +126,7 @@ public class PostgreSQLProducer extends SQLProducer {
 	public String getType(MonetaryType type) {
 		switch(type) {
 			case MONEY:
-				return null;
+				return "money"; // this might not be the best choice.
 			case SMALLMONEY:
 				return "money";
 			default:

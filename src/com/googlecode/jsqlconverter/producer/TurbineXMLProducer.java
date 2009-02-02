@@ -42,7 +42,6 @@ public class TurbineXMLProducer extends Producer implements CreateTableInterface
 		// TODO: support adding indexes to existing <table> elements.
 		// should this support unique indexes also?
 
-
 		//<index name="book_author_title">
 		//	<index-column name="author_id"/>
 		//	<index-column name="title_id"/>
@@ -111,6 +110,9 @@ public class TurbineXMLProducer extends Producer implements CreateTableInterface
 				case BIT:
 					return "BIT";
 				case BLOB:
+				case LONGBLOB:
+				case MEDIUMBLOB:
+				case TINYBLOB:
 					return "BLOB";
 				case VARBINARY:
 					return "VARBINARY";
@@ -126,6 +128,7 @@ public class TurbineXMLProducer extends Producer implements CreateTableInterface
 				case DATETIME:
 					return "DATE";
 				case TIME:
+					return "TIME";
 				case TIMESTAMP:
 					return "TIMESTAMP";
 			}
@@ -148,14 +151,18 @@ public class TurbineXMLProducer extends Producer implements CreateTableInterface
 			switch ((MonetaryType)type) {
 				case MONEY:
 				case SMALLMONEY:
+					return "DOUBLE";
 			}
 		} else if (type instanceof StringType) {
 			switch ((StringType)type) {
 				case CHAR:
 				case NCHAR:
 					return "CHAR";
+				case LONGTEXT:
+				case MEDIUMTEXT:
 				case NTEXT:
 				case TEXT:
+				case TINYTEXT:
 				case NVARCHAR:
 				case VARCHAR:
 					return "VARCHAR";
