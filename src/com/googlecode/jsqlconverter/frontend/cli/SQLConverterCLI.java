@@ -396,7 +396,7 @@ public class SQLConverterCLI implements ParserCallback {
 		);
 	}
 
-	public static void main (String[] args) throws ParserException, SQLException, FileNotFoundException, ClassNotFoundException {
+	public static void main(String[] args) throws ParserException, SQLException, FileNotFoundException, ClassNotFoundException {
 		new SQLConverterCLI(args);
 	}
 }

@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+	"-//Puppy Crawl//DTD Check Configuration 1.1//EN"
+	"http://www.puppycrawl.com/dtds/configuration_1_1.dtd">
+
+<module name="Checker">
+	<!-- Naming Conventions -->
+	<module name="TreeWalker">
+		<!--<module name="AbstractClassName"/>-->
+		<module name="ConstantName"/>
+		<module name="LocalFinalVariableName"/>
+		<module name="LocalVariableName"/>
+		<module name="MemberName"/>
+		<module name="MethodName"/>
+		<module name="PackageName"/>
+		<module name="ParameterName"/>
+		<module name="StaticVariableName"/>
+		<module name="TypeName"/>
+	</module>
+
+	<!-- White Space -->
+	<module name="TreeWalker">
+		<module name="EmptyForInitializerPad"/>
+		<module name="EmptyForIteratorPad"/>
+		<module name="MethodParamPad"/>
+		<module name="NoWhitespaceAfter"/>
+		<module name="NoWhitespaceBefore"/>
+		<!--<module name="OperatorWrap"/>-->
+		<module name="ParenPad"/>
+		<module name="TypecastParenPad">
+			<property name="option" value="nospace"/>
+		</module>
+		<!--<module name="WhitespaceAfter"/>-->
+		<!--<module name="WhitespaceAround"/>-->
+	</module>
+
+	<!-- Modifiers -->
+	<module name="TreeWalker">
+		<module name="ModifierOrder"/>
+		<module name="RedundantModifier"/>
+	</module>
+
+	<!-- Block Checks -->
+	<module name="TreeWalker">
+		<module name="EmptyBlock"/>
+		<module name="LeftCurly"/>
+		<module name="NeedBraces"/>
+		<module name="RightCurly"/>
+		<module name="AvoidNestedBlocks"/>
+	</module>
+
+	<!-- Coding -->
+	<!--<module name="TreeWalker">
+		<module name="ArrayTrailingComma"/>
+		<module name="AvoidInlineConditionals"/>
+		<module name="CovariantEquals"/>
+		<module name="DoubleCheckedLocking"/>
+		<module name="EmptyStatement"/>
+		<module name="EqualsHashCode"/>
+		<module name="FinalLocalVariable"/>
+		<module name="HiddenField"/>
+		<module name="IllegalToken"/>
+		IllegalTokenText
+		InnerAssignment
+		MagicNumber
+		MissingSwitchDefault
+		ModifiedControlVariable
+		RedundantThrows
+		
+	</module>-->
+
+	<!-- Class Design -->
+	<module name="TreeWalker">
+		<module name="VisibilityModifier"/>
+		<module name="FinalClass"/>
+		<module name="InterfaceIsType"/>
+		<module name="HideUtilityClassConstructor"/>
+		<!--<module name="DesignForExtension"/>-->
+		<module name="MutableException"/>
+		<!--<module name="ThrowsCount"/>-->
+	</module>
+
+	<!-- Duplicate code -->
+	<!--<module name="StrictDuplicateCode">
+		<property name="min" value="15"/>
+	</module>-->
+
+	<!-- Metrics -->
+	<!-- Misc -->
+	<!-- Optional -->
+</module>

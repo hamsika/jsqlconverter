@@ -28,7 +28,7 @@ public class TypeMappingHandledTest extends TestCase {
 	}
 
 	public void testJDBCParser() throws IllegalAccessException {
-		for (Field field  :Types.class.getDeclaredFields()) {
+		for (Field field  : Types.class.getDeclaredFields()) {
 			assertNotNull(field.getName() + " type isn't handled by JDBCParser", jdbcParser.getType(field.getInt(field), 0, 0));
 		}
 	}
@@ -37,7 +37,7 @@ public class TypeMappingHandledTest extends TestCase {
 		return new TestSuite(TypeMappingHandledTest.class);
 	}
 
-	public static void main (String[] args) {
+	public static void main(String[] args) {
 		junit.textui.TestRunner.run(suite());
 	}
 }

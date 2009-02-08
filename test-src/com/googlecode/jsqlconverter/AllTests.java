@@ -3,7 +3,9 @@ package com.googlecode.jsqlconverter;
 import junit.framework.TestSuite;
 import junit.framework.Test;
 
-public class AllTests {
+public final class AllTests {
+	private AllTests() { }
+
 	public static Test suite() {
 		TestSuite suite = new TestSuite("All jSQLConverter Tests");
 
@@ -13,7 +15,7 @@ public class AllTests {
 		return suite;
 	}
 
-	public static void main (String[] args) {
+	public static void main(String[] args) {
 		junit.textui.TestRunner.run(suite());
 	}
 }

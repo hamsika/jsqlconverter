@@ -3,7 +3,7 @@ package com.googlecode.jsqlconverter.parser.callback;
 import com.googlecode.jsqlconverter.definition.Statement;
 
 public interface ParserCallback {
-	public void produceStatement(Statement statement);
+	void produceStatement(Statement statement);
 
-	public void log(String message);
+	void log(String message);
 }

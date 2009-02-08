@@ -32,7 +32,7 @@ public class PostgreSQLProducerTest extends TestCase {
 		return new TestSuite(PostgreSQLProducerTest.class);
 	}
 
-	public static void main (String[] args) {
+	public static void main(String[] args) {
 		junit.textui.TestRunner.run(suite());
 	}
 }

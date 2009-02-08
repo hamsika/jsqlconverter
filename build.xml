@@ -21,7 +21,7 @@
 
 	<path id="classpath.lib">
 		<fileset dir="${project.lib}" >
-			<include name="*.jar" />
+			<include name="**/*.jar" />
 		</fileset>
 	</path>
 
@@ -118,6 +118,41 @@
 
 			<test name="com.googlecode.jsqlconverter.AllTests"/>
 		</junit>
+	</target>
+
+	<target name="checkstyle">
+		<taskdef resource="checkstyletask.properties">
+			<classpath refid="classpath.lib"/>
+		</taskdef>
+
+		<checkstyle config="checkstyle.xml">
+			<fileset dir="${project.src}" includes="**/*.java"/>
+
+			<fileset dir=".">
+				<patternset>
+					<include name="${project.src}/**/*.java"/>
+					<include name="${project.tests}/**/*.java"/>
+				</patternset>
+			</fileset>
+		</checkstyle>
+	</target>
+
+	<target name="doc">
+		<javadoc packagenames="com.googlecode.jsqlconverter.*"
+			sourcepath="${project.src}"
+			defaultexcludes="yes"
+			destdir="${build.temp}/docs/api"
+			author="true"
+			version="true"
+			use="true"
+			windowtitle="Test API">
+
+			<tag name="todo" scope="all" description="To do:"/>
+			<!--<group title="Parser Packages" packages="com.googlecode.jsqlconverter.parser.*"/>
+			<group title="Producer Packages" packages="com.googlecode.jsqlconverter.producer.*"/>-->
+			<group title="Definition Packages" packages="com.googlecode.jsqlconverter.definition.*"/>
+			<group title="Frontend Packages" packages="com.googlecode.jsqlconverter.frontend.*"/>
+		</javadoc>
 	</target>
 
 	<target name="clean">

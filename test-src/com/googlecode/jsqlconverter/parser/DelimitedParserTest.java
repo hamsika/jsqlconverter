@@ -21,11 +21,12 @@ public class DelimitedParserTest extends TestCase {
 	public void testTextQuantifier() throws FileNotFoundException, ParserException {
 		DelimitedParser parser = new DelimitedParser(new File("tests/delimited/textquantifier.csv"), ',', '"', true, true);
 
+
 		parser.parse(new TextQuantifierCallback());
 	}
 
 	private class TextQuantifierCallback implements ParserCallback {
-		CreateTable correctTable = new CreateTable(new Name("textquantifier"));
+		private CreateTable correctTable = new CreateTable(new Name("textquantifier"));
 
 		public TextQuantifierCallback() {
 			correctTable.addColumn(new Column(new Name("column \" a"), StringType.VARCHAR));
@@ -64,7 +65,7 @@ public class DelimitedParserTest extends TestCase {
 		return new TestSuite(DelimitedParserTest.class);
 	}
 
-	public static void main (String[] args) {
+	public static void main(String[] args) {
 		junit.textui.TestRunner.run(suite());
 	}
 }

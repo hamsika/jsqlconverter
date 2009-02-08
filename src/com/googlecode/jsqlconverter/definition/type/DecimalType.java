@@ -6,11 +6,11 @@ public class DecimalType implements NumericType {
 
 	// e.g: the number 23.5141 has a precision of 6 and a scale of 4
 
-	public DecimalType (int precision) {
+	public DecimalType(int precision) {
 		this (precision, 0);
 	}
 
-	public DecimalType (int precision, int scale) {
+	public DecimalType(int precision, int scale) {
 		this.precision = precision;
 		this.scale = scale;
 	}
