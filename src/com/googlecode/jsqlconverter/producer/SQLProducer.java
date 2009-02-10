@@ -41,7 +41,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		out.print(" ON ");
 		out.print(getQuotedName(createIndex.getTableName(), QuoteType.INSERT));
 		out.print(" (");
-		out.print(getColumnList(createIndex.getColumns()));
+		out.print(getColumnList(createIndex.getColumns(), QuoteType.INDEX));
 		out.println(");");
 	}
 
@@ -74,7 +74,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 			out.print(" ");
 
 			// constraints
-			String typeName = getType(column.getType());
+			String typeName = getType(column.getType(), column.getSize());
 
 			out.print(typeName);
 
@@ -137,14 +137,14 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 
 		if (primaryKey != null) {
 			out.print("\tPRIMARY KEY (");
-			out.print(getColumnList(primaryKey.getColumns()));
+			out.print(getColumnList(primaryKey.getColumns(), QuoteType.TABLE));
 			out.println(")");
 		}
 
 		// indexes
 		for (KeyConstraint key : table.getUniqueCompoundKeyConstraint()) {
 			out.print("\tUNIQUE (");
-			out.print(getColumnList(key.getColumns()));
+			out.print(getColumnList(key.getColumns(), QuoteType.TABLE));
 			out.println(")");
 		}
 
@@ -207,7 +207,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		out.println(";");
 	}
 
-	private String getColumnList(Name[] names) {
+	private String getColumnList(Name[] names, QuoteType type) {
 		StringBuffer columnList = new StringBuffer();
 
 		for (Name columnName : names) {
@@ -215,7 +215,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 				columnList.append(", ");
 			}
 
-			columnList.append(getQuotedName(columnName, QuoteType.TRUNCATE));
+			columnList.append(getQuotedName(columnName, type));
 		}
 
 		return columnList.toString();
@@ -283,7 +283,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		return sb.toString();
 	}
 
-	private String getType(Type type) {
+	private String getType(Type type, int size) {
 		String dataTypeString = null;
 
 		if (type instanceof ApproximateNumericType) {
@@ -301,7 +301,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		} else if (type instanceof MonetaryType) {
 			dataTypeString = getType((MonetaryType)type);
 		} else if (type instanceof StringType) {
-			dataTypeString = getType((StringType)type);
+			dataTypeString = getType((StringType)type, size);
 		}
 
 		if (dataTypeString == null) {
@@ -345,7 +345,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 	public abstract String getType(DecimalType type); // TODO: precision / scale
 	public abstract String getType(ExactNumericType type);
 	public abstract String getType(MonetaryType type);
-	public abstract String getType(StringType type);
+	public abstract String getType(StringType type, int size);
 
 	public abstract boolean outputTypeSize(Type type, String localname);
 

@@ -32,7 +32,7 @@ public class PostgreSQLProducer extends SQLProducer {
 		return "DEFAULT '" + defaultConstraint.getValue() + "'";
 	}
 
-	public String getType(StringType type) {
+	public String getType(StringType type, int size) {
 		switch(type) {
 			case CHAR:
 			case NCHAR:

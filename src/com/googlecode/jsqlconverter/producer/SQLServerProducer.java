@@ -117,7 +117,7 @@ public class SQLServerProducer extends SQLProducer {
 		}
 	}
 
-	public String getType(StringType type) {
+	public String getType(StringType type, int size) {
 		switch(type) {
 			case CHAR:
 				return "char";

@@ -124,24 +124,24 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
-	public String getType(StringType type) {
+	public String getType(StringType type, int size) {
 		switch(type) {
 			case CHAR:
 				return "char";
 			case NCHAR:
 				return "nchar";
 			case NTEXT:
-				return "ntext";
+				return "text";
 			case NVARCHAR:
 				return "nvarchar";
 			case TEXT:
 				return "text";
 			case LONGTEXT:
-				return "longtext";
+				return (size > 0) ? "text" : "longtext";
 			case MEDIUMTEXT:
-				return "mediumtext";
+				return (size > 0) ? "text" : "mediumtext";
 			case TINYTEXT:
-				return "tinytext";
+				return (size > 0) ? "text" : "tinytext";
 			case VARCHAR:
 				return "varchar";
 			default:
@@ -150,7 +150,8 @@ public class MySQLProducer extends SQLProducer {
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {
-		return !(type instanceof DateTimeType);
+		// TODO: support DOUBLE. certain times it should be ok.
+		return !(type instanceof DateTimeType) && !(type instanceof BooleanType) && type != ApproximateNumericType.DOUBLE;
 	}
 
 	public boolean isValidIdentifier(String name) {

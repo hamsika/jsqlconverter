@@ -128,7 +128,7 @@ public class TypeMappingHandledTest extends TestCase {
 			}
 
 			for (StringType type : StringType.values()) {
-				assertNotNull(sqlproducer.getClass().getName() + " does not handle " + type, sqlproducer.getType(type));
+				assertNotNull(sqlproducer.getClass().getName() + " does not handle " + type, sqlproducer.getType(type, 0));
 			}
 
 			assertNotNull(sqlproducer.getClass().getName() + " does not handle DecimalType", sqlproducer.getType(decimalType));
@@ -171,7 +171,7 @@ public class TypeMappingHandledTest extends TestCase {
 		return new TestSuite(TypeMappingHandledTest.class);
 	}
 
-	public static void main (String[] args) {
+	public static void main(String[] args) {
 		junit.textui.TestRunner.run(suite());
 	}
 }
