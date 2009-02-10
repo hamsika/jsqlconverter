@@ -11,6 +11,7 @@ public final class AllTests {
 
 		suite.addTestSuite(DelimitedParserTest.class);
 		suite.addTestSuite(TypeMappingHandledTest.class);
+		suite.addTestSuite(ValidationTest.class);
 
 		return suite;
 	}
