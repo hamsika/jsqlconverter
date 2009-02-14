@@ -17,11 +17,11 @@ public class PostgreSQLProducer extends SQLProducer {
 	}
 
 	public char getLeftQuote(QuoteType type) {
-		return '\'';
+		return '"';
 	}
 
 	public char getRightQuote(QuoteType type) {
-		return '\'';
+		return '"';
 	}
 
 	public String getValidIdentifier(String name) {
@@ -140,7 +140,12 @@ public class PostgreSQLProducer extends SQLProducer {
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {
-		return !(type instanceof NumericType) && !(type instanceof BooleanType) && !(type instanceof DateTimeType);
+		return !(type instanceof NumericType) &&
+			!(type instanceof BooleanType) &&
+			!(type instanceof DateTimeType) &&
+			!(type instanceof MonetaryType) &&
+			!localname.equals("bytea") &&
+			!localname.equals("text");
 	}
 
 	public boolean isValidIdentifier(String name) {
@@ -157,8 +162,6 @@ public class PostgreSQLProducer extends SQLProducer {
 	public boolean supportsTableOption(TableOption option) {
 		switch(option) {
 			case TEMPORARY:
-			case LOCAL:
-			case GLOBAL:
 				return true;
 			default:
 				log.log(LogLevel.UNHANDLED, "Unknown table option: " + option);

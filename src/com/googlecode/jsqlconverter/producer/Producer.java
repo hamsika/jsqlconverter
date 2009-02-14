@@ -32,21 +32,29 @@ public abstract class Producer {
 			if (this instanceof CreateIndexInterface) {
 				CreateIndexInterface cii = (CreateIndexInterface)this;
 				cii.doCreateIndex((CreateIndex)statement);
+			} else {
+				log.warning("This Producer does not support CreateIndexInterface");
 			}
 		} else if (statement instanceof CreateTable) {
 			if (this instanceof CreateTableInterface) {
 				CreateTableInterface cti = (CreateTableInterface)this;
 				cti.doCreateTable((CreateTable)statement);
+			} else {
+				log.warning("This Producer does not support CreateTableInterface");
 			}
 		} else if (statement instanceof InsertFromValues) {
 			if (this instanceof InsertFromValuesInterface) {
 				InsertFromValuesInterface ifvi = (InsertFromValuesInterface)this;
 				ifvi.doInsertFromValues((InsertFromValues)statement);
+			} else {
+				log.warning("This Producer does not support InsertFromValuesInterface");
 			}
 		} else if (statement instanceof Truncate) {
 			if (this instanceof TruncateInterface) {
 				TruncateInterface ti = (TruncateInterface)this;
 				ti.doTruncate((Truncate)statement);
+			} else {
+				log.warning("This Producer does not support TruncateInterface");
 			}
 		} else {
 			log.log(LogLevel.UNHANDLED, "statement type: " + statement.getClass().getName());

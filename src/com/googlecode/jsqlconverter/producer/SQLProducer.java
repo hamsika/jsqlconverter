@@ -48,14 +48,6 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 	public void doCreateTable(CreateTable table) throws ProducerException {
 		out.print("CREATE ");
 
-		if (table.containsOption(TableOption.GLOBAL) && supportsTableOption(TableOption.GLOBAL)) {
-			out.print("GLOBAL ");
-		}
-
-		if (table.containsOption(TableOption.LOCAL) && supportsTableOption(TableOption.LOCAL)) {
-			out.print("LOCAL ");
-		}
-
 		if (table.containsOption(TableOption.TEMPORARY) && supportsTableOption(TableOption.TEMPORARY)) {
 			out.print("TEMPORARY ");
 		}

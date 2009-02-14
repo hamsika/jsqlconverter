@@ -175,9 +175,6 @@ public class MySQLProducer extends SQLProducer {
 		switch(option) {
 			case TEMPORARY:
 				return true;
-			case LOCAL:
-			case GLOBAL:
-				return false;
 			default:
 				log.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
 				return false;

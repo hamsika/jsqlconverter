@@ -101,10 +101,6 @@ public class ValidationTest extends TestCase {
 		}
 
 		private void validateCreateTable(CreateTable table) {
-			if (table.containsOption(TableOption.GLOBAL) && table.containsOption(TableOption.LOCAL)) {
-				assertTrue(parserName + " GLOBAL and LOCAL table options used together", false);
-			}
-
 			if (table.getColumnCount() == 0) {
 				assertTrue(parserName + " no columns defined", false);
 			}

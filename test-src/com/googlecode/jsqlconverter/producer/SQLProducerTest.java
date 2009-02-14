@@ -15,11 +15,18 @@ import com.googlecode.jsqlconverter.testutils.StatementGenerator;
 import com.googlecode.jsqlconverter.testutils.TestProperties;
 
 public class SQLProducerTest extends TestCase {
+	private PipedInputStream in;
 	private Statement[] statements;
-	private PrintStream out = System.out;
 	private ArrayList<ConnectionSetup> connections = new ArrayList<ConnectionSetup>();
 
 	protected void setUp() throws IOException, ClassNotFoundException, SQLException {
+		DriverManager.setLoginTimeout(3000);
+
+		PipedInputStream pin = new PipedInputStream();
+		PrintStream out = new PrintStream(new PipedOutputStream(pin));
+
+		in = pin;
+
 		statements = new StatementGenerator().generateCreateTableStatements(1);
 
 		if (TestProperties.getBoolean("access.enabled")) {
@@ -47,24 +54,31 @@ public class SQLProducerTest extends TestCase {
 		for (ConnectionSetup cs : connections) {
 			try {
 				doExecution(cs.getConnection(), cs.getProducer());
-			} catch (ProducerException e) {
-				e.printStackTrace();
-				assertFalse(true);
-			} catch (SQLException e) {
-				e.printStackTrace();
-				assertFalse(true);
+			} catch (IOException e) {
+				fail(e.getMessage());
 			}
 		}
 	}
 
-	private void doExecution(Connection con, Producer producer) throws ProducerException, SQLException {
+	private void doExecution(Connection con, Producer producer) throws IOException {
 		for (Statement statement : statements) {
 			producer.produce(statement);
-			// read 'out'
 
-			String sql = "";
+			int avail = in.available();
 
-			con.prepareStatement(sql).executeUpdate();
+			byte[] bytes = new byte[avail];
+
+			if (in.read(bytes) != avail) {
+				assertTrue("Number of bytes read doesn't match number of bytes available", false);
+			}
+
+			String sql = new String(bytes);
+
+			try {
+				con.prepareStatement(sql).executeUpdate();
+			} catch (SQLException e) {
+				fail(sql + "\n" + e.getMessage());
+			}
 		}
 	}
 

@@ -154,8 +154,6 @@ public class SQLServerProducer extends SQLProducer {
 
 	public boolean supportsTableOption(TableOption option) {
 		switch(option) {
-			case GLOBAL:
-			case LOCAL:
 			case TEMPORARY:
 				return false;
 			default:
