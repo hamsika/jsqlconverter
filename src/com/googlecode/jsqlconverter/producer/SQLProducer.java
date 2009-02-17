@@ -4,10 +4,7 @@ import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.truncate.table.Truncate;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.*;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
@@ -110,7 +107,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 			}
 
 			// reference
-			ForeignKeyConstraint reference = column.getForeignKeyConstraint();
+			ColumnForeignKeyConstraint reference = column.getForeignKeyConstraint();
 
 			if (reference != null) {
 				out.print(" ");
@@ -133,11 +130,34 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 			out.println(")");
 		}
 
-		// indexes
+		// compound indexes
 		for (KeyConstraint key : table.getUniqueCompoundKeyConstraint()) {
 			out.print("\tUNIQUE (");
 			out.print(getColumnList(key.getColumns(), QuoteType.TABLE));
 			out.println(")");
+		}
+
+		// compound foreign keys
+		for (CompoundForeignKeyConstraint reference : table.getCompoundForeignKeyConstraints()) {
+			out.print("\tFOREIGN KEY (");
+			out.print(getColumnList(reference.getColumnNames(), QuoteType.TABLE));
+			out.print(") REFERENCES ");
+			out.print(getQuotedName(reference.getTableName(), QuoteType.TABLE));
+			out.print(" (");
+			out.print(getColumnList(reference.getReferenceColumns(), QuoteType.TABLE));
+			out.print(")");
+
+			if (reference.getUpdateAction() != null && supportsForeignKeyAction(reference.getUpdateAction())) {
+				out.print(" ON UPDATE ");
+
+				out.print(getActionValue(reference.getUpdateAction()));
+			}
+
+			if (reference.getDeleteAction() != null && supportsForeignKeyAction(reference.getDeleteAction())) {
+				out.print(" ON DELETE ");
+	
+				out.print(getActionValue(reference.getDeleteAction()));
+			}
 		}
 
 		out.println(");");
@@ -251,7 +271,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		return columnList.toString();
 	}
 
-	private String getForeignKeyConstraintString(ForeignKeyConstraint reference) {
+	private String getForeignKeyConstraintString(ColumnForeignKeyConstraint reference) {
 		StringBuffer sb = new StringBuffer();
 
 		sb.append("REFERENCES ");

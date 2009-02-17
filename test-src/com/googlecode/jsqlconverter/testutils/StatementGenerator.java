@@ -8,19 +8,17 @@ import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ColumnForeignKeyConstraint;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
-import com.googlecode.jsqlconverter.producer.Producer;
-import com.googlecode.jsqlconverter.producer.ProducerException;
-import com.googlecode.jsqlconverter.producer.MySQLProducer;
 
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Collections;
 
 public class StatementGenerator {
+	// TODO: support column DEFAULT
 	private Random gen = new Random();
+
 	private enum NameType {
 		DATABASE,
 		SCHEMA,
@@ -38,14 +36,15 @@ public class StatementGenerator {
 	public CreateTable[] generateCreateTableStatements(int num) {
 		ArrayList<CreateTable> statements = new ArrayList<CreateTable>();
 
-		// TODO: make one of the tables offlimits to adding fkeys
-
 		for (int i=0; i<num; i++) {
-			statements.add(generateCreateTableStatement());
+			CreateTable table = generateCreateTableStatement(statements.toArray(new CreateTable[statements.size()]));
+
+			statements.add(table);
 		}
 
+		// setup foreign keys
 		if (statements.size() > 1) {
-			for (int i=0; i<statements.size()*2; i++) {
+			for (int i=0; i<statements.size()*3; i++) {
 				CreateTable tableA = statements.get(gen.nextInt(statements.size()));
 				Column columnA = getRandomColumn(tableA);
 
@@ -57,6 +56,33 @@ public class StatementGenerator {
 					tableB = statements.get(gen.nextInt(statements.size()));
 				} while (tableA == tableB);
 
+				// make sure neither tableA nor tableB are temporary
+				if (tableA.containsOption(TableOption.TEMPORARY) || tableB.containsOption(TableOption.TEMPORARY)) {
+					continue;
+				}
+
+				// make sure tableB doesn't already have references to tableA
+				boolean mutualReference = false;
+
+				for (Column column : tableB.getColumns()) {
+					ColumnForeignKeyConstraint fkey = column.getForeignKeyConstraint();
+
+					if (fkey != null) {
+						if (fkey.getTableName().getObjectName().equals(tableA.getName().getObjectName())) {
+							mutualReference = true;
+							break;
+						}
+					}
+				}
+
+				if (mutualReference) {
+					continue;
+				}
+
+				// circle reference
+				// make sure this wont create a circle reference
+				// TODO:
+
 				// make sure columnB is the same type as column a
 				for (Column column : tableB.getColumns()) {
 					if (column.getType().equals(columnA.getType())) {
@@ -65,8 +91,11 @@ public class StatementGenerator {
 					}
 				}
 
+				// make sure columnB is indexed.
 				if (columnB != null) {
-					columnA.setForeignKeyConstraint(new ForeignKeyConstraint(tableB.getName(), columnB.getName()));
+					if (columnB.containsOption(ColumnOption.PRIMARY_KEY) || columnB.containsOption(ColumnOption.UNIQUE)) {
+						columnA.setForeignKeyConstraint(new ColumnForeignKeyConstraint(tableB.getName(), columnB.getName()));
+					}
 				}
 			}
 		}
@@ -82,59 +111,147 @@ public class StatementGenerator {
 	 * @return the generated CreateTable object
 	 */
 	public CreateTable generateCreateTableStatement() {
-		CreateTable ct = new CreateTable(generateName(NameType.SCHEMA));
+		return generateCreateTableStatement(null);
+	}
+
+	public CreateTable generateCreateTableStatement(CreateTable[] previousTables) {
+		// TODO: support generating table name with a SCHEMA. (schema must exist..)
+		Name tableName;
+
+		if (previousTables != null) {
+			tableName = generateUniqueName(NameType.OBJECT, previousTables);
+		} else {
+			tableName = generateName(NameType.OBJECT);
+		}
+
+		CreateTable ct = new CreateTable(tableName);
 
 		for (Type type : ApproximateNumericType.values()) {
-			Column a = new Column(generateName(NameType.OBJECT), type);
+			Column a = new Column(generateUniqueName(NameType.OBJECT, ct.getColumns()), type);
+
+			// TODO: support setSize() here
 
 			ct.addColumn(a);
 		}
 
 		for (Type type : BinaryType.values()) {
-			Column a = new Column(generateName(NameType.OBJECT), type);
+			Column a = new Column(generateUniqueName(NameType.OBJECT, ct.getColumns()), type);
+
+			a.setSize(generateInt(1, 30));
 
 			ct.addColumn(a);
 		}
 
 		for (Type type : BooleanType.values()) {
-			Column a = new Column(generateName(NameType.OBJECT), type);
+			Column a = new Column(generateUniqueName(NameType.OBJECT, ct.getColumns()), type);
 
 			ct.addColumn(a);
 		}
 
 		for (Type type : DateTimeType.values()) {
-			Column a = new Column(generateName(NameType.OBJECT), type);
+			Column a = new Column(generateUniqueName(NameType.OBJECT, ct.getColumns()), type);
 
 			ct.addColumn(a);
 		}
 
 		for (Type type : ExactNumericType.values()) {
-			Column a = new Column(generateName(NameType.OBJECT), type);
+			Column a = new Column(generateUniqueName(NameType.OBJECT, ct.getColumns()), type);
 
 			ct.addColumn(a);
 		}
 
 		for (Type type : MonetaryType.values()) {
-			Column a = new Column(generateName(NameType.OBJECT), type);
+			Column a = new Column(generateUniqueName(NameType.OBJECT, ct.getColumns()), type);
 
 			ct.addColumn(a);
 		}
 
 		for (Type type : StringType.values()) {
-			Column a = new Column(generateName(NameType.OBJECT), type);
+			Column a = new Column(generateUniqueName(NameType.OBJECT, ct.getColumns()), type);
+
+			a.setSize(generateInt(1, 255));
 
 			ct.addColumn(a);
 		}
 
-		Column a = new Column(generateName(NameType.OBJECT), new DecimalType(generateInt(), generateInt()));
-		Column b = new Column(generateName(NameType.OBJECT), new DecimalType(generateInt()));
+		Column a = new Column(generateUniqueName(NameType.OBJECT, ct.getColumns()), new DecimalType(generateInt(), generateInt()));
+		Column b = new Column(generateUniqueName(NameType.OBJECT, ct.getColumns()), new DecimalType(generateInt()));
 
 		ct.addColumn(a);
 		ct.addColumn(b);
 
-		generateOptions(ct);
+		generateTableOptions(ct);
 
 		return ct;
+	}
+
+	private void generateTableOptions(CreateTable ct) {
+		// table options
+		if (gen.nextBoolean()) {
+			ct.addOption(TableOption.TEMPORARY);
+		}
+
+		if (gen.nextBoolean()) {
+			getRandomColumn(ct).addColumnOption(ColumnOption.NOT_NULL);
+		}
+
+
+		boolean createPKey = false;
+		boolean pkeyCreated = false;
+
+		if (gen.nextBoolean()) {
+			createPKey = true;
+		}
+
+		for (Column column : ct.getColumns()) {
+			if (column.getType() instanceof NumericType) {
+				if (createPKey && !pkeyCreated && gen.nextBoolean()) {
+					column.addColumnOption(ColumnOption.PRIMARY_KEY);
+
+					if (gen.nextBoolean()) {
+						column.addColumnOption(ColumnOption.AUTO_INCREMENT);
+					}
+
+					pkeyCreated = true;
+
+					continue;
+				}
+			}
+
+			if (column.getType() instanceof NumericType ||
+				column.getType() instanceof DateTimeType ||
+				column.getType() instanceof MonetaryType ||
+				column.getType() instanceof StringType
+			) {
+				if (gen.nextBoolean()) {
+					column.addColumnOption(ColumnOption.UNIQUE);
+				}
+			}
+		}
+
+		// TODO: compound primary key
+
+		// TODO: unique compound key
+		/*if (gen.nextBoolean()) {
+			ArrayList<Column> columns = new ArrayList<Column>();
+			ArrayList<Name> names = new ArrayList<Name>();
+
+			for (int i=0; i<gen.nextInt(5); i++) {
+				Column column;
+
+				do {
+					column = getRandomColumn(ct);
+				} while (columns.contains(column));
+
+				columns.add(column);
+				names.add(column.getName());
+			}
+
+			if (names.size() != 0) {
+				// TODO: don't set for columns that don't allow it
+				//	ct.adudUniqueCompoundKeyConstraint(new KeyConstraint(names.toArray(new Name[names.size()])));
+			}
+		}*/
 	}
 
 	/**
@@ -204,65 +321,44 @@ public class StatementGenerator {
 		return null;
 	}
 
-	private void generateOptions(CreateTable ct) {
-		// TODO: don't set sizes for columns that don't allow it
-		// TODO: set sizes for columns that require it
-		// column sizes
-		for (Column column : ct.getColumns()) {
-			column.setSize(generateInt());
-		}
+	private Name generateUniqueName(NameType nameType, Column[] columns) {
+		boolean nameAlreadyExists;
+		Name name;
 
-		// table options
+		do {
+			name = generateName(nameType);
 
-		if (gen.nextBoolean()) {
-			ct.addOption(TableOption.TEMPORARY);
-		} else if (gen.nextBoolean()) {
-			ct.addOption(TableOption.LOCAL);
-		} else if (gen.nextBoolean()) {
-			ct.addOption(TableOption.GLOBAL);
-		}
+			nameAlreadyExists = false;
 
-		// column options
-		if (gen.nextBoolean()) {
-			// TODO: don't set for columns that don't allow it
-			getRandomColumn(ct).addColumnOption(ColumnOption.PRIMARY_KEY);
-		}
-
-		if (gen.nextBoolean()) {
-			getRandomColumn(ct).addColumnOption(ColumnOption.NOT_NULL);
-		}
-
-		if (gen.nextBoolean()) {
-			getRandomColumn(ct).addColumnOption(ColumnOption.UNIQUE);
-		}
-
-		if (gen.nextBoolean()) {
-			// TODO: don't set for columns that don't allow it
-			getRandomColumn(ct).addColumnOption(ColumnOption.AUTO_INCREMENT);
-		}
-
-		// compound pkeuy
-
-		// unique compound key
-		if (gen.nextBoolean()) {
-			ArrayList<Column> columns = new ArrayList<Column>();
-			ArrayList<Name> names = new ArrayList<Name>();
-
-			for (int i=0; i<gen.nextInt(5); i++) {
-				Column column;
-
-				do {
-					column = getRandomColumn(ct);
-				} while (columns.contains(column));
-
-				columns.add(column);
-				names.add(column.getName());
+			for (Column column : columns) {
+				if (column.getName().getObjectName().equalsIgnoreCase(name.getObjectName())) {
+					nameAlreadyExists = true;
+					break;
+				}
 			}
+		} while (nameAlreadyExists);
 
-			if (names.size() != 0) {
-				ct.addUniqueCompoundKeyConstraint(new KeyConstraint(names.toArray(new Name[names.size()])));
+		return name;
+	}
+
+	private Name generateUniqueName(NameType nameType, CreateTable[] tables) {
+		boolean nameAlreadyExists;
+		Name name;
+
+		do {
+			name = generateName(nameType);
+
+			nameAlreadyExists = false;
+
+			for (CreateTable table : tables) {
+				if (table.getName().getObjectName().equalsIgnoreCase(name.getObjectName())) {
+					nameAlreadyExists = true;
+					break;
+				}
 			}
-		}
+		} while (nameAlreadyExists);
+
+		return name;
 	}
 
 	private Name generateName(NameType nameType) {
@@ -299,25 +395,7 @@ public class StatementGenerator {
 	}
 
 	private int generateInt() {
-		int seed = gen.nextInt(100);
-		int num;
-
-		if (1 == 1) {
-			return gen.nextInt(30);
-		}
-
-		if (seed > 30) {
-			// small
-			num = gen.nextInt(30);
-		} else if (seed > 10) {
-			// possibly larger
-			num = gen.nextInt(255);
-		} else {
-			// largest, least common
-			num = gen.nextInt(4000);
-		}
-
-		return num;
+		return gen.nextInt(30);
 	}
 
 	private int generateInt(int min, int max) {
@@ -328,26 +406,5 @@ public class StatementGenerator {
 		} while (num > max || num < min);
 
 		return num;
-	}
-
-	public static void main(String args[]) throws ProducerException {
-		//Producer producer = new PostgreSQLProducer(System.out);
-		Producer producer = new MySQLProducer(System.out);
-
-		StatementGenerator sg = new StatementGenerator();
-
-		CreateTable[] statements = sg.generateCreateTableStatements(3);
-
-		for (Statement statement : statements) {
-			producer.produce(statement);
-		}
-
-		/*for (int i=0; i<30; i++) {
-			producer.produce(sg.generateCreateIndexStatement());
-		}*/
-
-		/*for (int i=0; i<10; i++) {
-			producer.produce(sg.generateInsertFromValues(sg.generateCreateTableStatement()));
-		}*/
 	}
 }

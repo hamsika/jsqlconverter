@@ -4,7 +4,7 @@ import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ColumnForeignKeyConstraint;
 import com.googlecode.jsqlconverter.producer.interfaces.CreateTableInterface;
 import com.googlecode.jsqlconverter.producer.interfaces.FinalInterface;
 
@@ -100,6 +100,10 @@ public class XHTMLProducer extends Producer implements CreateTableInterface, Fin
 				out.println("		</tr>");
 			}
 
+			// TODO: support compound primary keys
+			// TODO: support compound unique keys
+			// TODO: support compound foreign keys
+
 			out.println("	</table>\n\n");
 		}
 	}
@@ -112,7 +116,7 @@ public class XHTMLProducer extends Producer implements CreateTableInterface, Fin
 		return defaultConstraint.getValue();
 	}
 
-	private String getForeignKeyXHTML(ForeignKeyConstraint foreignKeyConstraint) {
+	private String getForeignKeyXHTML(ColumnForeignKeyConstraint foreignKeyConstraint) {
 		if (foreignKeyConstraint == null) {
 			return "";
 		}

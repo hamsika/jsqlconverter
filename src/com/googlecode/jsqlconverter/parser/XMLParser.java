@@ -4,10 +4,7 @@ import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyMatch;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.*;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.type.*;
@@ -129,7 +126,7 @@ public abstract class XMLParser extends Parser {
 			for (int k=0; k<referenceNodes.getLength(); k++) {
 				Element referenceElement = (Element)referenceNodes.item(k);
 
-				ForeignKeyConstraint fkey = new ForeignKeyConstraint(tableName, new Name(referenceElement.getAttribute("foreign")));
+				ColumnForeignKeyConstraint fkey = new ColumnForeignKeyConstraint(tableName, new Name(referenceElement.getAttribute("foreign")));
 
 				String localColumn = referenceElement.getAttribute("local");
 
@@ -170,7 +167,7 @@ public abstract class XMLParser extends Parser {
 				String onUpdate = constraintElement.getAttribute("on_update");
 				String matchType = constraintElement.getAttribute("match_type");
 
-				ForeignKeyConstraint fkey = new ForeignKeyConstraint(new Name(referenceTable), new Name(referenceFields));
+				ColumnForeignKeyConstraint fkey = new ColumnForeignKeyConstraint(new Name(referenceTable), new Name(referenceFields));
 
 				ForeignKeyAction deleteAction = getAction(onDelete);
 				ForeignKeyAction updateAction = getAction(onUpdate);

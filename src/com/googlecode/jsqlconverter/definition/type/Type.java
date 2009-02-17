@@ -5,8 +5,6 @@ public interface Type {
 		// TODO: The following were taken from java.sql.Types and may need to be supported at some point
 
 		public final static int LONGVARCHAR 	=  -1;
-		public final static int DATE 		=  91;
-		public final static int TIME 		=  92;
 		public final static int LONGVARBINARY 	=  -4;
 		public final static int OTHER		= 1111;
 
@@ -22,24 +20,8 @@ public interface Type {
 		public static final int LONGNVARCHAR = -16;
 		public static final int NCLOB = 2011;
 		public static final int SQLXML = 2009;
-	 */
 
-	/*
-	BIGSERIAL,
-	UNKNOWN;
+		BIGSERIAL,
+		UNKNOWN;
 	*/
-
-	/*
-	PLUS, MINUS, TIMES, DIVIDE;
-
-	// Do arithmetic op represented by this constant
-	double eval(double x, double y){
-		switch(this) {
-			case PLUS:   return x + y;
-			case MINUS:  return x - y;
-			case TIMES:  return x * y;
-			case DIVIDE: return x / y;
-		}
-		throw new AssertionError("Unknown op: " + this);
-	}*/
 }

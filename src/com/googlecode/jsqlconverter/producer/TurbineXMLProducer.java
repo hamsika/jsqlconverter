@@ -21,6 +21,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 public class TurbineXMLProducer extends Producer implements CreateTableInterface, FinalInterface {
+	// TODO: support compound keys (primary, foreign, unique)
 	private Document document;
 	private Element databaseElement;
 

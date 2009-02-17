@@ -5,7 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
-public class TestProperties {
+public final class TestProperties {
 	private static String propertiesFile = "test.properties";
 	private static Properties properties = null;
 
@@ -13,8 +13,9 @@ public class TestProperties {
 
 	private static void initialise() {
 		// only initialise if it hasn't already been
-		if (properties != null)
+		if (properties != null) {
 			return;
+		}
 
 		// initialise our application properties with default values incase they are not set yet
 		properties = new Properties();

@@ -2,26 +2,19 @@ package com.googlecode.jsqlconverter.definition.create.table.constraint;
 
 import com.googlecode.jsqlconverter.definition.Name;
 
-public class ForeignKeyConstraint {
+public abstract class ForeignKeyConstraint {
 	private Name tableName;
-	private Name columnName;
-
 	private ForeignKeyMatch match;
 	private ForeignKeyAction updateAction = null;
 	private ForeignKeyAction deleteAction = null;
 
-	public ForeignKeyConstraint(Name tableName, Name columnName) {
+	public ForeignKeyConstraint(Name tableName) {
 		this.tableName = tableName;
-		this.columnName = columnName;
 	}
 
 	// getters
 	public Name getTableName() {
 		return tableName;
-	}
-
-	public Name getColumnName() {
-		return columnName;
 	}
 
 	public ForeignKeyAction getUpdateAction() {

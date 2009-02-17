@@ -3,6 +3,7 @@ package com.googlecode.jsqlconverter.definition.create.table;
 import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.CompoundForeignKeyConstraint;
 
 import java.util.ArrayList;
 
@@ -11,7 +12,8 @@ public class CreateTable extends Statement implements Comparable<CreateTable> {
 	private Name tableName;
 	private ArrayList<Column> columns = new ArrayList<Column>();
 	private ArrayList<TableOption> options = new ArrayList<TableOption>();
-	private ArrayList<KeyConstraint> uniqueKeys = new ArrayList<KeyConstraint>();
+	private ArrayList<KeyConstraint> compoundUniqueKeys = new ArrayList<KeyConstraint>();
+	private ArrayList<CompoundForeignKeyConstraint> compoundForeignKeys = new ArrayList<CompoundForeignKeyConstraint>();
 	private KeyConstraint primaryKey = null;
 
 	public CreateTable(Name tableName) {
@@ -49,12 +51,16 @@ public class CreateTable extends Statement implements Comparable<CreateTable> {
 		return options.toArray(new TableOption[options.size()]);
 	}
 
-	public KeyConstraint[] getUniqueCompoundKeyConstraint() {
-		return uniqueKeys.toArray(new KeyConstraint[uniqueKeys.size()]);
-	}
-
 	public KeyConstraint getPrimaryCompoundKeyConstraint() {
 		return primaryKey;
+	}
+
+	public KeyConstraint[] getUniqueCompoundKeyConstraint() {
+		return compoundUniqueKeys.toArray(new KeyConstraint[compoundUniqueKeys.size()]);
+	}
+
+	public CompoundForeignKeyConstraint[] getCompoundForeignKeyConstraints() {
+		return compoundForeignKeys.toArray(new CompoundForeignKeyConstraint[compoundForeignKeys.size()]);
 	}
 
 	public boolean containsOption(TableOption option) {
@@ -84,7 +90,11 @@ public class CreateTable extends Statement implements Comparable<CreateTable> {
 	}
 
 	public void addUniqueCompoundKeyConstraint(KeyConstraint keyConstraint) {
-		uniqueKeys.add(keyConstraint);
+		compoundUniqueKeys.add(keyConstraint);
+	}
+
+	public void addCompoundForeignKeyConstraint(CompoundForeignKeyConstraint keyConstraint) {
+		compoundForeignKeys.add(keyConstraint);
 	}
 
 	// removers

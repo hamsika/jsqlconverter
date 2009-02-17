@@ -4,12 +4,12 @@ import com.googlecode.jsqlconverter.producer.interfaces.CreateTableInterface;
 import com.googlecode.jsqlconverter.producer.interfaces.FinalInterface;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ColumnForeignKeyConstraint;
 
 import java.io.*;
 
 public class DOTProducer extends Producer implements CreateTableInterface, FinalInterface {
-	// TODO: point out primary key, point out uniques
+	// TODO: point out primary key, point out uniques, compound foreign keys!
 	private StringBuffer relationshipBuffer = new StringBuffer();
 
 	public DOTProducer(PrintStream out) {
@@ -30,7 +30,7 @@ public class DOTProducer extends Producer implements CreateTableInterface, Final
 		out.println("	]");
 
 		for (Column column : table.getColumns()) {
-			ForeignKeyConstraint fkey = column.getForeignKeyConstraint();
+			ColumnForeignKeyConstraint fkey = column.getForeignKeyConstraint();
 
 			// if target table doesn't exist then an empty table will be created.
 			// should probably output a warning if thatis the case

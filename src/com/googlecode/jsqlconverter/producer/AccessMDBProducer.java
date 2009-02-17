@@ -58,6 +58,7 @@ public class AccessMDBProducer extends Producer implements CreateTableInterface,
 		}
 
 		// TODO: indexes
+		// compound indexes (primary, foreign, unique)
 	}
 
 	public void doInsertFromValues(InsertFromValues insert) throws ProducerException {

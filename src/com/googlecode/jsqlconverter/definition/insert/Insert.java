@@ -2,7 +2,7 @@ package com.googlecode.jsqlconverter.definition.insert;
 
 import com.googlecode.jsqlconverter.definition.Statement;
 
-public class Insert extends Statement {
+public abstract class Insert extends Statement {
 	/*
 	features from other RDBMS:
 		PRIORITYS

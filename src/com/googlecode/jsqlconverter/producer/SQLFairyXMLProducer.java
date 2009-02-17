@@ -3,7 +3,7 @@ package com.googlecode.jsqlconverter.producer;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ColumnForeignKeyConstraint;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyMatch;
 import com.googlecode.jsqlconverter.definition.type.*;
@@ -25,6 +25,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.dom.DOMSource;
 
 public class SQLFairyXMLProducer extends Producer implements CreateTableInterface, FinalInterface {
+	// TODO: support compound keys (primary, foreign, unique)
 	private Document document;
 	private Element schemaElement;
 	private Element tablesElement;
@@ -116,7 +117,7 @@ public class SQLFairyXMLProducer extends Producer implements CreateTableInterfac
 				constraints.appendChild(nullConstraint);
 			}
 
-			ForeignKeyConstraint fkey = column.getForeignKeyConstraint();
+			ColumnForeignKeyConstraint fkey = column.getForeignKeyConstraint();
 
 			if (fkey != null) {
 				Element fkeyConstraint = document.createElement("constraint");

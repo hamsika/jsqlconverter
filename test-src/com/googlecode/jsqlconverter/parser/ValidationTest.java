@@ -16,7 +16,6 @@ import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
-import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstraint;
@@ -71,7 +70,7 @@ public class ValidationTest extends TestCase {
 			try {
 				parser.parse(new ValidationParserCallback(parser.getClass().getName()));
 			} catch (ParserException e) {
-				assertTrue(parser.getClass().getName() + " failed: " + e.getMessage(), false);
+				fail(parser.getClass().getName() + " failed: " + e.getMessage());
 			}
 		}
 	}
@@ -91,22 +90,22 @@ public class ValidationTest extends TestCase {
 			} else if (statement instanceof InsertFromValues) {
 				validateInsertFromValues((InsertFromValues)statement);
 			} else {
-				assertTrue("unknown statement type " + statement, false);
+				fail("unknown statement type " + statement);
 			}
 		}
 
 		private void validateCreatexIndex(CreateIndex createIndex) {
-			//assertTrue("unimplemented for " + parserName, false);
+			//fail("unimplemented for " + parserName);
 			// TODO: do some checks heres
 		}
 
 		private void validateCreateTable(CreateTable table) {
 			if (table.getColumnCount() == 0) {
-				assertTrue(parserName + " no columns defined", false);
+				fail(parserName + " no columns defined");
 			}
 
 			if (table.getName().getDatabaseName() != null) {
-				assertTrue(parserName + " table name should not be database qualified", false);
+				fail(parserName + " table name should not be database qualified");
 			}
 
 			KeyConstraint primaryKey = table.getPrimaryCompoundKeyConstraint();
@@ -116,18 +115,18 @@ public class ValidationTest extends TestCase {
 
 			for (Column column : table.getColumns()) {
 				if (column.getName().getDatabaseName() != null || column.getName().getSchemaName() != null) {
-					assertTrue(parserName + " column name should not be database or schema qualified", false);
+					fail(parserName + " column name should not be database or schema qualified");
 				}
 
 				if (column.containsOption(ColumnOption.NULL) && column.containsOption(ColumnOption.NOT_NULL)) {
-					assertTrue(parserName + " NULL and NOT_NULL column options used together", false);
+					fail(parserName + " NULL and NOT_NULL column options used together");
 				}
 
 				if (column.containsOption(ColumnOption.PRIMARY_KEY)) {
 					++primaryKeyCount;
 
 					if (column.containsOption(ColumnOption.UNIQUE)) {
-						assertTrue(parserName + " PRIMARY_KEY and UNIQUE column options used together", false);
+						fail(parserName + " PRIMARY_KEY and UNIQUE column options used together");
 					}
 				}
 
@@ -137,7 +136,7 @@ public class ValidationTest extends TestCase {
 					for (Name pkeycol : pkeyCols) {
 						if (pkeycol.getObjectName().equals(column.getName().getObjectName())) {
 							if (column.containsOption(ColumnOption.PRIMARY_KEY) || column.containsOption(ColumnOption.UNIQUE)) {
-								assertTrue(parserName + " column options conflict with primary compound key constraint", false);
+								fail(parserName + " column options conflict with primary compound key constraint");
 							}
 
 							return;
@@ -149,18 +148,18 @@ public class ValidationTest extends TestCase {
 			}
 
 			if (primaryKeyCount > 1) {
-				assertTrue(parserName + " table has " + primaryKeyCount + " PRIMARY KEY columns defined, only allowed 1", false);
+				fail(parserName + " table has " + primaryKeyCount + " PRIMARY KEY columns defined, only allowed 1");
 			}
 
 			for (KeyConstraint ukc : uniqueKeys) {
 				if (ukc.getColumns().length <= 1) {
-					assertTrue(parserName + " unique compound key must have at least 2 columns defined", false);
+					fail(parserName + " unique compound key must have at least 2 columns defined");
 				}
 			}
 		}
 
 		private void validateInsertFromValues(InsertFromValues insert) {
-			//assertTrue("unimplemented for " + parserName, false);
+			//fail("unimplemented for " + parserName);
 			// TODO: do some checks heres
 			// should have same number of columns as values!
 			//assertNotNull("Incorrect column and value count", insert.getObject(insert.getColumnCount() - 1));

@@ -4,7 +4,7 @@ import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ColumnForeignKeyConstraint;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class AccessMDBParser extends Parser {
+	// TODO: support compound foreign keys
 	private File mdbFile;
 	private boolean convertDataToInsert;
 
@@ -59,7 +60,7 @@ public class AccessMDBParser extends Parser {
 					// TODO: this probably doesn't work right. the column in "our" ct may not be the same column name in the referenced table
 					String colName = index.getColumns().get(0).getName();
 
-					ct.getColumn(colName).setForeignKeyConstraint(new ForeignKeyConstraint(new Name(index.getTable().getName()), new Name(colName)));
+					ct.getColumn(colName).setForeignKeyConstraint(new ColumnForeignKeyConstraint(new Name(index.getTable().getName()), new Name(colName)));
 				} else if (index.isPrimaryKey()) {
 					List<Index.ColumnDescriptor> indexes = index.getColumns();
 

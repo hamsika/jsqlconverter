@@ -6,6 +6,7 @@ import com.googlecode.jsqlconverter.logging.LogLevel;
 import java.io.InputStream;
 
 public class TurbineXMLParser extends XMLParser {
+	// TODO: support compound foreign keys
 	public TurbineXMLParser(InputStream in) {
 		super(in);
 	}

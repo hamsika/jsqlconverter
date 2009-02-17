@@ -1,5 +1,5 @@
 package com.googlecode.jsqlconverter.definition;
 
-public class Statement {
+public abstract class Statement {
 
 }

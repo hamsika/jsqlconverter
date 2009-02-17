@@ -27,7 +27,7 @@ public class SQLProducerTest extends TestCase {
 
 		in = pin;
 
-		statements = new StatementGenerator().generateCreateTableStatements(1);
+		statements = new StatementGenerator().generateCreateTableStatements(20);
 
 		if (TestProperties.getBoolean("access.enabled")) {
 			System.out.println("SQLProducerTest adding Access");
@@ -69,7 +69,7 @@ public class SQLProducerTest extends TestCase {
 			byte[] bytes = new byte[avail];
 
 			if (in.read(bytes) != avail) {
-				assertTrue("Number of bytes read doesn't match number of bytes available", false);
+				fail("Number of bytes read doesn't match number of bytes available");
 			}
 
 			String sql = new String(bytes);

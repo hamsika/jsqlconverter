@@ -3,10 +3,7 @@ package com.googlecode.jsqlconverter.parser;
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.create.table.*;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.KeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.*;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.logging.LogLevel;
@@ -17,13 +14,14 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 
 public class JDBCParser extends Parser {
+	// TODO: support compound foreign keys
 	// TODO: support create schema
 	// TODO: find out if all RDBMS always create indexes on foreign key columns
 	private Connection con;
 	private String catalog;
 	private String schemaPattern;
 	private String tableNamePattern;
-	private static final String columnNamePattern = null; // currently unused
+	private final String columnNamePattern = null; // currently unused
 	private boolean convertDataToInsert;
 	private ParserCallback callback;
 	private String[] types = { "TABLE" };	// TODO: support VIEW, GLOBAL TEMPORARY, LOCAL TEMPORARY
@@ -135,7 +133,7 @@ public class JDBCParser extends Parser {
 			if (referencesRs != null) {
 				while (referencesRs.next()) {
 					if (referencesRs.getString("PKCOLUMN_NAME").equals(columnsRs.getString("COLUMN_NAME"))) {
-						ForeignKeyConstraint ref = new ForeignKeyConstraint(new Name(referencesRs.getString("PKTABLE_NAME")), new Name(referencesRs.getString("PKCOLUMN_NAME")));
+						ColumnForeignKeyConstraint ref = new ColumnForeignKeyConstraint(new Name(referencesRs.getString("PKTABLE_NAME")), new Name(referencesRs.getString("PKCOLUMN_NAME")));
 
 						switch(referencesRs.getShort("UPDATE_RULE")) {
 							case DatabaseMetaData.importedKeyNoAction:
@@ -405,12 +403,12 @@ public class JDBCParser extends Parser {
 		return primaryKey;
 	}
 
-	private Type getType(int dbType, int columnSize, int decimalDigits) {
-		Type dataType = null;
+	public Type getType(int dbType, int columnSize, int decimalDigits) {
+		Type dataType;
 
 		switch(dbType) {
 			case Types.ARRAY:
-				dataType = BinaryType.BLOB; // guess
+				dataType = BinaryType.BLOB; // TODO: this is meant to be 'user defined'
 			break;
 			case Types.BIGINT:
 				dataType = ExactNumericType.BIGINT;
@@ -431,11 +429,11 @@ public class JDBCParser extends Parser {
 				dataType = StringType.CHAR;
 			break;
 			case Types.CLOB:
-
+				dataType = BinaryType.BLOB; // TODO: 
 			break;
-			/*case Types.DATALINK:
-
-			break;*/
+			case Types.DATALINK:
+				dataType = StringType.VARCHAR; // TODO:
+			break;
 			case Types.DATE:
 				dataType = DateTimeType.DATE;
 			break;
@@ -444,9 +442,9 @@ public class JDBCParser extends Parser {
 				// TODO: detect if this should be money / small money
 				dataType = new DecimalType(columnSize, decimalDigits);
 			break;
-			/*case Types.DISTINCT:
-
-			break;*/
+			case Types.DISTINCT:
+				dataType = StringType.VARCHAR; // TODO:
+			break;
 			case Types.DOUBLE:
 				dataType = ApproximateNumericType.DOUBLE;
 			break;
@@ -456,56 +454,55 @@ public class JDBCParser extends Parser {
 			case Types.INTEGER:
 				dataType = ExactNumericType.INTEGER;
 			break;
-			/*case Types.JAVA_OBJECT:
-
-			break;*/
+			case Types.JAVA_OBJECT:
+				dataType = BinaryType.BINARY; // TODO:
+			break;
 			case Types.LONGNVARCHAR:
-				dataType = StringType.NVARCHAR; // guess
+				dataType = StringType.NVARCHAR;
 			break;
 			case Types.LONGVARBINARY:
-				dataType = BinaryType.VARBINARY; // guess
+				dataType = BinaryType.VARBINARY;
 			break;
 			case Types.LONGVARCHAR:
-				dataType = StringType.VARCHAR; // guess
+				dataType = StringType.VARCHAR;
 			break;
 			case Types.NCHAR:
 				dataType = StringType.NCHAR;
 			break;
 			case Types.NCLOB:
-
+				dataType = BinaryType.BLOB; // TODO:
 			break;
-			/*case Types.NULL:
-
-			break;*/
+			case Types.NULL:
+				dataType = BinaryType.BIT; // TODO is this really suiteable?
+			break;
 			case Types.NVARCHAR:
 				dataType = StringType.NVARCHAR;
 			break;
-			/*case Types.OTHER:
-
-			break;*/
+			case Types.OTHER:
+				dataType = BinaryType.BIT; // TODO is this really suiteable?
+			break;
 			case Types.REAL:
 				dataType = ApproximateNumericType.REAL;
 			break;
 			case Types.REF:
-
+				dataType = BinaryType.BIT; // TODO: user-defined
 			break;
 			case Types.ROWID:
-
+				dataType = ExactNumericType.INTEGER; // this is a best guess
 			break;
 			case Types.SMALLINT:
 				dataType = ExactNumericType.SMALLINT;
 			break;
-			/*case Types.SQLXML:
-
+			case Types.SQLXML:
+				dataType = StringType.VARCHAR; // TODO:
 			break;
 			case Types.STRUCT:
-
-			break;*/
+				dataType = BinaryType.BIT; // TODO: user-defined
+			break;
 			case Types.TIME:
 				dataType = DateTimeType.TIME;
 			break;
 			case Types.TIMESTAMP:
-				// TODO: is JDBC timestamp the same as our timestamp?
 				dataType = DateTimeType.TIMESTAMP;
 			break;
 			case Types.TINYINT:
@@ -519,13 +516,8 @@ public class JDBCParser extends Parser {
 			break;
 			default:
 				// This should only happen if new types are added in newer JDBC versions
-				log.log(LogLevel.UNHANDLED, "unknown data type - this needs to be fixed: " + dbType);
-			break;
-		}
-
-		if (dataType == null) {
-			log.log(LogLevel.UNHANDLED, "Unhandled type from database: " + dbType);
-			dataType = StringType.VARCHAR;
+				log.log(LogLevel.UNHANDLED, "Unhandled data type: " + dbType);
+				return null;
 		}
 
 		// correct certain types based on size

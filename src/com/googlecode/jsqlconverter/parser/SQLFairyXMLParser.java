@@ -5,7 +5,7 @@ import com.googlecode.jsqlconverter.definition.type.*;
 import java.io.InputStream;
 
 // TODO: support foreign keys
-
+// TODO: support compound foreign keys
 public class SQLFairyXMLParser extends XMLParser {
 	private String tagPrefix = null;
 
