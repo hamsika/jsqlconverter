@@ -1,5 +1,6 @@
-Please note that this project is likely to have major errors with output.
-Please report any bugs / feature requests to http://code.google.com/p/jsqlconverter/issues/list
+-- Bug Reports / Feature Requests --
+See the issue tracker:
+http://code.google.com/p/jsqlconverter/issues/list
 
 
 From ./bin folder run the relevant script:
@@ -11,7 +12,7 @@ $ ./jsqlconverter -h
 
 
 
--- EXAMPLES --
+-- Example Usage --
 -- Delimited file to PostgreSQL --
 $ ./jsqlconverter -delim -file input.csv -out-postgre
 

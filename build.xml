@@ -56,8 +56,8 @@
 
 			<fileset dir="${build.temp}">
 				<patternset>
+					<exclude name="**/frontend/**/*.class"/>
 					<include name="**/*.class"/>
-					<exclude name="**/frontend/*.class"/>
 				</patternset>
 			</fileset>
 		</jar>

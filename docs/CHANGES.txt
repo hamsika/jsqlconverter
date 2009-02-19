@@ -1,7 +1,22 @@
-0.0.1.34 2009-01-21
+0.0.3.44 2009-02-19
+	Feature improvements
+	* Added docs folder (change log, license, usage guide)
+	* Added SQL Fairy XML Producer
+	* Added Foreign key support for SQL Fairy Parser
+	* Added various test cases and greatly improved quality
+
+	API improvements
+	* Added CreateTable.getColumn(String)
+	* Added compound foreign key support
+
+	Bug fixes
+	* Fixed JDBC Parser displaying PRIMARY KEY / UNIQUE attributes
+	* Fixed MySQL Producer DEFAULT quotation and type mapping
+	* Fixed PostgreSQL Producer quotation and displaying size for various types
+
+0.0.2.34 2009-01-21
 	Feature improvements
 	* Added Turbine XML Producer
-	* Added SQL Fairy XML Producer (basic)
 	* Added XHTML Producer
 	* Added DOT Producer (GraphWiz)
 	* Added MySQL Producer
