@@ -157,7 +157,7 @@ public class SQLServerProducer extends SQLProducer {
 			case TEMPORARY:
 				return false;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
+				LOG.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
 				return false;
 		}
 	}
@@ -172,7 +172,7 @@ public class SQLServerProducer extends SQLProducer {
 			case RESTRICT:			
 				return false;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown ForeignKeyAction: " + action);
+				LOG.log(LogLevel.UNHANDLED, "Unknown ForeignKeyAction: " + action);
 				return false;
 		}
 	}
@@ -186,7 +186,7 @@ public class SQLServerProducer extends SQLProducer {
 			case UNIQUE:
 				return true;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown column option: " + option);
+				LOG.log(LogLevel.UNHANDLED, "Unknown column option: " + option);
 				return false;
 		}
 	}

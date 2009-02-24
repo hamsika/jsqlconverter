@@ -123,7 +123,7 @@ public class DelimitedParser extends Parser {
 		}
 
 		for (int i=0; i<columns.length; i++) {
-			if (columns[i].equals("") || columns[i].equals("null")) {
+			if (columns[i].isEmpty() || columns[i].equals("null")) {
 				insert.setValue(i, null);
 			} else {
 				insert.setValue(i, columns[i]);
@@ -170,7 +170,7 @@ public class DelimitedParser extends Parser {
 				// if column value is null then don't detect data type
 				if (values[i].equals("null")) {
 					continue;
-				} else if (values[i].equals("")) {
+				} else if (values[i].isEmpty()) {
 					continue;
 				}
 
@@ -379,10 +379,10 @@ public class DelimitedParser extends Parser {
 		columns.add(columnBuffer.toString());
 
 		for (int i=0; i<columns.size(); i++) {
-			log.fine("col " + (i + 1) + ": " + columns.get(i));
+			LOG.fine("col " + (i + 1) + ": " + columns.get(i));
 		}
 
-		log.fine("-----------");
+		LOG.fine("-----------");
 
 		return columns.toArray(new String[columns.size()]);
 	}

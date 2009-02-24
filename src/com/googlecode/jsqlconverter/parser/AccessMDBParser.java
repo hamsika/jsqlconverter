@@ -173,7 +173,7 @@ public class AccessMDBParser extends Parser {
 				return BinaryType.BINARY;
 		}
 
-		log.log(LogLevel.UNHANDLED, "Unhandled type: " + type);
+		LOG.log(LogLevel.UNHANDLED, "Unhandled type: " + type);
 
 		return null;
 	}

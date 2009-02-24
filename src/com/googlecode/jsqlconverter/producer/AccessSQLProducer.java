@@ -149,7 +149,7 @@ public class AccessSQLProducer extends SQLProducer {
 			case TEMPORARY:
 				return true;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
+				LOG.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
 				return false;
 		}
 	}
@@ -183,7 +183,7 @@ public class AccessSQLProducer extends SQLProducer {
 			case UNIQUE:
 				return true;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown column option: " + option);
+				LOG.log(LogLevel.UNHANDLED, "Unknown column option: " + option);
 				return false;
 		}
 	}

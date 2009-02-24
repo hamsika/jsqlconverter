@@ -164,7 +164,7 @@ public class SQLFairyXMLProducer extends Producer implements CreateTableInterfac
 				return "set null";
 		}
 
-		log.warning("Unknown action: " + action);
+		LOG.warning("Unknown action: " + action);
 
 		return null;
 	}
@@ -179,12 +179,12 @@ public class SQLFairyXMLProducer extends Producer implements CreateTableInterfac
 				return "simple";
 		}
 
-		log.warning("Unknown action: " + match);
+		LOG.warning("Unknown action: " + match);
 
 		return null;
 	}
 
-	private String getType(Type type) {
+	public String getType(Type type) {
 		String dataTypeString = null;
 
 		if (type instanceof ApproximateNumericType) {

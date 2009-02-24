@@ -166,7 +166,7 @@ public class MySQLProducer extends SQLProducer {
 			case DATABASE:
 				return true;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown identifier type: " + type);
+				LOG.log(LogLevel.UNHANDLED, "Unknown identifier type: " + type);
 				return false;
 		}
 	}
@@ -176,7 +176,7 @@ public class MySQLProducer extends SQLProducer {
 			case TEMPORARY:
 				return true;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
+				LOG.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
 				return false;
 		}
 	}
@@ -191,7 +191,7 @@ public class MySQLProducer extends SQLProducer {
 			case SET_DEFAULT:
 				return false;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown ForeignKeyAction: " + action);
+				LOG.log(LogLevel.UNHANDLED, "Unknown ForeignKeyAction: " + action);
 				return false;
 		}
 	}
@@ -205,7 +205,7 @@ public class MySQLProducer extends SQLProducer {
 			case UNIQUE:
 				return true;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown column option: " + option);
+				LOG.log(LogLevel.UNHANDLED, "Unknown column option: " + option);
 				return false;
 		}
 	}

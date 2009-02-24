@@ -19,9 +19,6 @@ import com.googlecode.jsqlconverter.producer.interfaces.InsertFromValuesInterfac
 import java.io.PrintStream;
 
 public abstract class SQLProducer extends Producer implements CreateIndexInterface, CreateTableInterface, InsertFromValuesInterface, TruncateInterface {
-	// TODO: support quoting ([ ], ', ", `, etc). column quoting may be different to value quoting for inserts
-	// e.g:  insert into `bob` values('a', 'b');
-
 	public SQLProducer(PrintStream out) {
 		super(out);
 	}
@@ -93,7 +90,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 						out.print(" PRIMARY KEY");
 					break;
 					default:
-						log.log(LogLevel.UNHANDLED, "Unknown constraint: " + option);
+						LOG.log(LogLevel.UNHANDLED, "Unknown constraint: " + option);
 					break;
 				}
 			}
@@ -185,8 +182,6 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 
 			Type type = insert.getType(i);
 
-			// TODO: get proper quote values
-
 			Object value = insert.getObject(i);
 
 			if (type instanceof StringType) {
@@ -200,13 +195,13 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 			} else if (type instanceof NumericType) {
 				out.print(value);
 			} else if (type instanceof DateTimeType) {
-				out.print("#");
+				out.print(getLeftQuote(QuoteType.DATETIME));
 				out.print(value);
-				out.print("#");
+				out.print(getRightQuote(QuoteType.DATETIME));
 			} else if (type instanceof BooleanType) {
 				out.print(value);
 			} else {
-				log.log(LogLevel.UNHANDLED, "Datatype: " + type);
+				LOG.log(LogLevel.UNHANDLED, "Datatype: " + type);
 			}
 		}
 
@@ -295,7 +290,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		return sb.toString();
 	}
 
-	private String getType(Type type, int size) {
+	public String getType(Type type, int size) {
 		String dataTypeString = null;
 
 		if (type instanceof ApproximateNumericType) {
@@ -337,7 +332,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 				return "NO ACTION";
 		}
 
-		log.warning("Unknown action value: " + action);
+		LOG.warning("Unknown action value: " + action);
 
 		return null;
 	}
@@ -354,7 +349,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 	public abstract String getType(BinaryType type);
 	public abstract String getType(BooleanType type);
 	public abstract String getType(DateTimeType type);
-	public abstract String getType(DecimalType type); // TODO: precision / scale
+	public abstract String getType(DecimalType type);
 	public abstract String getType(ExactNumericType type);
 	public abstract String getType(MonetaryType type);
 	public abstract String getType(StringType type, int size);
@@ -374,9 +369,10 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 	}
 
 	public enum QuoteType {
-		TABLE,
-		INSERT,
+		DATETIME,
 		INDEX,
+		INSERT,
+		TABLE,
 		TRUNCATE
 	}
 }

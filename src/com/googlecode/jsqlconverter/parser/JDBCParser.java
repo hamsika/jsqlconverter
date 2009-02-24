@@ -24,7 +24,7 @@ public class JDBCParser extends Parser {
 	private final String columnNamePattern = null; // currently unused
 	private boolean convertDataToInsert;
 	private ParserCallback callback;
-	private String[] types = { "TABLE" };	// TODO: support VIEW, GLOBAL TEMPORARY, LOCAL TEMPORARY
+	private String[] types = {"TABLE"};	// TODO: support VIEW, GLOBAL TEMPORARY, LOCAL TEMPORARY
 									// h2: TABLE LINK
 									// postgres: TEMPORARY TABLE
 
@@ -59,7 +59,7 @@ public class JDBCParser extends Parser {
 				if (tableType.equals("TABLE")) {
 					getTableStatements(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"), convertDataToInsert);
 				} else {
-					log.log(Level.WARNING, "Unhandled Table Type: " + tableType);
+					LOG.log(Level.WARNING, "Unhandled Table Type: " + tableType);
 				}
 			}
 
@@ -127,7 +127,7 @@ public class JDBCParser extends Parser {
 				referencesRs = meta.getImportedKeys(catalog, tableSchema, currentTable);
 			} catch (SQLException sqle) {
 				callback.log("Failed to get foreign key list");
-				log.log(LogLevel.WARNING, "", sqle);
+				LOG.log(LogLevel.WARNING, "", sqle);
 			}
 
 			if (referencesRs != null) {
@@ -152,7 +152,7 @@ public class JDBCParser extends Parser {
 								ref.setUpdate(ForeignKeyAction.RESTRICT);
 							break;
 							default:
-								log.log(LogLevel.UNHANDLED, "Unknown update reference");
+								LOG.log(LogLevel.UNHANDLED, "Unknown update reference");
 							break;
 						}
 
@@ -173,7 +173,7 @@ public class JDBCParser extends Parser {
 								ref.setDelete(ForeignKeyAction.RESTRICT);
 							break;
 							default:
-								log.log(LogLevel.UNHANDLED, "Unknown delete reference");
+								LOG.log(LogLevel.UNHANDLED, "Unknown delete reference");
 							break;
 						}
 
@@ -201,7 +201,7 @@ public class JDBCParser extends Parser {
 			primaryKey = getTablePrimaryKey(meta, createTable.getName());
 		} catch (SQLException sqle) {
 			callback.log("Failed to get primary key list");
-			log.log(LogLevel.WARNING, "", sqle);
+			LOG.log(LogLevel.WARNING, "", sqle);
 		}
 
 		if (primaryKey != null) {
@@ -249,7 +249,7 @@ public class JDBCParser extends Parser {
 				userIndexes.add(index);
 
 				if (index.isUnique()) {
-					log.log(LogLevel.UNHANDLED, "possible implicit database index: " + index.getTableName().getObjectName() + " " + index.getIndexName().getObjectName() + " " + index.getColumns().length + " " + index.isUnique());
+					LOG.log(LogLevel.UNHANDLED, "possible implicit database index: " + index.getTableName().getObjectName() + " " + index.getIndexName().getObjectName() + " " + index.getColumns().length + " " + index.isUnique());
 				}
 			}
 		}
@@ -317,11 +317,11 @@ public class JDBCParser extends Parser {
 					// TODO: find out if this is unique to access (and what it means)
 					// TODO: find out if statistic index has anything to do with this 
 
-					log.log(LogLevel.ERROR, "both column name and index name are null - skipped");
+					LOG.log(LogLevel.ERROR, "both column name and index name are null - skipped");
 					continue;
 				}
 
-				log.log(LogLevel.ERROR, "index name is null, but a column name is available - skipped");
+				LOG.log(LogLevel.ERROR, "index name is null, but a column name is available - skipped");
 
 				continue;
 			}
@@ -354,7 +354,7 @@ public class JDBCParser extends Parser {
 					} else if (sortSeq.equals("D")) {
 						createIndex.setSortSequence(CreateIndex.SortSequence.DESC);
 					} else {
-						log.log(LogLevel.UNHANDLED, "Unknown sort sequence");
+						LOG.log(LogLevel.UNHANDLED, "Unknown sort sequence");
 					}
 				}
 
@@ -516,7 +516,7 @@ public class JDBCParser extends Parser {
 			break;
 			default:
 				// This should only happen if new types are added in newer JDBC versions
-				log.log(LogLevel.UNHANDLED, "Unhandled data type: " + dbType);
+				LOG.log(LogLevel.UNHANDLED, "Unhandled data type: " + dbType);
 				return null;
 		}
 

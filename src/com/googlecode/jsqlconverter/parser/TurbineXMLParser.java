@@ -80,10 +80,10 @@ public class TurbineXMLParser extends XMLParser {
 		} else if (type.equals("CHAR")) {
 			return StringType.CHAR;
 		} else if (type.equals("CLOB")) {
-
+			return BinaryType.BLOB; // TODO: check this
 		} else if (type.equals("DATE")) {
-
-		} else if (type.equals("DECIMAL")) {
+			return DateTimeType.DATE;
+		} else if (type.equals("DECIMAL") || type.equals("NUMERIC")) {
 			return new DecimalType(size);
 		} else if (type.equals("DISTINCT")) {
 		} else if (type.equals("DOUBLE")) {
@@ -94,9 +94,10 @@ public class TurbineXMLParser extends XMLParser {
 			return ExactNumericType.INTEGER;
 		} else if (type.equals("JAVA_OBJECT")) {
 		} else if (type.equals("LONGVARBINARY")) {
+			return BinaryType.VARBINARY;
 		} else if (type.equals("LONGVARCHAR")) {
+			return StringType.VARCHAR;
 		} else if (type.equals("NULL")) {
-		} else if (type.equals("NUMERIC")) {
 		} else if (type.equals("OTHER")) {
 		} else if (type.equals("REAL")) {
 			return ApproximateNumericType.REAL;
@@ -105,7 +106,9 @@ public class TurbineXMLParser extends XMLParser {
 			return ExactNumericType.SMALLINT;
 		} else if (type.equals("STRUCT")) {
 		} else if (type.equals("TIME")) {
+			return DateTimeType.TIME;
 		} else if (type.equals("TIMESTAMP")) {
+			return DateTimeType.TIMESTAMP; // TODO: check this - should it be DATETIME instead?
 		} else if (type.equals("TINYINT")) {
 			return ExactNumericType.TINYINT;
 		} else if (type.equals("VARBINARY")) {
@@ -114,7 +117,7 @@ public class TurbineXMLParser extends XMLParser {
 			return StringType.VARCHAR;
 		}
 
-		log.log(LogLevel.UNHANDLED, "Unhandled type: " + type);
+		LOG.log(LogLevel.UNHANDLED, "Unhandled type: " + type);
 
 		return StringType.VARCHAR;
 	}

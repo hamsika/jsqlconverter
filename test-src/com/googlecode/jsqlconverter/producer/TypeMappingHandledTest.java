@@ -10,12 +10,14 @@ import java.io.File;
 import java.io.IOException;
 
 import com.googlecode.jsqlconverter.definition.type.*;
+import com.googlecode.jsqlconverter.testutils.CommonTasks;
 
 import javax.xml.transform.TransformerException;
 import javax.xml.parsers.ParserConfigurationException;
 
 public class TypeMappingHandledTest extends TestCase {
 	private PrintStream out = System.out;
+	private Type[] types = CommonTasks.getTypes();
 	private DecimalType decimalType;
 	private AccessMDBProducer accessMDBProducer;
 	private SQLFairyXMLProducer sqlfairyProducer;
@@ -38,31 +40,7 @@ public class TypeMappingHandledTest extends TestCase {
 	}
 
 	public void testAcesssMDBProducer() {
-		for (ApproximateNumericType type : ApproximateNumericType.values()) {
-			assertNotNull(accessMDBProducer.getClass().getName() + " does not handle " + type, accessMDBProducer.getType(type));
-		}
-
-		for (BinaryType type : BinaryType.values()) {
-			assertNotNull(accessMDBProducer.getClass().getName() + " does not handle " + type, accessMDBProducer.getType(type));
-		}
-
-		for (BooleanType type : BooleanType.values()) {
-			assertNotNull(accessMDBProducer.getClass().getName() + " does not handle " + type, accessMDBProducer.getType(type));
-		}
-
-		for (DateTimeType type : DateTimeType.values()) {
-			assertNotNull(accessMDBProducer.getClass().getName() + " does not handle " + type, accessMDBProducer.getType(type));
-		}
-
-		for (ExactNumericType type : ExactNumericType.values()) {
-			assertNotNull(accessMDBProducer.getClass().getName() + " does not handle " + type, accessMDBProducer.getType(type));
-		}
-
-		for (MonetaryType type : MonetaryType.values()) {
-			assertNotNull(accessMDBProducer.getClass().getName() + " does not handle " + type, accessMDBProducer.getType(type));
-		}
-
-		for (StringType type : StringType.values()) {
+		for (Type type : types) {
 			assertNotNull(accessMDBProducer.getClass().getName() + " does not handle " + type, accessMDBProducer.getType(type));
 		}
 
@@ -70,31 +48,7 @@ public class TypeMappingHandledTest extends TestCase {
 	}
 
 	public void testSQLFairy() {
-		for (ApproximateNumericType type : ApproximateNumericType.values()) {
-			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
-		}
-
-		for (BinaryType type : BinaryType.values()) {
-			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
-		}
-
-		for (BooleanType type : BooleanType.values()) {
-			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
-		}
-
-		for (DateTimeType type : DateTimeType.values()) {
-			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
-		}
-
-		for (ExactNumericType type : ExactNumericType.values()) {
-			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
-		}
-
-		for (MonetaryType type : MonetaryType.values()) {
-			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
-		}
-
-		for (StringType type : StringType.values()) {
+		for (Type type : types) {
 			assertNotNull(sqlfairyProducer.getClass().getName() + " does not handle " + type, sqlfairyProducer.getType(type));
 		}
 
@@ -103,31 +57,7 @@ public class TypeMappingHandledTest extends TestCase {
 
 	public void testSQLProducers() {
 		for (SQLProducer sqlproducer : sqlproducers) {
-			for (ApproximateNumericType type : ApproximateNumericType.values()) {
-				assertNotNull(sqlproducer.getClass().getName() + " does not handle " + type, sqlproducer.getType(type));
-			}
-
-			for (BinaryType type : BinaryType.values()) {
-				assertNotNull(sqlproducer.getClass().getName() + " does not handle " + type, sqlproducer.getType(type));
-			}
-
-			for (BooleanType type : BooleanType.values()) {
-				assertNotNull(sqlproducer.getClass().getName() + " does not handle " + type, sqlproducer.getType(type));
-			}
-
-			for (DateTimeType type : DateTimeType.values()) {
-				assertNotNull(sqlproducer.getClass().getName() + " does not handle " + type, sqlproducer.getType(type));
-			}
-
-			for (ExactNumericType type : ExactNumericType.values()) {
-				assertNotNull(sqlproducer.getClass().getName() + " does not handle " + type, sqlproducer.getType(type));
-			}
-
-			for (MonetaryType type : MonetaryType.values()) {
-				assertNotNull(sqlproducer.getClass().getName() + " does not handle " + type, sqlproducer.getType(type));
-			}
-
-			for (StringType type : StringType.values()) {
+			for (Type type : types) {
 				assertNotNull(sqlproducer.getClass().getName() + " does not handle " + type, sqlproducer.getType(type, 0));
 			}
 
@@ -136,31 +66,7 @@ public class TypeMappingHandledTest extends TestCase {
 	}
 
 	public void testTurbineProducer() {
-		for (ApproximateNumericType type : ApproximateNumericType.values()) {
-			assertNotSame(turbineProducer.getClass().getName() + " does not handle " + type, turbineProducer.getType(type), "OTHER");
-		}
-
-		for (BinaryType type : BinaryType.values()) {
-			assertNotSame(turbineProducer.getClass().getName() + " does not handle " + type, turbineProducer.getType(type), "OTHER");
-		}
-
-		for (BooleanType type : BooleanType.values()) {
-			assertNotSame(turbineProducer.getClass().getName() + " does not handle " + type, turbineProducer.getType(type), "OTHER");
-		}
-
-		for (DateTimeType type : DateTimeType.values()) {
-			assertNotSame(turbineProducer.getClass().getName() + " does not handle " + type, turbineProducer.getType(type), "OTHER");
-		}
-
-		for (ExactNumericType type : ExactNumericType.values()) {
-			assertNotSame(turbineProducer.getClass().getName() + " does not handle " + type, turbineProducer.getType(type), "OTHER");
-		}
-
-		for (MonetaryType type : MonetaryType.values()) {
-			assertNotSame(turbineProducer.getClass().getName() + " does not handle " + type, turbineProducer.getType(type), "OTHER");
-		}
-
-		for (StringType type : StringType.values()) {
+		for (Type type : types) {
 			assertNotSame(turbineProducer.getClass().getName() + " does not handle " + type, turbineProducer.getType(type), "OTHER");
 		}
 

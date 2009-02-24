@@ -133,7 +133,7 @@ public abstract class XMLParser extends Parser {
 				Column column = ct.getColumn(localColumn);
 
 				if (column == null) {
-					log.warning("Column '" + localColumn + "' was not found");
+					LOG.warning("Column '" + localColumn + "' was not found");
 					continue;
 				}
 
@@ -152,7 +152,7 @@ public abstract class XMLParser extends Parser {
 			Column column = ct.getColumn(fields);
 
 			if (column == null) {
-				log.warning("Column '" + fields + "' was not found");
+				LOG.warning("Column '" + fields + "' was not found");
 				continue;
 			}
 
@@ -187,7 +187,7 @@ public abstract class XMLParser extends Parser {
 
 				column.setForeignKeyConstraint(fkey);
 			} else {
-				log.warning("Unhandled constraint type: " + type);
+				LOG.warning("Unhandled constraint type: " + type);
 			}
 		}
 	}
@@ -234,7 +234,7 @@ public abstract class XMLParser extends Parser {
 				Column column = ct.getColumn(indexColumn);
 
 				if (column == null) {
-					log.warning("Column '" + indexColumn + "' was not found");
+					LOG.warning("Column '" + indexColumn + "' was not found");
 					continue;
 				}
 
@@ -292,7 +292,7 @@ public abstract class XMLParser extends Parser {
 		String defaultValue = columnElement.getAttribute("defaultValue");
 		int size = 0;
 
-		if (!colSize.equals("")) {
+		if (!colSize.isEmpty()) {
 			size = Integer.parseInt(colSize);
 		}
 
@@ -312,7 +312,7 @@ public abstract class XMLParser extends Parser {
 			column.addColumnOption(ColumnOption.NOT_NULL);
 		}
 
-		if (!defaultValue.equals("")) {
+		if (!defaultValue.isEmpty()) {
 			column.setDefaultConstraint(new DefaultConstraint(defaultValue));
 		}
 

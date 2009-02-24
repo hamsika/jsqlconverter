@@ -54,9 +54,8 @@ public class PostgreSQLProducer extends SQLProducer {
 	public String getType(ApproximateNumericType type) {
 		switch (type) {
 			case DOUBLE:
-				return "float8";
+				return "double precision";
 			case FLOAT:
-				return "float4";
 			case REAL:
 				return "real";
 			default:
@@ -164,7 +163,7 @@ public class PostgreSQLProducer extends SQLProducer {
 			case TEMPORARY:
 				return true;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
+				LOG.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
 				return false;
 		}
 	}
@@ -178,7 +177,7 @@ public class PostgreSQLProducer extends SQLProducer {
 			case SET_NULL:
 				return true;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown ForeignKeyAction: " + action);
+				LOG.log(LogLevel.UNHANDLED, "Unknown ForeignKeyAction: " + action);
 				return false;
 		}
 	}
@@ -193,7 +192,7 @@ public class PostgreSQLProducer extends SQLProducer {
 			case UNIQUE:
 				return true;
 			default:
-				log.log(LogLevel.UNHANDLED, "Unknown column option: " + option);
+				LOG.log(LogLevel.UNHANDLED, "Unknown column option: " + option);
 				return false;
 		}
 	}

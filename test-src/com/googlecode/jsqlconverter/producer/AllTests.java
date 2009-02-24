@@ -12,6 +12,7 @@ public final class AllTests {
 		suite.addTestSuite(PostgreSQLProducerTest.class);
 		suite.addTestSuite(SQLProducerTest.class);
 		suite.addTestSuite(TypeMappingHandledTest.class);
+		suite.addTestSuite(TypeMappingCorrectTest.class);
 
 		return suite;
 	}

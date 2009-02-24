@@ -89,7 +89,7 @@ public class AccessMDBProducer extends Producer implements CreateTableInterface,
 		return objectArray.toArray(new Object[objectArray.size()]);
 	}
 
-	private DataType getType(Type type) {
+	public DataType getType(Type type) {
 		DataType dataType = null;
 
 		if (type instanceof ApproximateNumericType) {

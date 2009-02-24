@@ -15,7 +15,7 @@ import java.io.PrintStream;
 import java.util.logging.Logger;
 
 public abstract class Producer {
-	protected static final Logger log = Logger.getLogger(Producer.class.getName());
+	protected static final Logger LOG = Logger.getLogger(Producer.class.getName());
 	protected PrintStream out = System.out;
 
 	// don't force the use of a specific constructor
@@ -33,31 +33,31 @@ public abstract class Producer {
 				CreateIndexInterface cii = (CreateIndexInterface)this;
 				cii.doCreateIndex((CreateIndex)statement);
 			} else {
-				log.warning("This Producer does not support CreateIndexInterface");
+				LOG.warning("This Producer does not support CreateIndexInterface");
 			}
 		} else if (statement instanceof CreateTable) {
 			if (this instanceof CreateTableInterface) {
 				CreateTableInterface cti = (CreateTableInterface)this;
 				cti.doCreateTable((CreateTable)statement);
 			} else {
-				log.warning("This Producer does not support CreateTableInterface");
+				LOG.warning("This Producer does not support CreateTableInterface");
 			}
 		} else if (statement instanceof InsertFromValues) {
 			if (this instanceof InsertFromValuesInterface) {
 				InsertFromValuesInterface ifvi = (InsertFromValuesInterface)this;
 				ifvi.doInsertFromValues((InsertFromValues)statement);
 			} else {
-				log.warning("This Producer does not support InsertFromValuesInterface");
+				LOG.warning("This Producer does not support InsertFromValuesInterface");
 			}
 		} else if (statement instanceof Truncate) {
 			if (this instanceof TruncateInterface) {
 				TruncateInterface ti = (TruncateInterface)this;
 				ti.doTruncate((Truncate)statement);
 			} else {
-				log.warning("This Producer does not support TruncateInterface");
+				LOG.warning("This Producer does not support TruncateInterface");
 			}
 		} else {
-			log.log(LogLevel.UNHANDLED, "statement type: " + statement.getClass().getName());
+			LOG.log(LogLevel.UNHANDLED, "statement type: " + statement.getClass().getName());
 		}
 	}
 }
