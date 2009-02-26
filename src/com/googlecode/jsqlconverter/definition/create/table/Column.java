@@ -50,7 +50,6 @@ public class Column {
 	}
 
 	// setters
-	// TODO: decide if this should be used, or if it's better for types that have sizes to be specificed in the Type object
 	public void setSize(int size) {
 		this.size = size;
 	}

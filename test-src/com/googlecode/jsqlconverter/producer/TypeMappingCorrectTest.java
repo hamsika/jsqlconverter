@@ -11,7 +11,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
-import java.util.Arrays;
 
 import com.googlecode.jsqlconverter.testutils.TestProperties;
 import com.googlecode.jsqlconverter.testutils.CommonTasks;
@@ -71,7 +70,7 @@ public class TypeMappingCorrectTest extends TestCase {
 		AccessMDBProducer producer = new AccessMDBProducer(new File("typemapping.mdb"));
 
 		for (Type type : types) {
-			checkType(type, COL_ACCESS_MDB, producer.getType(type).toString());
+			checkType(type, COL_ACCESS_MDB, producer.getClass().getName(), producer.getType(type).toString());
 		}
 	}
 
@@ -95,7 +94,7 @@ public class TypeMappingCorrectTest extends TestCase {
 		SQLFairyXMLProducer producer = new SQLFairyXMLProducer(out);
 
 		for (Type type : types) {
-			checkType(type, COL_SQLFAIRY, producer.getType(type));
+			checkType(type, COL_SQLFAIRY, producer.getClass().getName(), producer.getType(type));
 		}
 	}
 
@@ -103,17 +102,17 @@ public class TypeMappingCorrectTest extends TestCase {
 		TurbineXMLProducer producer = new TurbineXMLProducer(out);
 
 		for (Type type : types) {
-			checkType(type, COL_TURBINE, producer.getType(type));
+			checkType(type, COL_TURBINE, producer.getClass().getName(), producer.getType(type));
 		}
 	}
 
 	private void testTypeMapping(SQLProducer producer, int column) {
 		for (Type type : types) {
-			checkType(type, column, producer.getType(type, 0));
+			checkType(type, column, producer.getClass().getName(), producer.getType(type, 0));
 		}
 	}
 
-	private void checkType(Type type, int column, String producerType) {
+	private void checkType(Type type, int column, String producerName, String producerType) {
 		String types = type.toString();
 
 		Row row = typeMap.get(types);
@@ -126,7 +125,7 @@ public class TypeMappingCorrectTest extends TestCase {
 			return;
 		}
 
-		assertEquals("producer says: \"" + producerType + "\" file says: \"" + cell.getStringCellValue() + "\"", cell.getStringCellValue(), producerType);
+		assertEquals(producerName + " says: \"" + producerType + "\" file says: \"" + cell.getStringCellValue() + "\" for main type: \"" + type + "\"", cell.getStringCellValue(), producerType);
 	}
 
 	public static Test suite() {

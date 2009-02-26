@@ -51,7 +51,7 @@ public class AccessSQLProducer extends SQLProducer {
 	public String getType(ApproximateNumericType type) {
 		switch (type) {
 			case DOUBLE:
-				return "decimal";
+				return "double";
 			case FLOAT:
 				return "float";
 			case REAL:
@@ -71,7 +71,7 @@ public class AccessSQLProducer extends SQLProducer {
 			case LONGBLOB:
 			case MEDIUMBLOB:
 			case TINYBLOB:
-				return "ole"; // TODO: check this.. this might be LONGBINARY
+				return "oleobject"; // TODO: check this.. this might be LONGBINARY
 			case VARBINARY:
 				return "longbinary";
 			default:
@@ -82,7 +82,7 @@ public class AccessSQLProducer extends SQLProducer {
 	public String getType(BooleanType type) {
 		switch(type) {
 			case BOOLEAN:
-				return "boolean";
+				return "yesno";
 			default:
 				return null;
 		}
@@ -128,11 +128,11 @@ public class AccessSQLProducer extends SQLProducer {
 	}
 
 	public String getType(DecimalType type) {
-		return "decimal";
+		return "numeric";
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {
-		return !localname.equals("memo") && !(type instanceof NumericType) && !(type instanceof BooleanType);
+		return !localname.equals("memo") && !localname.equals("oleobject") && !localname.equals("longbinary") && !(type instanceof DecimalType) && !(type instanceof NumericType) && !(type instanceof BooleanType);
 	}
 
 	public boolean isValidIdentifier(String name) {
