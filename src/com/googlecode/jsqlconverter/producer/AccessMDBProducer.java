@@ -44,7 +44,15 @@ public class AccessMDBProducer extends Producer implements CreateTableInterface,
 
 			jcol.setName(column.getName().getObjectName());
 			jcol.setType(getType(column.getType()));
-			jcol.setLength((short)column.getSize()); // TODO: check this
+
+			if (column.getSize() != 0) {
+				jcol.setLength((short)column.getSize());
+			}
+
+			// auto number is only supported by long int type
+			if (column.containsOption(ColumnOption.AUTO_INCREMENT) && jcol.getType() == DataType.LONG) {
+				jcol.setAutoNumber(true);
+			}
 
 			tb.addColumn(jcol);
 		}

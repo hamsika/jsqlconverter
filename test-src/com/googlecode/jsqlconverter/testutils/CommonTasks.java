@@ -19,7 +19,7 @@ public final class CommonTasks {
 		types.addAll(Arrays.asList(MonetaryType.values()));
 		types.addAll(Arrays.asList(StringType.values()));
 
-		// TODO: decimal type
+		// Note decimal type is not returned.
 
 		return types.toArray(new Type[types.size()]);
 	}

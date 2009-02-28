@@ -49,7 +49,7 @@ public class AccessMDBParser extends Parser {
 			ArrayList<CreateIndex> createIndexes = new ArrayList<CreateIndex>(); // normal non-unique indexes
 
 			for (Column column : table.getColumns()) {
-				com.googlecode.jsqlconverter.definition.create.table.Column col = new com.googlecode.jsqlconverter.definition.create.table.Column(new Name(column.getName()), getDataType(column.getType()));
+				com.googlecode.jsqlconverter.definition.create.table.Column col = new com.googlecode.jsqlconverter.definition.create.table.Column(new Name(column.getName()), getType(column.getType()));
 
 				ct.addColumn(col);
 			}
@@ -136,7 +136,7 @@ public class AccessMDBParser extends Parser {
 		}
 	}
 
-	public Type getDataType(DataType type) {
+	public Type getType(DataType type) {
 		switch (type) {
 			case BINARY:
 				return BinaryType.BINARY;
@@ -156,7 +156,7 @@ public class AccessMDBParser extends Parser {
 			case LONG:
 				return ExactNumericType.INTEGER;
 			case MEMO:
-				return StringType.TEXT;
+				return StringType.NVARCHAR;
 			case MONEY:
 				return MonetaryType.MONEY;
 			case NUMERIC:

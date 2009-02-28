@@ -7,7 +7,6 @@ import junit.framework.TestCase;
 import java.sql.Types;
 import java.lang.reflect.Field;
 
-import com.googlecode.jsqlconverter.definition.type.StringType;
 import com.healthmarketscience.jackcess.DataType;
 
 public class TypeMappingHandledTest extends TestCase {
@@ -23,7 +22,7 @@ public class TypeMappingHandledTest extends TestCase {
 
 	public void testAccessMDBParser() {
 		for (DataType type : DataType.values()) {
-			assertNotNull(type + " type isn't handled by AccessMDBParser", accessMDBParser.getDataType(type));
+			assertNotNull(type + " type isn't handled by AccessMDBParser", accessMDBParser.getType(type));
 		}
 	}
 

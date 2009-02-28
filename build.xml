@@ -89,7 +89,11 @@
 		<mkdir dir="${build.zip}/${project.name}/lib"/>
 
 		<copy todir="${build.zip}/${project.name}/lib">
+			<!-- include compiled jar's -->
 			<fileset dir="${build.bin}" includes="*.jar"/>
+
+			<!-- include runtime libs -->
+			<fileset dir="${project.lib}" includes="*.jar"/>
 		</copy>
 
 		<copy todir="${build.zip}/${project.name}/bin">
