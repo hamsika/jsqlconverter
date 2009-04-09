@@ -118,10 +118,6 @@ public class AccessMDBProducer extends Producer implements CreateTableInterface,
 			dataType = getType((StringType)type);
 		}
 
-		if (dataType == null) {
-			// TODO: message unable to get datatype
-		}
-
 		return dataType;
 	}
 

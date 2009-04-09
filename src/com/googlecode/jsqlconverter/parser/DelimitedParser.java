@@ -233,8 +233,6 @@ public class DelimitedParser extends Parser {
 		// create column objects
 		ArrayList<Column> columnList = new ArrayList<Column>();
 
-		// TODO: create some fake header names if headers were not provided
-
 		for (int i=0; i<headerNames.length; i++) {
 			if (types.get(i) == null) {
 				callback.log("Datatype for column #" + (i + 1) + " was not detected");

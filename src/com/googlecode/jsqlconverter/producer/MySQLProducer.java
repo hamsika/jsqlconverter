@@ -55,10 +55,13 @@ public class MySQLProducer extends SQLProducer {
 			case BIT:
 				return "bit";
 			case BLOB:
-			case LONGBLOB:
-			case MEDIUMBLOB:
-			case TINYBLOB:
 				return "blob";
+			case LONGBLOB:
+				return "longblob";
+			case MEDIUMBLOB:
+				return "mediumblob";
+			case TINYBLOB:
+				return "tinyblob";
 			case VARBINARY:
 				return "varbinary";
 			default:
