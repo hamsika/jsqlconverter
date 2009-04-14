@@ -29,6 +29,9 @@ public class SQLConverterCLI implements ParserCallback {
 	private char textQuantifier = '\0';
 	private Producer producer;
 
+	// generator
+	private int numStatements;
+
 	// sql fairy
 	private String prefix = null;
 
@@ -47,6 +50,7 @@ public class SQLConverterCLI implements ParserCallback {
 	private enum InputOperation {
 		MSACCESS_MDB,
 		DELIMITED,
+		GENERATOR,
 		JDBC,
 		SQLFAIRY_XML,
 		TURBINE_XML
@@ -84,6 +88,10 @@ public class SQLConverterCLI implements ParserCallback {
 
 		if (argList.contains("-delim")) {
 			setInputOperation(InputOperation.DELIMITED);
+		}
+
+		if (argList.contains("-gen")) {
+			setInputOperation(InputOperation.GENERATOR);
 		}
 
 		if (argList.contains("-jdbc")) {
@@ -132,6 +140,9 @@ public class SQLConverterCLI implements ParserCallback {
 						exitMessage("Text quantifier must be a single character");
 					}
 				}
+			break;
+			case GENERATOR:
+				numStatements = Integer.parseInt(getRequiredParameter("-num"));
 			break;
 			case JDBC:
 				driver = getRequiredParameter("-driver");
@@ -262,6 +273,9 @@ public class SQLConverterCLI implements ParserCallback {
 					parser = new DelimitedParser(new BufferedReader(new InputStreamReader(System.in)), new Name("unknown"), delimiter, textQuantifier, hasHeaderRow, doData);
 				}
 			break;
+			case GENERATOR:
+				parser = new GeneratorParser(numStatements);
+			break;
 			case JDBC:
 				Class.forName(driver);
 				Connection con = DriverManager.getConnection(url, user, pass);
@@ -379,6 +393,7 @@ public class SQLConverterCLI implements ParserCallback {
 			"input options:\n" +
 			"\t-access-mdb -file <filename>\n" +
 			"\t-delim [ -file <filename> ] [-noheader] [-seperator <char>] [-quantifier <char>]\n" +
+			"\t-gen -num <number>\n"+
 			"\t-jdbc -driver <driver> -url <url> [-user <username>] [-pass <password>]\n" +
 			"\t-sqlfairy -file <filename> [-prefix <prefix>]\n" +
 			"\t-turbine -file <filename>\n" +

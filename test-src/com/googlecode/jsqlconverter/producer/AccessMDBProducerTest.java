@@ -1,7 +1,7 @@
 package com.googlecode.jsqlconverter.producer;
 
-import com.googlecode.jsqlconverter.testutils.StatementGenerator;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
+import com.googlecode.jsqlconverter.parser.GeneratorParser;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,9 +14,9 @@ public class AccessMDBProducerTest extends TestCase {
 	private CreateTable[] createTables;
 
 	protected void setUp() {
-		StatementGenerator sg = new StatementGenerator();
+		GeneratorParser gp = new GeneratorParser(50);
 
-		createTables = sg.generateCreateTableStatements(50);
+		createTables = gp.generateCreateTableStatements(50);
 	}
 
 	public void testAccessProducer() throws IOException {

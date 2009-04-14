@@ -11,8 +11,8 @@ import java.sql.SQLException;
 import java.io.*;
 
 import com.googlecode.jsqlconverter.definition.Statement;
-import com.googlecode.jsqlconverter.testutils.StatementGenerator;
 import com.googlecode.jsqlconverter.testutils.TestProperties;
+import com.googlecode.jsqlconverter.parser.GeneratorParser;
 
 public class SQLProducerTest extends TestCase {
 	private PipedInputStream in;
@@ -27,7 +27,7 @@ public class SQLProducerTest extends TestCase {
 
 		in = pin;
 
-		statements = new StatementGenerator().generateCreateTableStatements(20);
+		statements = new GeneratorParser(20).generateCreateTableStatements(20);
 
 		if (TestProperties.getBoolean("access.enabled")) {
 			System.out.println("SQLProducerTest adding Access");

@@ -1,23 +1,26 @@
-package com.googlecode.jsqlconverter.testutils;
+package com.googlecode.jsqlconverter.parser;
 
-import com.googlecode.jsqlconverter.definition.Name;
-import com.googlecode.jsqlconverter.definition.Statement;
-import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
-import com.googlecode.jsqlconverter.definition.type.*;
+import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.Column;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ColumnForeignKeyConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.CompoundForeignKeyConstraint;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
+import com.googlecode.jsqlconverter.definition.Name;
+import com.googlecode.jsqlconverter.definition.Statement;
+import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
+import com.googlecode.jsqlconverter.definition.type.*;
 
-import java.util.ArrayList;
 import java.util.Random;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
-public class StatementGenerator {
-	// TODO: support column DEFAULT
+public class GeneratorParser extends Parser {
 	private Random gen = new Random();
+	private int numCreateTable;
 
 	private enum NameType {
 		DATABASE,
@@ -25,9 +28,19 @@ public class StatementGenerator {
 		OBJECT
 	}
 
+	public GeneratorParser(int numCreateTable) {
+		this.numCreateTable = numCreateTable;
+	}
+
+	public void parse(ParserCallback callback) throws ParserException {
+		for (CreateTable table : generateCreateTableStatements(numCreateTable)) {
+			callback.produceStatement(table);
+		}
+	}
+
 	/**
 	 * Generates a number of CreateTable objects and randomly sets up valid foreign key constraints between them
-	 * 
+	 *
 	 * The returned order will also be valid for execution top to bottom in a database.
 	 *
 	 * @param   num number of statements to generate
@@ -82,6 +95,9 @@ public class StatementGenerator {
 				// circle reference
 				// make sure this wont create a circle reference
 				// TODO:
+				// make sure we don't have a circle reference back to tableB
+
+				//isCircleReference(statements, tableA, tableB);
 
 				// make sure columnB is the same type as column a
 				for (Column column : tableB.getColumns()) {
@@ -103,6 +119,44 @@ public class StatementGenerator {
 		Collections.sort(statements);
 
 		return statements.toArray(new CreateTable[statements.size()]);
+	}
+
+	private void isCircleReference(ArrayList<CreateTable> statements, CreateTable tableA, CreateTable tableB) {
+		// table A points to table B
+		// find all tables that point to table A
+		HashMap<String, ArrayList<String>> referenceMap = new HashMap<String, ArrayList<String>>();
+
+		for (CreateTable table : statements) {
+			CompoundForeignKeyConstraint[] compoundKey = table.getCompoundForeignKeyConstraints();
+
+			if (compoundKey.length != 0) {
+				// TODO: support compound keys
+			} else {
+				for (Column column : table.getColumns()) {
+					ColumnForeignKeyConstraint fkey = column.getForeignKeyConstraint();
+
+					if (fkey != null) {
+						String key = table.getName().getObjectName();
+
+						if (!referenceMap.containsKey(key)) {
+							referenceMap.put(key, new ArrayList<String>());
+						}
+
+						ArrayList<String> refTables = referenceMap.get(key);
+
+						refTables.add(fkey.getTableName().getObjectName());
+					}
+				}
+			}
+		}
+
+		for (String tableName : referenceMap.keySet()) {
+			for (String refTable : referenceMap.get(tableName)) {
+				if (refTable.contains(tableA.getName().getObjectName())) {
+
+				}
+			}
+		}
 	}
 
 	/**
@@ -291,7 +345,7 @@ public class StatementGenerator {
 	/**
 	 * Generates a valid insert statement. With a random number of columns.
 	 * If any of the columns has the NOT NULL constraint then they will always be included
-	 * 
+	 *
 	 * Note this does not handle foreign key constraints.
 	 *
 	 * @param   table   the table to generate the insert statement for
@@ -396,6 +450,24 @@ public class StatementGenerator {
 
 	private int generateInt() {
 		return gen.nextInt(30);
+
+		/*
+		int seed = gen.nextInt(100);
+		int num;
+
+		if (seed > 30) {
+			// small
+			num = gen.nextInt(30);
+		} else if (seed > 10) {
+			// possibly larger
+			num = gen.nextInt(255);
+		} else {
+			// largest, least common
+			num = gen.nextInt(4000);
+		}
+
+		return num;
+		*/
 	}
 
 	private int generateInt(int min, int max) {
