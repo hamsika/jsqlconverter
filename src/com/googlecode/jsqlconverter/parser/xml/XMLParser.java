@@ -83,19 +83,23 @@ public abstract class XMLParser extends Parser {
 
 		NodeList columnNodes = (NodeList) xpath.compile(getColumnListPath(tableNode)).evaluate(tableNode, XPathConstants.NODESET);
 
-		//NodeList indexNodes = table.getElementsByTagName("index");
-
 		for (int i=0; i<columnNodes.getLength(); i++) {
 			Column column = getColumn((Element)columnNodes.item(i));
 
 			ct.addColumn(column);
 		}
 
-		// TODO detect foreign-keys (turbine only)
+		// TODO detect foreign-keys
+		// getFkeyBlah
+		//  getDeleteAction
+		//  getUpdateAction
+		// maybe even use isNoAction, isUpdateAction, isCascadeAction, etc
 
 		// TODO detect unique columns
+		// getUniqueColumnsPath(tableNode)
 
 		// TODO find indices
+		// getIndexesPath();
 
 		// send create table statement to be produced
 		callback.produceStatement(ct);
@@ -112,7 +116,7 @@ public abstract class XMLParser extends Parser {
 		boolean isRequired = Boolean.parseBoolean((String) xpath.evaluate(getIsRequiredPath(), columnElement, XPathConstants.STRING));
 		String colSize = (String) xpath.evaluate(getColumnSizePath(), columnElement, XPathConstants.STRING);
 		String defaultValue = (String) xpath.evaluate(getDefaultValuePath(), columnElement, XPathConstants.STRING);
-		String colType = (String) xpath.evaluate(getDataTypePath(), columnElement, XPathConstants.STRING);
+		String colType = (String) xpath.evaluate(getDataTypePath(columnElement), columnElement, XPathConstants.STRING);
 
 		int size = 0;
 
@@ -154,7 +158,7 @@ public abstract class XMLParser extends Parser {
 	public abstract String getColumnSizePath();
 	public abstract String getDefaultValuePath();
 
-	public abstract String getDataTypePath();
+	public abstract String getDataTypePath(Element columnElement);
 
 	public abstract Type getType(String type, int size);
 }

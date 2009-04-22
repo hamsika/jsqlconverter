@@ -1,7 +1,7 @@
 package com.googlecode.jsqlconverter.parser.xml;
 
-import org.w3c.dom.Element;
 import com.googlecode.jsqlconverter.definition.type.*;
+import org.w3c.dom.Element;
 
 import java.io.InputStream;
 
@@ -54,7 +54,7 @@ public class SQLFairyXMLParser extends XMLParser {
 		return "defaultValue";
 	}
 
-	public String getDataTypePath() {
+	public String getDataTypePath(Element columnElement) {
 		return "@data_type";
 	}
 

@@ -2,7 +2,6 @@ package com.googlecode.jsqlconverter.parser.xml;
 
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.logging.LogLevel;
-
 import org.w3c.dom.Element;
 
 import java.io.InputStream;
@@ -48,7 +47,7 @@ public class TurbineXMLParser extends XMLParser {
 		return "defaultValue";
 	}
 
-	public String getDataTypePath() {
+	public String getDataTypePath(Element columnElement) {
 		return "@type";
 	}
 

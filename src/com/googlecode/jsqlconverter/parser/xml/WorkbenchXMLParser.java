@@ -18,11 +18,10 @@ public class WorkbenchXMLParser extends XMLParser {
 
 	public String getTableNamePath() {
 		return "value[@key='name']/text()";
-		// <value type="string" key="name">salesPortfolioItems</value>
 	}
 
 	public String getColumnListPath(Element tableNode) {
-		// TODO: don't assume this is the first <link> element 
+		// TODO: don't assume this is always the first <link> element 
 		String tableId = tableNode.getElementsByTagName("link").item(0).getTextContent();
 
 		return "//value[@struct-name='db.mysql.Column'][link/text() = '" + tableId + "']";
@@ -52,7 +51,7 @@ public class WorkbenchXMLParser extends XMLParser {
 		return "value[@key='defaultValue']/text()";
 	}
 
-	public String getDataTypePath() {
+	public String getDataTypePath(Element columnElement) {
 		return "link[@key='simpleType']";
 	}
 
