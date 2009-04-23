@@ -6,8 +6,8 @@ import org.w3c.dom.Element;
 
 import java.io.InputStream;
 
-public class DBModelXMLParser extends XMLParser {
-	public DBModelXMLParser(InputStream in) {
+public class DBDesignerXMLParser extends XMLParser {
+	public DBDesignerXMLParser(InputStream in) {
 		super(in);
 	}
 

@@ -23,6 +23,7 @@ public class TypeMappingCorrectTest extends TestCase {
 	private static final int COL_ACCESS_MDB = 4;
 	private static final int COL_ACCESS_SQL = 3;
 	private static final int COL_MYSQL = 6;
+	private static final int COL_ORACLE = 12;
 	private static final int COL_POSTGRESQL = 7;
 	private static final int COL_SQLSERVER = 8;
 	private static final int COL_SQLFAIRY = 9;
@@ -81,6 +82,10 @@ public class TypeMappingCorrectTest extends TestCase {
 		testTypeMapping(new MySQLProducer(out), COL_MYSQL);
 	}
 
+	public void testOracle() {
+		testTypeMapping(new OracleSQLProducer(out), COL_ORACLE);
+	}
+
 	public void testPostgreSQL() {
 		testTypeMapping(new PostgreSQLProducer(out), COL_POSTGRESQL);
 	}
@@ -120,7 +125,7 @@ public class TypeMappingCorrectTest extends TestCase {
 
 		Cell cell = row.getCell(column);
 
-		if (cell.getStringCellValue().isEmpty()) {
+		if (cell == null || cell.getStringCellValue().isEmpty()) {
 			return;
 		}
 

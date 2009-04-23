@@ -42,6 +42,11 @@ public class SQLProducerTest extends TestCase {
 			connections.add(new ConnectionSetup("mysql", new MySQLProducer(out)));
 		}
 
+		if (TestProperties.getBoolean("oracle.enabled")) {
+			System.out.println("SQLProducerTest adding Oracle");
+			connections.add(new ConnectionSetup("oracle", new OracleSQLProducer(out)));
+		}
+
 		if (TestProperties.getBoolean("postgresql.enabled")) {
 			System.out.println("SQLProducerTest adding PostgreSQL");
 			connections.add(new ConnectionSetup("postgresql", new PostgreSQLProducer(out)));

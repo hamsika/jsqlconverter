@@ -32,25 +32,6 @@ public class PostgreSQLProducer extends SQLProducer {
 		return "DEFAULT '" + defaultConstraint.getValue() + "'";
 	}
 
-	public String getType(StringType type, int size) {
-		switch(type) {
-			case CHAR:
-			case NCHAR:
-				return "char";
-			case LONGTEXT:
-			case MEDIUMTEXT:
-			case TEXT:
-			case NTEXT:
-				return "text";
-			case TINYTEXT:
-			case VARCHAR:
-			case NVARCHAR:
-				return "varchar";
-			default:
-				return null;
-		}
-	}
-
 	public String getType(ApproximateNumericType type) {
 		switch (type) {
 			case DOUBLE:
@@ -128,6 +109,25 @@ public class PostgreSQLProducer extends SQLProducer {
 				return "money"; // this might not be the best choice.
 			case SMALLMONEY:
 				return "money";
+			default:
+				return null;
+		}
+	}
+
+	public String getType(StringType type, int size) {
+		switch(type) {
+			case CHAR:
+			case NCHAR:
+				return "char";
+			case LONGTEXT:
+			case MEDIUMTEXT:
+			case TEXT:
+			case NTEXT:
+				return "text";
+			case TINYTEXT:
+			case VARCHAR:
+			case NVARCHAR:
+				return "varchar";
 			default:
 				return null;
 		}

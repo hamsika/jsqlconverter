@@ -31,6 +31,7 @@ public class TypeMappingHandledTest extends TestCase {
 
 		sqlproducers.add(new AccessSQLProducer(out));
 		sqlproducers.add(new MySQLProducer(out));
+		sqlproducers.add(new OracleSQLProducer(out));
 		sqlproducers.add(new PostgreSQLProducer(out));
 		sqlproducers.add(new SQLServerProducer(out));
 

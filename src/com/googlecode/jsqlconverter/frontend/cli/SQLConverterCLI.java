@@ -4,12 +4,11 @@ import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.Statement;
 import com.googlecode.jsqlconverter.parser.*;
 import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
+import com.googlecode.jsqlconverter.parser.xml.DBDesignerXMLParser;
+import com.googlecode.jsqlconverter.parser.xml.WorkbenchXMLParser;
 import com.googlecode.jsqlconverter.producer.*;
 import com.googlecode.jsqlconverter.producer.interfaces.FinalInterface;
-import com.googlecode.jsqlconverter.producer.sql.AccessSQLProducer;
-import com.googlecode.jsqlconverter.producer.sql.MySQLProducer;
-import com.googlecode.jsqlconverter.producer.sql.PostgreSQLProducer;
-import com.googlecode.jsqlconverter.producer.sql.SQLServerProducer;
+import com.googlecode.jsqlconverter.producer.sql.*;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -52,12 +51,14 @@ public class SQLConverterCLI implements ParserCallback {
 	private PrintStream out = System.out;
 
 	private enum InputOperation {
+		DBDESIGNER_XML,
 		MSACCESS_MDB,
 		DELIMITED,
 		GENERATOR,
 		JDBC,
 		SQLFAIRY_XML,
-		TURBINE_XML
+		TURBINE_XML,
+		WORKBENCH_XML
 	}
 
 	private enum OutputOperation {
@@ -65,6 +66,7 @@ public class SQLConverterCLI implements ParserCallback {
 		MSACCESS_MDB,
 		MSACCESS_SQL,
 		MYSQL,
+		ORACLE,
 		POSTGRESQL,
 		SQLFAIRY_XML,
 		SQLSERVER,
@@ -90,6 +92,10 @@ public class SQLConverterCLI implements ParserCallback {
 			setInputOperation(InputOperation.MSACCESS_MDB);
 		}
 
+		if (argList.contains("-dbdesigner")) {
+			setInputOperation(InputOperation.DBDESIGNER_XML);
+		}
+
 		if (argList.contains("-delim")) {
 			setInputOperation(InputOperation.DELIMITED);
 		}
@@ -110,15 +116,16 @@ public class SQLConverterCLI implements ParserCallback {
 			setInputOperation(InputOperation.TURBINE_XML);
 		}
 
+		if (argList.contains("-workbench")) {
+			setInputOperation(InputOperation.WORKBENCH_XML);
+		}
+
 		if (inputOp == null) {
 			exitMessage("No input operation specified");
 		}
 
 		// detect parser options
 		switch(inputOp) {
-			case MSACCESS_MDB:
-				file = getRequiredParameter("-file");
-			break;
 			case DELIMITED:
 				setStdInOrFile();
 
@@ -155,10 +162,11 @@ public class SQLConverterCLI implements ParserCallback {
 				pass = getOptionalParameter("-pass");
 			break;
 			case SQLFAIRY_XML:
-				file = getRequiredParameter("-file");
 				prefix = getOptionalParameter("-prefix");
-			break;
+			case DBDESIGNER_XML:
+			case MSACCESS_MDB:
 			case TURBINE_XML:
+			case WORKBENCH_XML:
 				file = getRequiredParameter("-file");
 			break;
 		}
@@ -181,6 +189,10 @@ public class SQLConverterCLI implements ParserCallback {
 
 		if (argList.contains("-out-mysql")) {
 			setOutputOperation(OutputOperation.MYSQL);
+		}
+
+		if (argList.contains("-out-oracle")) {
+			setOutputOperation(OutputOperation.ORACLE);
 		}
 
 		if (argList.contains("-out-postgresql")) {
@@ -267,8 +279,8 @@ public class SQLConverterCLI implements ParserCallback {
 		Parser parser = null;
 
 		switch(inputOp) {
-			case MSACCESS_MDB:
-				parser = new AccessMDBParser(new File(file), doData);
+			case DBDESIGNER_XML:
+				parser = new DBDesignerXMLParser(new FileInputStream(file));
 			break;
 			case DELIMITED:
 				if (file != null) {
@@ -285,12 +297,22 @@ public class SQLConverterCLI implements ParserCallback {
 				Connection con = DriverManager.getConnection(url, user, pass);
 				parser = new JDBCParser(con, null, null, null, doData);
 			break;
+			case MSACCESS_MDB:
+				parser = new AccessMDBParser(new File(file), doData);
+			break;
 			case SQLFAIRY_XML:
 				parser = new SQLFairyXMLParser(new FileInputStream(file), prefix);
 			break;
 			case TURBINE_XML:
 				parser = new TurbineXMLParser(new FileInputStream(file));
 			break;
+			case WORKBENCH_XML:
+				try {
+					parser = new WorkbenchXMLParser(new File(file), "document.mwb.xml");
+				} catch (IOException e) {
+					exitMessage(e.getMessage(), e.getCause());
+				}
+				break;
 			default:
 				exitMessage("This input option hasn't been defined!");
 			break;
@@ -313,6 +335,9 @@ public class SQLConverterCLI implements ParserCallback {
 			break;
 			case MYSQL:
 				producer = new MySQLProducer(out);
+			break;
+			case ORACLE:
+				producer = new OracleSQLProducer(out);
 			break;
 			case POSTGRESQL:
 				producer = new PostgreSQLProducer(out);
@@ -399,11 +424,13 @@ public class SQLConverterCLI implements ParserCallback {
 			"\t-delim [ -file <filename> ] [-noheader] [-seperator <char>] [-quantifier <char>]\n" +
 			"\t-gen -num <number>\n"+
 			"\t-jdbc -driver <driver> -url <url> [-user <username>] [-pass <password>]\n" +
+			"\t-dbdesigner -file <filename>\n" +
 			"\t-sqlfairy -file <filename> [-prefix <prefix>]\n" +
 			"\t-turbine -file <filename>\n" +
+			"\t-workbench -file <filename>\n" +
 			"\n" +
 			"output options:\n" +
-			"\t-out-{access | mysql | postgresql | sqlserver}\n" +
+			"\t-out-{access | mysql | oracle | postgresql | sqlserver}\n" +
 			"\t-out-access-mdb -ofile <filename>\n" +
 			"\t-out-dot\n" +
 			"\t-out-sqlfairy\n" +
