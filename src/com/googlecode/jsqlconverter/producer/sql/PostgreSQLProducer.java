@@ -1,15 +1,15 @@
-package com.googlecode.jsqlconverter.producer;
+package com.googlecode.jsqlconverter.producer.sql;
 
-import com.googlecode.jsqlconverter.definition.type.*;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
+import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.logging.LogLevel;
 
 import java.io.PrintStream;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PostgreSQLProducer extends SQLProducer {
 	public PostgreSQLProducer(PrintStream out) {

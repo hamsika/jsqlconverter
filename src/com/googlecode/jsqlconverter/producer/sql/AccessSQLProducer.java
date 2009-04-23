@@ -1,9 +1,9 @@
-package com.googlecode.jsqlconverter.producer;
+package com.googlecode.jsqlconverter.producer.sql;
 
-import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
+import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
 import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.logging.LogLevel;
 

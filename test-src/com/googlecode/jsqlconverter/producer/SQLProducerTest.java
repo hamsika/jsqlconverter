@@ -1,18 +1,21 @@
 package com.googlecode.jsqlconverter.producer;
 
+import com.googlecode.jsqlconverter.definition.Statement;
+import com.googlecode.jsqlconverter.parser.GeneratorParser;
+import com.googlecode.jsqlconverter.producer.sql.*;
+import com.googlecode.jsqlconverter.testutils.TestProperties;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.io.*;
-
-import com.googlecode.jsqlconverter.definition.Statement;
-import com.googlecode.jsqlconverter.testutils.TestProperties;
-import com.googlecode.jsqlconverter.parser.GeneratorParser;
+import java.util.ArrayList;
 
 public class SQLProducerTest extends TestCase {
 	private PipedInputStream in;

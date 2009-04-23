@@ -1,24 +1,23 @@
 package com.googlecode.jsqlconverter.producer;
 
-import junit.framework.TestCase;
+import com.googlecode.jsqlconverter.definition.type.Type;
+import com.googlecode.jsqlconverter.producer.sql.*;
+import com.googlecode.jsqlconverter.testutils.CommonTasks;
+import com.googlecode.jsqlconverter.testutils.TestProperties;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.poi.ss.usermodel.*;
 
-import java.io.FileInputStream;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.HashMap;
-
-import com.googlecode.jsqlconverter.testutils.TestProperties;
-import com.googlecode.jsqlconverter.testutils.CommonTasks;
-import com.googlecode.jsqlconverter.definition.type.*;
-import org.apache.poi.ss.usermodel.*;
-
-import javax.xml.transform.TransformerException;
-import javax.xml.parsers.ParserConfigurationException;
+import java.util.Iterator;
 
 public class TypeMappingCorrectTest extends TestCase {
 	private static final int COL_ACCESS_MDB = 4;

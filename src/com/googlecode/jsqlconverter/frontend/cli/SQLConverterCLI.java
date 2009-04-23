@@ -1,20 +1,24 @@
 package com.googlecode.jsqlconverter.frontend.cli;
 
-import com.googlecode.jsqlconverter.parser.*;
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.Statement;
+import com.googlecode.jsqlconverter.parser.*;
+import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 import com.googlecode.jsqlconverter.producer.*;
 import com.googlecode.jsqlconverter.producer.interfaces.FinalInterface;
-import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
+import com.googlecode.jsqlconverter.producer.sql.AccessSQLProducer;
+import com.googlecode.jsqlconverter.producer.sql.MySQLProducer;
+import com.googlecode.jsqlconverter.producer.sql.PostgreSQLProducer;
+import com.googlecode.jsqlconverter.producer.sql.SQLServerProducer;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class SQLConverterCLI implements ParserCallback {
 	private InputOperation inputOp = null;

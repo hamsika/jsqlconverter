@@ -1,19 +1,19 @@
 package com.googlecode.jsqlconverter.producer;
 
-import junit.framework.TestCase;
+import com.googlecode.jsqlconverter.definition.type.DecimalType;
+import com.googlecode.jsqlconverter.definition.type.Type;
+import com.googlecode.jsqlconverter.producer.sql.*;
+import com.googlecode.jsqlconverter.testutils.CommonTasks;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import java.util.ArrayList;
-import java.io.PrintStream;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
-
-import com.googlecode.jsqlconverter.definition.type.*;
-import com.googlecode.jsqlconverter.testutils.CommonTasks;
-
-import javax.xml.transform.TransformerException;
-import javax.xml.parsers.ParserConfigurationException;
+import java.io.PrintStream;
+import java.util.ArrayList;
 
 public class TypeMappingHandledTest extends TestCase {
 	private PrintStream out = System.out;

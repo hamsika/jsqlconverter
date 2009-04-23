@@ -1,25 +1,30 @@
-package com.googlecode.jsqlconverter.producer;
+package com.googlecode.jsqlconverter.producer.sql;
 
-import com.googlecode.jsqlconverter.definition.type.*;
+import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
+import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.DefaultConstraint;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ForeignKeyAction;
-import com.googlecode.jsqlconverter.definition.create.table.TableOption;
-import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
+import com.googlecode.jsqlconverter.definition.type.*;
 import com.googlecode.jsqlconverter.logging.LogLevel;
 
 import java.io.PrintStream;
 
-public class SQLServerProducer extends SQLProducer {
-	public SQLServerProducer(PrintStream out) {
+public class MySQLProducer extends SQLProducer {
+	public MySQLProducer(PrintStream out) {
 		super(out);
 	}
 
 	public char getLeftQuote(QuoteType type) {
-		return '\'';
+		switch(type) {
+			case TABLE:
+				return '`';
+			default:
+				return '\'';
+		}
 	}
 
 	public char getRightQuote(QuoteType type) {
-		return '\'';
+		return getLeftQuote(type);
 	}
 
 	public String getValidIdentifier(String name) {
@@ -33,9 +38,9 @@ public class SQLServerProducer extends SQLProducer {
 	public String getType(ApproximateNumericType type) {
 		switch (type) {
 			case DOUBLE:
-				return "float";
+				return "double";
 			case FLOAT:
-				return "real";
+				return "float";
 			case REAL:
 				return "float";
 			default:
@@ -50,10 +55,13 @@ public class SQLServerProducer extends SQLProducer {
 			case BIT:
 				return "bit";
 			case BLOB:
+				return "blob";
 			case LONGBLOB:
+				return "longblob";
 			case MEDIUMBLOB:
+				return "mediumblob";
 			case TINYBLOB:
-				return "image";
+				return "tinyblob";
 			case VARBINARY:
 				return "varbinary";
 			default:
@@ -64,7 +72,7 @@ public class SQLServerProducer extends SQLProducer {
 	public String getType(BooleanType type) {
 		switch(type) {
 			case BOOLEAN:
-				return "bit"; // TODO: should be bit(1) ?
+				return "boolean";
 			default:
 				return null;
 		}
@@ -73,11 +81,13 @@ public class SQLServerProducer extends SQLProducer {
 	public String getType(DateTimeType type) {
 		switch(type) {
 			case DATE:
+				return "date";
 			case DATETIME:
-				return "datetime"; // according to some docs TIMESTAMP is eqiv to DATETIME
+				return "datetime"; // according to some docs TIMESTAMP is eqiv to DATETIME aparantly
 			case TIME:
+				return "time";
 			case TIMESTAMP:
-				return "smalldatetime";
+				return "timestamp"; // TODO find out if this can have a time zone
 			default:
 				return null;
 		}
@@ -94,7 +104,7 @@ public class SQLServerProducer extends SQLProducer {
 			case INTEGER:
 				return "integer";
 			case MEDIUMINT:
-				return "integer";
+				return "mediumint";
 			case SMALLINT:
 				return "smallint";
 			case TINYINT:
@@ -109,9 +119,9 @@ public class SQLServerProducer extends SQLProducer {
 
 		switch(type) {
 			case MONEY:
-				return "money";
+				return "numeric";
 			case SMALLMONEY:
-				return "smallmoney";
+				return "numeric";
 			default:
 				return null;
 		}
@@ -124,14 +134,17 @@ public class SQLServerProducer extends SQLProducer {
 			case NCHAR:
 				return "nchar";
 			case NTEXT:
-				return "ntext";
+				return "text";
 			case NVARCHAR:
 				return "nvarchar";
 			case TEXT:
-			case LONGTEXT:
-			case MEDIUMTEXT:
-			case TINYTEXT:
 				return "text";
+			case LONGTEXT:
+				return (size > 0) ? "text" : "longtext";
+			case MEDIUMTEXT:
+				return (size > 0) ? "text" : "mediumtext";
+			case TINYTEXT:
+				return (size > 0) ? "text" : "tinytext";
 			case VARCHAR:
 				return "varchar";
 			default:
@@ -140,7 +153,8 @@ public class SQLServerProducer extends SQLProducer {
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {
-		return !(type instanceof NumericType) && !(type instanceof BooleanType) && !(type instanceof DateTimeType);
+		// TODO: support DOUBLE. certain times it should be ok.
+		return !(type instanceof DateTimeType) && !(type instanceof BooleanType) && type != ApproximateNumericType.DOUBLE;
 	}
 
 	public boolean isValidIdentifier(String name) {
@@ -149,13 +163,21 @@ public class SQLServerProducer extends SQLProducer {
 	}
 
 	public boolean supportsIdentifier(IdentifierType type) {
-		return true;
+		switch (type) {
+			case SCHEMA:
+				return false;
+			case DATABASE:
+				return true;
+			default:
+				LOG.log(LogLevel.UNHANDLED, "Unknown identifier type: " + type);
+				return false;
+		}
 	}
 
 	public boolean supportsTableOption(TableOption option) {
 		switch(option) {
 			case TEMPORARY:
-				return false;
+				return true;
 			default:
 				LOG.log(LogLevel.UNHANDLED, "Unknown table option: " + option);
 				return false;
@@ -166,10 +188,10 @@ public class SQLServerProducer extends SQLProducer {
 		switch(action) {
 			case CASCADE:
 			case NO_ACTION:
-			case SET_DEFAULT:
+			case RESTRICT:
 			case SET_NULL:
 				return true;
-			case RESTRICT:			
+			case SET_DEFAULT:
 				return false;
 			default:
 				LOG.log(LogLevel.UNHANDLED, "Unknown ForeignKeyAction: " + action);
