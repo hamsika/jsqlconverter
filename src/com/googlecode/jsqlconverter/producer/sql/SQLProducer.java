@@ -164,14 +164,14 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 
 	public void doInsertFromValues(InsertFromValues insert) throws ProducerException {
 		out.print("INSERT INTO ");
-		out.print(getQuotedName(insert.getTableName(), QuoteType.INSERT));
+		out.print(getQuotedName(insert.getTableName(), QuoteType.TABLE));
 		out.print(" ");
 
 		Column[] columns = insert.getColumns();
 
 		if (columns != null) {
 			out.print("(");
-			out.print(getColumnList(columns, QuoteType.INSERT));
+			out.print(getColumnList(columns));
 			out.print(") ");
 		}
 
@@ -186,14 +186,15 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 
 			Object value = insert.getObject(i);
 
-			if (type instanceof StringType) {
-				if (value == null) {
-					out.print("null");
-				} else {
-					out.print(getLeftQuote(QuoteType.INSERT));
-					out.print(value);
-					out.print(getRightQuote(QuoteType.INSERT));
-				}
+			if (value == null) {
+				out.print("null");
+				continue;
+			}
+
+			if (type instanceof StringType || type instanceof BinaryType) {
+				out.print(getLeftQuote(QuoteType.INSERT));
+				out.print(getEscapedString((String)value));
+				out.print(getRightQuote(QuoteType.INSERT));
 			} else if (type instanceof NumericType) {
 				out.print(value);
 			} else if (type instanceof DateTimeType) {
@@ -204,6 +205,9 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 				out.print(value);
 			} else {
 				LOG.log(LogLevel.UNHANDLED, "Datatype: " + type);
+				out.print(getLeftQuote(QuoteType.INSERT));
+				out.print(value);
+				out.print(getRightQuote(QuoteType.INSERT));
 			}
 		}
 
@@ -254,7 +258,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		return sb.toString();
 	}
 
-	private String getColumnList(Column[] columns, QuoteType type) {
+	private String getColumnList(Column[] columns) {
 		StringBuffer columnList = new StringBuffer();
 
 		for (Column column : columns) {
@@ -262,7 +266,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 				columnList.append(", ");
 			}
 
-			columnList.append(getQuotedName(column.getName(), type));
+			columnList.append(getValidIdentifier(column.getName().getObjectName()));
 		}
 
 		return columnList.toString();
@@ -344,6 +348,8 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 	public abstract char getRightQuote(QuoteType type);
 
 	public abstract String getValidIdentifier(String name);
+
+	public abstract String getEscapedString(String value);
 
 	public abstract String getDefaultConstraintString(DefaultConstraint defaultConstraint);
 

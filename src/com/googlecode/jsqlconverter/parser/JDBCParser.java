@@ -11,6 +11,7 @@ import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.logging.Level;
 
 public class JDBCParser extends Parser {
@@ -52,12 +53,15 @@ public class JDBCParser extends Parser {
 
 			ResultSet tablesRs = meta.getTables(catalog, schemaPattern, tableNamePattern, types);
 
+			ArrayList<CreateTable> tables = new ArrayList<CreateTable>();
+			ArrayList<CreateIndex> indexes = new ArrayList<CreateIndex>();
+
 			while (tablesRs.next()) {
 				// find out what type the object returned is (it may be a table / view / other)
 				String tableType = tablesRs.getString("TABLE_TYPE");
 
 				if (tableType.equals("TABLE")) {
-					getTableStatements(meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"), convertDataToInsert);
+					doTableStatements(tables, indexes, meta, tablesRs.getString("TABLE_CAT"), tablesRs.getString("TABLE_SCHEM"), tablesRs.getString("TABLE_NAME"));
 				} else {
 					LOG.log(Level.WARNING, "Unhandled Table Type: " + tableType);
 				}
@@ -65,13 +69,29 @@ public class JDBCParser extends Parser {
 
 			tablesRs.close();
 
+			Collections.sort(tables);
+
+			for (CreateTable table : tables) {
+				callback.produceStatement(table);
+			}
+
+			for (CreateIndex index : indexes) {
+				callback.produceStatement(index);
+			}
+
+			if (convertDataToInsert) {
+				for (CreateTable table : tables) {
+					doTableData(table);
+				}
+			}
+
 			con.close();
 		} catch (SQLException sqle) {
 			throw new ParserException(sqle.getMessage(), sqle.getCause());
 		}
 	}
 
-	private void getTableStatements(DatabaseMetaData meta, String catalog, String schema, String tableName, boolean convertDataToInsert) throws SQLException {
+	private void doTableStatements(ArrayList<CreateTable> tablesList, ArrayList<CreateIndex> indexesList, DatabaseMetaData meta, String catalog, String schema, String tableName) throws SQLException {
 		ResultSet columnsRs = meta.getColumns(
 								catalog,
 								schema,
@@ -132,7 +152,7 @@ public class JDBCParser extends Parser {
 
 			if (referencesRs != null) {
 				while (referencesRs.next()) {
-					if (referencesRs.getString("PKCOLUMN_NAME").equals(columnsRs.getString("COLUMN_NAME"))) {
+					if (referencesRs.getString("FKCOLUMN_NAME").equals(columnsRs.getString("COLUMN_NAME"))) {
 						ColumnForeignKeyConstraint ref = new ColumnForeignKeyConstraint(new Name(referencesRs.getString("PKTABLE_NAME")), new Name(referencesRs.getString("PKCOLUMN_NAME")));
 
 						switch(referencesRs.getShort("UPDATE_RULE")) {
@@ -254,23 +274,12 @@ public class JDBCParser extends Parser {
 			}
 		}
 
-		callback.produceStatement(createTable);
+		tablesList.add(createTable);
 
-		// output any user generated indexes
-		for (CreateIndex index : userIndexes) {
-			callback.produceStatement(index);
-		}
-
-		if (convertDataToInsert) {
-			InsertFromValues[] inserts = getTableData(createTable);
-
-			for (InsertFromValues insert : inserts) {
-				callback.produceStatement(insert);
-			}
-		}
+		indexesList.addAll(userIndexes);
 	}
 
-	private InsertFromValues[] getTableData(CreateTable tableName) throws SQLException {
+	private void doTableData(CreateTable tableName) throws SQLException {
 		// TODO: find better way of doing this
 		// some DBMS do not allow setting tablename as "?" for PreparedStatements
 		PreparedStatement dataPs = con.prepareStatement("SELECT * FROM \"" + tableName.getName().getObjectName() + "\"");
@@ -279,28 +288,20 @@ public class JDBCParser extends Parser {
 
 		ResultSetMetaData meta = dataRs.getMetaData();
 
-		ArrayList<InsertFromValues> inserts = new ArrayList<InsertFromValues>();
-
 		while (dataRs.next()) {
 			InsertFromValues insert = new InsertFromValues(tableName.getName(), tableName.getColumns());
 
 			for (int i=0; i<meta.getColumnCount(); i++) {
 				String columnValue = dataRs.getString(i + 1);
 
-				if (columnValue == null) {
-					continue;
-				}
-
 				insert.setValue(i, columnValue);
 			}
 
-			inserts.add(insert);
+			callback.produceStatement(insert);
 		}
 
 		dataRs.close();
 		dataPs.close();
-
-		return inserts.toArray(new InsertFromValues[inserts.size()]);
 	}
 
 	private CreateIndex[] getTableIndexes(DatabaseMetaData meta, Name tableName) throws SQLException {
@@ -522,6 +523,7 @@ public class JDBCParser extends Parser {
 
 		// correct certain types based on size
 		if (dataType == StringType.VARCHAR) {
+			// Our VARCHAR type is limited to 255, so convert it to TEXT
 			if (columnSize > 255) {
 				dataType = StringType.TEXT;
 			}

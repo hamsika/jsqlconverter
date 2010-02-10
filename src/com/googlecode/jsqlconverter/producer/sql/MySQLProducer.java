@@ -27,6 +27,10 @@ public class MySQLProducer extends SQLProducer {
 		return getLeftQuote(type);
 	}
 
+	public String getEscapedString(String value) {
+		return value;
+	}
+
 	public String getValidIdentifier(String name) {
 		return name;
 	}

@@ -33,7 +33,7 @@ public class DOTProducer extends Producer implements CreateTableInterface, Final
 			ColumnForeignKeyConstraint fkey = column.getForeignKeyConstraint();
 
 			// if target table doesn't exist then an empty table will be created.
-			// should probably output a warning if thatis the case
+			// should probably output a warning if that is the case
 			if (fkey != null) {
 				relationshipBuffer.append("\t");
 				relationshipBuffer.append(tableName);

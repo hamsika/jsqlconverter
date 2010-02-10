@@ -15,19 +15,29 @@ public class SQLServerProducer extends SQLProducer {
 	}
 
 	public char getLeftQuote(QuoteType type) {
+		switch(type) {
+			case TABLE:
+				return '"';
+		}
+
 		return '\'';
 	}
 
 	public char getRightQuote(QuoteType type) {
-		return '\'';
+		return getLeftQuote(type);
 	}
 
 	public String getValidIdentifier(String name) {
 		return name;
 	}
 
+	public String getEscapedString(String value) {
+		return value.replace("'", "''");
+	}
+
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
-		return "DEFAULT '" + defaultConstraint.getValue() + "'";
+		// Remove (, ) and ' as for some reason the default that comes from JDBC Driver is often something like: ('100') 
+		return "DEFAULT '" + defaultConstraint.getValue().replace("(", "").replace(")", "").replace("'", "") + "'";
 	}
 
 	public String getType(ApproximateNumericType type) {
@@ -140,7 +150,10 @@ public class SQLServerProducer extends SQLProducer {
 	}
 
 	public boolean outputTypeSize(Type type, String localname) {
-		return !(type instanceof NumericType) && !(type instanceof BooleanType) && !(type instanceof DateTimeType);
+		return	!(type instanceof NumericType) &&
+				!(type instanceof BooleanType) &&
+				!(type instanceof DateTimeType) &&
+				 (type != BinaryType.BIT);
 	}
 
 	public boolean isValidIdentifier(String name) {

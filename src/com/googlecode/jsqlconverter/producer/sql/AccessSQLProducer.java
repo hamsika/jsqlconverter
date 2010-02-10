@@ -26,6 +26,10 @@ public class AccessSQLProducer extends SQLProducer {
 		return name;
 	}
 
+	public String getEscapedString(String value) {
+		return value;
+	}
+
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
 		return "DEFAULT [" + defaultConstraint.getValue() + "]";
 	}

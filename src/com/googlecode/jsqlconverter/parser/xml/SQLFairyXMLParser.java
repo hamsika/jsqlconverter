@@ -35,15 +35,15 @@ public class SQLFairyXMLParser extends XMLParser {
 	}
 
 	public String getPrimaryKeyPath() {
-		return "@is_primary_key='1'";
+		return "@is_primary_key=1";
 	}
 
 	public String getAutoIncrementPath() {
-		return "@is_auto_increment='1'";
+		return "@is_auto_increment=1";
 	}
 
 	public String getIsRequiredPath() {
-		return "@is_nullable='0'";
+		return "@is_nullable=0";
 	}
 
 	public String getColumnSizePath() {
