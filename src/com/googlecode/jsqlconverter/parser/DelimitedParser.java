@@ -21,6 +21,7 @@ public class DelimitedParser extends Parser {
 	private char textQuantifier = '\0';
 	private int maxLineReads = 20;
 	private Column[] headers = null;
+	private char nextChar = '\0';
 
 	// hold a copy of the lines read to detect data types
 	private ArrayList<String[]> lines = new ArrayList<String[]>();
@@ -99,14 +100,10 @@ public class DelimitedParser extends Parser {
 			// clear memory lines is using and loop through rest of the input
 			lines.clear();
 
-			String line;
+			String values[];
 
-			while ((line = in.readLine()) != null) {
-				if (line.trim().isEmpty()) {
-					continue;
-				}
-
-				callback.produceStatement(getInsertFromValues(getColumns(callback, line)));
+			while ((values = getColumns(callback)) != null) {
+				callback.produceStatement(getInsertFromValues(values));
 			}
 		} catch (IOException ioe) {
 			throw new ParserException(ioe.getMessage(), ioe.getCause());
@@ -134,21 +131,15 @@ public class DelimitedParser extends Parser {
 	}
 
 	private void detectDataTypes(ParserCallback callback) throws IOException {
-		String line;
 		int lineNumber = 0;
 
 		String[] headerNames = new String[] {};
 		HashMap<Integer, Type> types = new HashMap<Integer, Type>();
 		HashMap<Integer, Integer> sizes = new HashMap<Integer, Integer>();
+		String[] values;
 
-		while ((line = in.readLine()) != null) {
-			if (line.trim().isEmpty()) {
-				continue;
-			}
-
+		while ((values = getColumns(callback)) != null) {
 			++lineNumber;
-
-			String values[] = getColumns(callback, line);
 
 			// if this is the first line and we are reading headers then set this row as headers
 			if (lineNumber == 1 && hasHeaders) {
@@ -181,13 +172,13 @@ public class DelimitedParser extends Parser {
 				Type type;
 
 				if (floatMatcher.matches()) {
-					//System.out.println("is float: " + values[i]);
+					//LOG.finer("is float: " + values[i]);
 					type = getColumnType(types.get(i), ApproximateNumericType.FLOAT);
 				} else if (doubleMatcher.matches()) {
-					//System.out.println("is double: " + values[i]);
+					//LOG.finer("is double: " + values[i]);
 					type = getColumnType(types.get(i), ApproximateNumericType.DOUBLE);
 				} else if (integerMatcher.matches()) {
-					//System.out.println("is int: " + values[i]);
+					//LOG.finer("is int: " + values[i]);
 					try {
 						long value = Long.parseLong(integerMatcher.group(0));
 
@@ -206,7 +197,7 @@ public class DelimitedParser extends Parser {
 						type = getColumnType(types.get(i), ExactNumericType.BIGINT);
 					}
 				} else {
-					//System.out.println("unknown column type for value: " + values[i]);
+					//LOG.finer("unknown column type for value: " + values[i]);
 					type = getColumnType(types.get(i), StringType.VARCHAR);
 				}
 
@@ -317,71 +308,99 @@ public class DelimitedParser extends Parser {
 		return 0;
 	}
 
-	// TODO: make sure this returns an array the same size of headers[]
-	private String[] getColumns(ParserCallback callback, String line) {
-		// if there's no textQuantifier set it means that all columns are seperated by delimiter
+	private String[] getColumns(ParserCallback callback) throws IOException {
 		if (textQuantifier == '\0') {
 			// note: if a line has empty columns they will not be included
-			return line.split(String.valueOf(delimiter));
+			String line = in.readLine();
+
+			if (line == null) {
+				return null;
+			}
+
+			return line.trim().split(String.valueOf(delimiter));
 		}
 
+		int currentInt;
+		char currentChar;
 		boolean hasStartQuantifier = false;
-
-		char[] lineChars = line.toCharArray();
-
 		StringBuffer columnBuffer = new StringBuffer();
-
 		ArrayList<String> columns = new ArrayList<String>();
 
-		for (int i=0; i<lineChars.length; i++) {
-			if (lineChars[i] == textQuantifier) {
-				if (hasStartQuantifier) {
-					// end (if it's not double quantifier)
-					if (lineChars[i + 1] == textQuantifier) {
-						++i;
-						columnBuffer.append(lineChars[i]);
-						continue;
-					}
+		while ((currentInt = readChar()) != -1) {
+			currentChar = (char)currentInt;
 
-					// it's possible this could be the end of the line so no more delims will be present
-					if (lineChars[i + 1] != delimiter) {
-						callback.log("Expected delimiter on next char.. not found, skipping row");
-						continue;
-					}
-
-					++i;
+			if (currentChar == textQuantifier) {
+				if (nextChar() == textQuantifier) {
+					columnBuffer.append(currentChar);
+					nextChar = '\0';
+				} else if (hasStartQuantifier) {
+					LOG.finer("End Text quantifier");
 
 					hasStartQuantifier = false;
-
-					columns.add(columnBuffer.toString());
-
-					columnBuffer = new StringBuffer();
 				} else {
+					LOG.finer("Start Text quantifier");
+
 					hasStartQuantifier = true;
 				}
-			} else if (lineChars[i] == delimiter) {
-				if (hasStartQuantifier) {
-					//System.out.println("adding: " + columnBuffer);
-					columnBuffer.append(lineChars[i]);
-				} else {
-					// this must be end of column
+			} else if (!hasStartQuantifier) {
+				if (currentChar == delimiter) {
+					LOG.finer("Delimiter: " + columnBuffer);
 					columns.add(columnBuffer.toString());
 					columnBuffer = new StringBuffer();
+				} else if (currentChar == '\r' || currentChar == '\n') {
+					if (hasStartQuantifier) {
+						// must go onto another line! :)
+						LOG.finer("Found quantifier that goes onto another line");
+						continue;
+					} else {
+						LOG.finer("Found end of line: " + columnBuffer);
+
+						if (nextChar() != '\r' && nextChar() != '\n') {
+							columns.add(columnBuffer.toString());
+							columnBuffer = new StringBuffer();
+
+							break;
+						}
+					}
+				} else {
+					columnBuffer.append(currentChar);
 				}
 			} else {
-				//System.out.println("adding: " + columnBuffer);
-				columnBuffer.append(lineChars[i]);
+				columnBuffer.append(currentChar);
 			}
 		}
 
-		columns.add(columnBuffer.toString());
-
-		for (int i=0; i<columns.size(); i++) {
-			LOG.fine("col " + (i + 1) + ": " + columns.get(i));
+		if (currentInt == -1) {
+			return null;
 		}
 
-		LOG.fine("-----------");
+		for (int i=0; i<columns.size(); i++) {
+			LOG.finer("col " + (i + 1) + ": " + columns.get(i));
+		}
+
+		LOG.finer("Returning: " + columns.size());
 
 		return columns.toArray(new String[columns.size()]);
+	}
+
+	private int readChar() throws IOException {
+		if (nextChar != '\0') {
+			char tempChar = nextChar;
+			nextChar = '\0';
+
+			return tempChar;
+		}
+
+		return in.read();
+	}
+
+	private char nextChar() throws IOException {
+		if (nextChar != '\0') {
+			return nextChar;
+		}
+
+		nextChar = (char) in.read();
+
+		return nextChar;
 	}
 }
