@@ -1,3 +1,17 @@
+0.0.4.56 2010-02-20
+	Feature improvements
+	* Added Generator Parser
+	* Added MySQL Workbench XMLParser
+	* Added DB Designer XMLParser
+	* Added Oracle SQL Producer
+	* Delimited Parser now supports multiline cells
+	* Type mappings are checked against file
+
+	Bug fixes
+	* Update various parser / producer mappings
+	* Fixed JDBC key mapping
+	* Various SQL output fixes
+
 0.0.3.44 2009-02-19
 	Feature improvements
 	* Added docs folder (change log, license, usage guide)
