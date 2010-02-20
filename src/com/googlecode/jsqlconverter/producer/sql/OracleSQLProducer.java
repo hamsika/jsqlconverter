@@ -79,7 +79,7 @@ public class OracleSQLProducer extends SQLProducer {
 	}
 
 	public String getType(DecimalType type) {
-		return null;
+		return "numeric";
 	}
 
 	public String getType(ExactNumericType type) {

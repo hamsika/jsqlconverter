@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema name="" database="" xmlns="http://sqlfairy.sourceforge.net/sqlfairy.xml">
+	<extra />
+	<tables>
+		<table name="BUTTON_COMMAND" order="1">
+			<extra />
+			<fields>
+				<field name="COMMAND_ID" data_type="varchar" size="10" is_nullable="0" is_auto_increment="0" is_primary_key="0" is_foreign_key="1" order="1">
+					<extra />
+					<comments></comments>
+				</field>
+				<field name="BUTTON_ID" data_type="varchar" size="10" is_nullable="0" is_auto_increment="0" is_primary_key="0" is_foreign_key="1" order="2">
+					<extra />
+					<comments></comments>
+				</field>
+				<field name="newerlol" data_type="varchar" size="4" is_nullable="0" is_auto_increment="0" is_primary_key="0" is_foreign_key="1" order="3">
+					<extra />
+					<comments></comments>
+				</field>
+			</fields>
+			<indices></indices>
+			<constraints>
+				<constraint name="" type="NOT NULL" fields="COMMAND_ID" reference_table="" reference_fields="" on_delete="" on_update="" match_type="" expression="" options="" deferrable="1">
+					<extra />
+				</constraint>
+				<constraint name="" type="FOREIGN KEY" fields="COMMAND_ID" reference_table="SOFTWARE_COMMAND" reference_fields="COMMAND_ID" on_delete="set null" on_update="cascade" match_type="" expression="" options="" deferrable="1">
+					<extra />
+				</constraint>
+				<constraint name="" type="NOT NULL" fields="BUTTON_ID" reference_table="" reference_fields="" on_delete="" on_update="" match_type="" expression="" options="" deferrable="1">
+					<extra />
+				</constraint>
+				<constraint name="" type="FOREIGN KEY" fields="BUTTON_ID" reference_table="BUTTON" reference_fields="BUTTON_ID" on_delete="no_action" on_update="set default" match_type="" expression="" options="" deferrable="1">
+					<extra />
+				</constraint>
+				<constraint name="" type="NOT NULL" fields="newerlol" reference_table="" reference_fields="" on_delete="" on_update="" match_type="" expression="" options="" deferrable="1">
+					<extra />
+				</constraint>
+				<constraint name="" type="FOREIGN KEY" fields="newerlol" reference_table="jimbo" reference_fields="jones" on_delete="" on_update="no_action" match_type="" expression="" options="" deferrable="1">
+					<extra />
+				</constraint>
+				<constraint name="" type="FOREIGN KEY" fields="COMMAND_ID" reference_table="SOFTWARE_COMMAND" reference_fields="COMMAND_ID" on_delete="set null" on_update="cascade" match_type="" expression="" options="" deferrable="1">
+					<extra />
+				</constraint>
+				<constraint name="" type="FOREIGN KEY" fields="BUTTON_ID" reference_table="BUTTON" reference_fields="BUTTON_ID" on_delete="no_action" on_update="set default" match_type="" expression="" options="" deferrable="1">
+					<extra />
+				</constraint>
+				<constraint name="" type="FOREIGN KEY" fields="newerlol" reference_table="jimbo" reference_fields="jones" on_delete="" on_update="no_action" match_type="" expression="" options="" deferrable="1">
+					<extra />
+				</constraint>
+			</constraints>
+			<comments></comments>
+		</table>
+	</tables>
+	<views></views>
+	<triggers></triggers>
+	<procedures></procedures>
+</schema>
