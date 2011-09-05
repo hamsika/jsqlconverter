@@ -1,11 +1,11 @@
 package com.googlecode.jsqlconverter.parser;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-
-import java.sql.Types;
 import java.lang.reflect.Field;
+import java.sql.Types;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import com.healthmarketscience.jackcess.DataType;
 
@@ -17,7 +17,12 @@ public class TypeMappingHandledTest extends TestCase {
 
 	protected void setUp() {
 		accessMDBParser = new AccessMDBParser(null, false);
-		jdbcParser = new JDBCParser(null);
+
+		try {
+			jdbcParser = new JDBCParser(null, null, null, null, null, null, null, null, true);
+		} catch (Exception e) {
+			fail();
+		}
 	}
 
 	public void testAccessMDBParser() {

@@ -1,19 +1,28 @@
 package com.googlecode.jsqlconverter.producer;
 
-import com.googlecode.jsqlconverter.definition.type.DecimalType;
-import com.googlecode.jsqlconverter.definition.type.Type;
-import com.googlecode.jsqlconverter.producer.sql.*;
-import com.googlecode.jsqlconverter.testutils.CommonTasks;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import com.googlecode.jsqlconverter.definition.type.DecimalType;
+import com.googlecode.jsqlconverter.definition.type.Type;
+import com.googlecode.jsqlconverter.producer.sql.AccessSQLProducer;
+import com.googlecode.jsqlconverter.producer.sql.MySQLProducer;
+import com.googlecode.jsqlconverter.producer.sql.OracleSQLProducer;
+import com.googlecode.jsqlconverter.producer.sql.PostgreSQLProducer;
+import com.googlecode.jsqlconverter.producer.sql.SQLProducer;
+import com.googlecode.jsqlconverter.producer.sql.SQLServerProducer;
+import com.googlecode.jsqlconverter.producer.xml.SQLFairyXMLProducer;
+import com.googlecode.jsqlconverter.producer.xml.TurbineXMLProducer;
+import com.googlecode.jsqlconverter.testutils.CommonTasks;
 
 public class TypeMappingHandledTest extends TestCase {
 	private PrintStream out = System.out;

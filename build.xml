@@ -1,55 +1,34 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<project basedir=".">
+<project basedir="." default="zip">
 	<property name="project.name" value="jsqlconverter"/>
 	<property name="project.author" value="James Carter"/>
 
-	<property name="project.jar" value="${project.name}.jar"/>
 	<property name="project.zip" value="${project.name}-0.0.0.build-quality.zip"/>
 	<property name="project.src" value="src"/>
-	<property name="project.tests" value="test-src"/>
-	<property name="project.lib" value="lib"/>
 	<property name="project.docs" value="docs"/>
+	<property name="project.plugins" value="plugins"/>
 
-	<property name="build.temp" value="build/temp"/>
-	<property name="build.bin" value="build/bin"/>
-	<property name="build.zip" value="build/zip"/>
+	<property name="build.dir" value="build"/>
+	<property name="build.temp" value="${build.dir}/temp"/>
+	<property name="build.bin" value="${build.dir}/bin"/>
+	<property name="build.plugins" value="${build.dir}/bin/plugins"/>
+	<property name="build.zip" value="${build.dir}/zip"/>
 
-	<property name="build.compiler" value="modern"/>
 	<property name="build.debug" value="on"/>
 
-	<property name="ant.build.javac.target" value="1.6"/>
-
-	<path id="classpath.lib">
-		<fileset dir="${project.lib}" >
-			<include name="**/*.jar" />
-		</fileset>
-	</path>
-
-	<path id="classpath.tests">
-		<pathelement location="${build.temp}" />
-	</path>
-
 	<target name="compile">
+		<antcall target="clean"/>
+
 		<mkdir dir="${build.temp}"/>
 
-		<javac srcdir="${project.src}" destdir="${build.temp}" debug="${build.debug}">
-			<classpath refid="classpath.lib"/>
-		</javac>
-	</target>
-
-	<target name="compile-tests" depends="compile">
-		<mkdir dir="${build.temp}"/>
-
-		<javac srcdir="${project.tests}" destdir="${build.temp}" debug="${build.debug}">
-			<classpath refid="classpath.lib"/>
-		</javac>
+		<javac srcdir="${project.src}" destdir="${build.temp}" debug="${build.debug}"/>
 	</target>
 
 	<target name="jar" depends="compile">
 		<mkdir dir="${build.bin}"/>
 
-		<!-- base source -->
-		<jar compress="true" jarfile="${build.temp}\${project.name}-lib.jar">
+		<!-- core source -->
+		<jar compress="true" jarfile="${build.temp}/${project.name}-core.jar">
 			<manifest>
 				<attribute name="Implementation-Vendor" value="${project.author}"/>
 			</manifest>
@@ -63,9 +42,11 @@
 		</jar>
 
 		<!-- cli lib -->
-		<jar compress="true" jarfile="${build.temp}\${project.name}-cli.jar">
+		<jar compress="true" jarfile="${build.temp}/${project.name}-cli.jar">
 			<manifest>
 				<attribute name="Implementation-Vendor" value="${project.author}"/>
+				<attribute name="Main-Class" value="com.googlecode.jsqlconverter.frontend.cli.SQLConverterCLI"/>
+				<attribute name="Class-Path" value="*.jar"/>
 			</manifest>
 
 			<fileset dir="${build.temp}">
@@ -75,37 +56,68 @@
 			</fileset>
 		</jar>
 
-		<!-- gui lib -->
-		<!-- place holder -->
-
 		<move todir="${build.bin}">
 			<fileset dir="${build.temp}" includes="*.jar"/>
 		</move>
 	</target>
 
-	<target name="zip" depends="jar">
-		<mkdir dir="${build.zip}"/>
-		<mkdir dir="${build.zip}/${project.name}"/>
-		<mkdir dir="${build.zip}/${project.name}/lib"/>
+	<target name="plugins">
+		<build-plugin name="delimited"/>
+		<build-plugin name="dot"/>
+		<build-plugin name="generator"/>
+		<build-plugin name="jackcess"/>
+		<build-plugin name="sql"/>
+		<build-plugin name="jdbc" depends="sql"/>
+		<build-plugin name="xhtml"/>
+		<build-plugin name="xml"/>
+	</target>
 
+	<macrodef name="build-plugin">
+		<attribute name="name" default="NOT SET"/>
+		<attribute name="depends" default=""/>
+
+		<sequential>
+			<echo>Building plugin: @{name}</echo>
+
+			<ant antfile="../build.xml" dir="${project.plugins}/@{name}" inheritAll="false">
+				<property name="project.name" value="@{name}"/>
+				<property name="project.author" value="${project.author}"/>
+				<property name="project.src" value="${project.src}"/>
+
+				<property name="build.dir" value="${build.dir}"/>
+				<property name="build.temp" value="${build.temp}"/>
+				<property name="build.bin" value="${build.bin}"/>
+
+				<property name="build.debug" value="${build.debug}"/>
+				<property name="build.depends" value="@{depends}"/>
+			</ant>
+
+			<copy todir="${build.plugins}/">
+				<fileset dir="${project.plugins}/@{name}/${build.bin}" includes="*.jar"/>
+			</copy>
+		</sequential>
+	</macrodef>
+
+	<target name="zip" depends="jar,plugins">
 		<copy todir="${build.zip}/${project.name}/lib">
 			<!-- include compiled jar's -->
 			<fileset dir="${build.bin}" includes="*.jar"/>
-
-			<!-- include runtime libs -->
-			<fileset dir="${project.lib}" includes="*.jar"/>
 		</copy>
 
 		<copy todir="${build.zip}/${project.name}/bin">
 			<fileset dir="bin"/>
 		</copy>
 
-		<copy todir="${build.zip}/${project.name}">
-			<fileset dir="./" includes="logging.properties" />
+		<copy todir="${build.zip}/${project.name}/docs">
+			<fileset dir="${project.docs}" />
+		</copy>
+
+		<copy todir="${build.zip}/${project.name}/plugins">
+			<fileset dir="${build.plugins}" includes="*.jar"/>
 		</copy>
 
 		<copy todir="${build.zip}/${project.name}">
-			<fileset dir="./" includes="${project.docs}/*" />
+			<fileset dir="." includes="logging.properties" />
 		</copy>
 
 		<zip destfile="${build.zip}/${project.zip}">
@@ -113,53 +125,7 @@
 		</zip>
 	</target>
 
-	<target name="junit" depends="compile-tests">
-		<junit printsummary="yes" fork="yes" haltonfailure="yes" showoutput="yes">
-			<classpath refid="classpath.lib"/>
-			<classpath refid="classpath.tests"/>
-
-			<formatter type="plain"/>
-
-			<test name="com.googlecode.jsqlconverter.AllTests"/>
-		</junit>
-	</target>
-
-	<target name="checkstyle">
-		<taskdef resource="checkstyletask.properties">
-			<classpath refid="classpath.lib"/>
-		</taskdef>
-
-		<checkstyle config="checkstyle.xml">
-			<fileset dir="${project.src}" includes="**/*.java"/>
-
-			<fileset dir=".">
-				<patternset>
-					<include name="${project.src}/**/*.java"/>
-					<include name="${project.tests}/**/*.java"/>
-				</patternset>
-			</fileset>
-		</checkstyle>
-	</target>
-
-	<target name="doc">
-		<javadoc packagenames="com.googlecode.jsqlconverter.*"
-			sourcepath="${project.src}"
-			defaultexcludes="yes"
-			destdir="${build.temp}/docs/api"
-			author="true"
-			version="true"
-			use="true"
-			windowtitle="Test API">
-
-			<tag name="todo" scope="all" description="To do:"/>
-			<!--<group title="Parser Packages" packages="com.googlecode.jsqlconverter.parser.*"/>
-			<group title="Producer Packages" packages="com.googlecode.jsqlconverter.producer.*"/>-->
-			<group title="Definition Packages" packages="com.googlecode.jsqlconverter.definition.*"/>
-			<group title="Frontend Packages" packages="com.googlecode.jsqlconverter.frontend.*"/>
-		</javadoc>
-	</target>
-
 	<target name="clean">
-		<delete dir="build"/>
+		<delete dir="${build.dir}"/>
 	</target>
 </project>

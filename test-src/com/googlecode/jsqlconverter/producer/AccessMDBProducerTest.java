@@ -1,14 +1,14 @@
 package com.googlecode.jsqlconverter.producer;
 
-import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
-import com.googlecode.jsqlconverter.parser.GeneratorParser;
-
 import java.io.File;
 import java.io.IOException;
 
+import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import junit.framework.Test;
+
+import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
+import com.googlecode.jsqlconverter.parser.GeneratorParser;
 
 public class AccessMDBProducerTest extends TestCase {
 	private CreateTable[] createTables;

@@ -1,10 +1,11 @@
 package com.googlecode.jsqlconverter.producer;
 
-import com.googlecode.jsqlconverter.producer.sql.PostgreSQLProducer;
-import com.googlecode.jsqlconverter.producer.sql.SQLProducer;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import com.googlecode.jsqlconverter.producer.sql.PostgreSQLProducer;
+import com.googlecode.jsqlconverter.producer.sql.SQLProducer;
 
 public class PostgreSQLProducerTest extends TestCase {
 	private SQLProducer producer;

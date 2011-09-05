@@ -1,394 +1,211 @@
 package com.googlecode.jsqlconverter.frontend.cli;
 
-import com.googlecode.jsqlconverter.definition.Name;
-import com.googlecode.jsqlconverter.definition.Statement;
-import com.googlecode.jsqlconverter.parser.*;
-import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
-import com.googlecode.jsqlconverter.parser.xml.DBDesignerXMLParser;
-import com.googlecode.jsqlconverter.parser.xml.WorkbenchXMLParser;
-import com.googlecode.jsqlconverter.producer.*;
-import com.googlecode.jsqlconverter.producer.interfaces.FinalInterface;
-import com.googlecode.jsqlconverter.producer.sql.*;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import java.io.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
+
+import com.googlecode.jsqlconverter.definition.Statement;
+import com.googlecode.jsqlconverter.parser.Parser;
+import com.googlecode.jsqlconverter.parser.ParserException;
+import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
+import com.googlecode.jsqlconverter.producer.Producer;
+import com.googlecode.jsqlconverter.producer.ProducerException;
+import com.googlecode.jsqlconverter.producer.interfaces.FinalInterface;
+import com.googlecode.jsqlconverter.service.EntryPoint;
+import com.googlecode.jsqlconverter.service.Parameter;
+import com.googlecode.jsqlconverter.service.Service;
+import com.googlecode.jsqlconverter.service.ServiceUtil;
 
 public class SQLConverterCLI implements ParserCallback {
-	private InputOperation inputOp = null;
-	private OutputOperation outputOp = null;
-	private ArrayList<String> argList;
-
-	// input params
-	// delim
-	private String file; // this is also used by AccessMDBParser
-	private boolean hasHeaderRow = true;
-	private char delimiter = ',';
-	private char textQuantifier = '\0';
+	private static final String FROM = "--from";
+	private static final String TO = "--to";
+	private ServiceUtil su;
+	private Parser parser;
 	private Producer producer;
 
-	// generator
-	private int numStatements;
+	public SQLConverterCLI(String[] args) throws IOException, ClassNotFoundException, IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+		su = new ServiceUtil();
+		CLIParser cli = new CLIParser(args);
 
-	// sql fairy
-	private String prefix = null;
-
-	// jdbc params
-	private String driver;
-	private String url;
-	private String user;
-	private String pass;
-	private boolean doData = false;
-
-	// output params
-	// access mdb
-	private File outputFile;
-	private PrintStream out = System.out;
-
-	private enum InputOperation {
-		DBDESIGNER_XML,
-		MSACCESS_MDB,
-		DELIMITED,
-		GENERATOR,
-		JDBC,
-		SQLFAIRY_XML,
-		TURBINE_XML,
-		WORKBENCH_XML
-	}
-
-	private enum OutputOperation {
-		DOT,
-		MSACCESS_MDB,
-		MSACCESS_SQL,
-		MYSQL,
-		ORACLE,
-		POSTGRESQL,
-		SQLFAIRY_XML,
-		SQLSERVER,
-		TURBINE_XML,
-		XHTML
-	}
-
-	public SQLConverterCLI(String[] args) throws ParserException, SQLException, FileNotFoundException, ClassNotFoundException {
-		if (args.length == 0) {
-			printUsage();
+		if (cli.isEmpty()) {
+			printHelp(su);
 			System.exit(0);
 		}
 
-		argList = new ArrayList<String>(Arrays.asList(args));
+		String parserName = cli.getString(FROM);
+		String producerName = cli.getString(TO);
 
-		if (argList.contains("-h") || argList.contains("-help") || argList.contains("--help")) {
-			printUsage();
-			System.exit(0);
+		HashMap<String, String> parserArgs = cli.getArgsWithPrefix(FROM + "-");
+		HashMap<String, String> producerArgs = cli.getArgsWithPrefix(TO + "-");
+
+		Service parserService = getService(parserName, true);
+		Service producerService = getService(producerName, false);
+
+		Object[] matchedParserArgs = getMatchingArgs(parserService, parserArgs);
+		Object[] matchedProducerArgs = getMatchingArgs(producerService, producerArgs);
+
+		parser = (Parser) parserService.newInstance(matchedParserArgs);
+		producer = (Producer) producerService.newInstance(matchedProducerArgs);
+	}
+
+	private Service getService(String name, boolean isParser) {
+		for (Service service : su.getService(name)) {
+			if (service.isParser() == isParser) {
+				return service;
+			}
 		}
 
-		// detect operation
-		if (argList.contains("-access-mdb")) {
-			setInputOperation(InputOperation.MSACCESS_MDB);
-		}
+		throw new RuntimeException("Service with name " + name + " not found");
+	}
+	
+	private Object[] getMatchingArgs(Service service, HashMap<String, String> argMap) throws FileNotFoundException {
+		EntryPoint[] eps = service.getEntryPoints();
+		EntryPoint matchedEp = null;
+		ArrayList<Object> finalArgs = new ArrayList<Object>();
+		boolean matchAll;
+		boolean returnPrintStream = false;
 
-		if (argList.contains("-dbdesigner")) {
-			setInputOperation(InputOperation.DBDESIGNER_XML);
-		}
+		for (EntryPoint ep : eps) {
+			matchAll = true;
+			returnPrintStream = false;
 
-		if (argList.contains("-delim")) {
-			setInputOperation(InputOperation.DELIMITED);
-		}
-
-		if (argList.contains("-gen")) {
-			setInputOperation(InputOperation.GENERATOR);
-		}
-
-		if (argList.contains("-jdbc")) {
-			setInputOperation(InputOperation.JDBC);
-		}
-
-		if (argList.contains("-sqlfairy")) {
-			setInputOperation(InputOperation.SQLFAIRY_XML);
-		}
-
-		if (argList.contains("-turbine")) {
-			setInputOperation(InputOperation.TURBINE_XML);
-		}
-
-		if (argList.contains("-workbench")) {
-			setInputOperation(InputOperation.WORKBENCH_XML);
-		}
-
-		if (inputOp == null) {
-			exitMessage("No input operation specified");
-		}
-
-		// detect parser options
-		switch(inputOp) {
-			case DELIMITED:
-				setStdInOrFile();
-
-				hasHeaderRow = !argList.contains("-noheader");
-
-				String seperator = getOptionalParameter("-seperator");
-
-				if (seperator != null) {
-					if (seperator.length() == 1) {
-						delimiter = seperator.charAt(0);
-					} else {
-						exitMessage("Seperator must be a single character");
+			for (Parameter p : ep.getParameters()) {
+				if (!argMap.containsKey(p.getFlattenedName()) && !p.isOptional()) {
+					if (p.getClassType().equals(PrintStream.class)) {
+						returnPrintStream = true;
+						continue;
 					}
+
+					matchAll = false;
+					break;
 				}
+			}
 
-
-				String quantifier = getOptionalParameter("-quantifier");
-
-				if (quantifier != null) {
-					if (quantifier.length() == 1) {
-						textQuantifier = quantifier.charAt(0);
-					} else {
-						exitMessage("Text quantifier must be a single character");
-					}
-				}
-			break;
-			case GENERATOR:
-				numStatements = Integer.parseInt(getRequiredParameter("-num"));
-			break;
-			case JDBC:
-				driver = getRequiredParameter("-driver");
-				url = getRequiredParameter("-url");
-				user = getOptionalParameter("-user");
-				pass = getOptionalParameter("-pass");
-			break;
-			case SQLFAIRY_XML:
-				prefix = getOptionalParameter("-prefix");
-			case DBDESIGNER_XML:
-			case MSACCESS_MDB:
-			case TURBINE_XML:
-			case WORKBENCH_XML:
-				file = getRequiredParameter("-file");
-			break;
-		}
-
-		// detect global optional params
-		doData = argList.contains("-data");
-
-		// detect producer options
-		if (argList.contains("-out-dot")) {
-			setOutputOperation(OutputOperation.DOT);
-		}
-
-		if (argList.contains("-out-access-mdb")) {
-			setOutputOperation(OutputOperation.MSACCESS_MDB);
-		}
-
-		if (argList.contains("-out-access")) {
-			setOutputOperation(OutputOperation.MSACCESS_SQL);
-		}
-
-		if (argList.contains("-out-mysql")) {
-			setOutputOperation(OutputOperation.MYSQL);
-		}
-
-		if (argList.contains("-out-oracle")) {
-			setOutputOperation(OutputOperation.ORACLE);
-		}
-
-		if (argList.contains("-out-postgresql")) {
-			setOutputOperation(OutputOperation.POSTGRESQL);
-		}
-
-		if (argList.contains("-out-sqlfairy")) {
-			setOutputOperation(OutputOperation.SQLFAIRY_XML);
-		}
-
-		if (argList.contains("-out-sqlserver")) {
-			setOutputOperation(OutputOperation.SQLSERVER);
-		}
-
-		if (argList.contains("-out-turbine")) {
-			setOutputOperation(OutputOperation.TURBINE_XML);
-		}
-
-		if (argList.contains("-out-xhtml")) {
-			setOutputOperation(OutputOperation.XHTML);
-		}
-
-		if (outputOp == null) {
-			exitMessage("No output operation specified");
-		}
-
-		// detect parser options
-		switch(outputOp) {
-			case MSACCESS_MDB:
-				outputFile = new File(getRequiredParameter("-ofile"));
-			break;
-		}
-
-		// run it! :)
-		run();
-	}
-
-	private void setStdInOrFile() {
-		file = getOptionalParameter("-file");
-	}
-
-	public String getRequiredParameter(String param) {		
-		String value = getOptionalParameter(param);
-
-		if (value == null) {
-			exitMessage("Missing required parameter: " + param);
-		}
-
-		return value;
-	}
-
-	public String getOptionalParameter(String param) {
-		if (!argList.contains(param)) {
-			return null;
-		}
-
-		int paramIndex = argList.indexOf(param);
-
-		if (paramIndex + 1 >= argList.size()) {
-			exitMessage("Parameter value missing for " + param);
-		}
-
-		return argList.get(paramIndex + 1);
-	}
-
-	private void setInputOperation(InputOperation newOp) {
-		if (inputOp != null) {
-			exitMessage("Multiple input operations found");
-		}
-
-		this.inputOp = newOp;
-	}
-
-	private void setOutputOperation(OutputOperation newOp) {
-		if (outputOp != null) {
-			exitMessage("Multiple output operations found");
-		}
-
-		this.outputOp = newOp;
-	}
-
-	private void run() throws FileNotFoundException, SQLException, ClassNotFoundException, ParserException {
-		// setup parser
-		Parser parser = null;
-
-		switch(inputOp) {
-			case DBDESIGNER_XML:
-				parser = new DBDesignerXMLParser(new FileInputStream(file));
-			break;
-			case DELIMITED:
-				if (file != null) {
-					parser = new DelimitedParser(new File(file), delimiter, textQuantifier, hasHeaderRow, doData);
-				} else {
-					parser = new DelimitedParser(new BufferedReader(new InputStreamReader(System.in)), new Name("unknown"), delimiter, textQuantifier, hasHeaderRow, doData);
-				}
-			break;
-			case GENERATOR:
-				parser = new GeneratorParser(numStatements);
-			break;
-			case JDBC:
-				Class.forName(driver);
-				Connection con = DriverManager.getConnection(url, user, pass);
-				parser = new JDBCParser(con, null, null, null, doData);
-			break;
-			case MSACCESS_MDB:
-				parser = new AccessMDBParser(new File(file), doData);
-			break;
-			case SQLFAIRY_XML:
-				parser = new SQLFairyXMLParser(new FileInputStream(file), prefix);
-			break;
-			case TURBINE_XML:
-				parser = new TurbineXMLParser(new FileInputStream(file));
-			break;
-			case WORKBENCH_XML:
-				try {
-					parser = new WorkbenchXMLParser(new File(file), "document.mwb.xml");
-				} catch (IOException e) {
-					exitMessage(e.getMessage(), e.getCause());
-				}
+			if (matchAll) {
+				matchedEp = ep;
 				break;
-			default:
-				exitMessage("This input option hasn't been defined!");
-			break;
+			}
 		}
 
-		// setup producer
-		switch(outputOp) {
-			case DOT:
-				producer = new DOTProducer(out);
-			break;
-			case MSACCESS_MDB:
-				try {
-					producer = new AccessMDBProducer(outputFile);
-				} catch (IOException e) {
-					exitMessage(e.getMessage(), e.getCause());
-				}
-			break;
-			case MSACCESS_SQL:
-				producer = new AccessSQLProducer(out);
-			break;
-			case MYSQL:
-				producer = new MySQLProducer(out);
-			break;
-			case ORACLE:
-				producer = new OracleSQLProducer(out);
-			break;
-			case POSTGRESQL:
-				producer = new PostgreSQLProducer(out);
-			break;
-			case SQLFAIRY_XML:
-				try {
-					producer = new SQLFairyXMLProducer(out);
-				} catch (TransformerException e) {
-					exitMessage(e.getMessage(), e.getCause());
-				} catch (ParserConfigurationException e) {
-					exitMessage(e.getMessage(), e.getCause());
-				}
-			break;
-			case SQLSERVER:
-				producer = new SQLServerProducer(out);
-			break;
-			case TURBINE_XML:
-				try {
-					producer = new TurbineXMLProducer(out);
-				} catch (ParserConfigurationException e) {
-					exitMessage(e.getMessage(), e.getCause());
-				} catch (TransformerException e) {
-					exitMessage(e.getMessage(), e.getCause());
-				}
-			break;
-			case XHTML:
-				producer = new XHTMLProducer(out);
-			break;
-			default:
-				exitMessage("This output option hasn't been defined!");
-				System.exit(0);
-			break;
+		if (returnPrintStream) {
+			return new Object[] { System.out };
 		}
 
+		if (matchedEp == null) {
+			throw new RuntimeException("No matching EntryPoint found");
+		}
+
+		// match constructor order and set defaults
+		for (Parameter p : matchedEp.getParameters()) {
+			if (argMap.containsKey(p.getFlattenedName())) {
+				finalArgs.add(p.toObject(argMap.get(p.getFlattenedName())));
+			} else if (p.isOptional()) {
+				finalArgs.add(p.toObject(argMap.get(p.getDefaultValue())));
+			} else {
+				throw new RuntimeException("Argment matching, this should never happen");
+			}
+		}
+
+		return finalArgs.toArray(new Object[finalArgs.size()]);
+	}
+	
+	public void run() throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, ParserException, ProducerException {
 		long beforeMili = System.currentTimeMillis();
 
 		parser.parse(this);
 
 		if (producer instanceof FinalInterface) {
-			try {
-				((FinalInterface)producer).doFinal();
-			} catch (ProducerException e) {
-				exitMessage(e.getMessage(), e.getCause());
-			}
+			((FinalInterface)producer).doFinal();
 		}
 
 		long runTimeMili = System.currentTimeMillis() - beforeMili;
 
-		System.err.println("Runtime: " + runTimeMili + "ms");
+		log("Runtime: " + runTimeMili + "ms");
 	}
 
+	private void printHelp(ServiceUtil su) {
+		System.out.println("Parsers");
+
+		for (Service s : su.getServices()) {
+			if (s.isParser()) {
+				for (EntryPoint ep : s.getEntryPoints()) {
+					System.out.print("\t" + FROM + " " + s.getFlattenedName());
+
+					for (Parameter p : ep.getParameters()) {
+						printParameter(p, true);
+					}
+
+					System.out.println();
+				}
+			}
+		}
+
+		System.out.println();
+		System.out.println("Producers");
+
+		for (Service s : su.getServices()) {
+			if (!s.isParser()) {
+				for (EntryPoint ep : s.getEntryPoints()) {
+					System.out.print("\t" + TO + " " + s.getFlattenedName());
+
+					for (Parameter p : ep.getParameters()) {
+						// If the output is a PrintStream, hide it as we always use System.out
+						if (p.getClassType() != PrintStream.class) {
+							printParameter(p, false);
+						}
+					}
+
+					System.out.println();
+				}
+			}
+		}
+	}
+
+	private void printParameter(Parameter p, boolean isParser) {
+		System.out.print(" ");
+
+		if (p.isOptional()) System.out.print("[");
+
+		String inputName = p.getClassType().getSimpleName();
+
+		if (inputName.endsWith("InputStream")) {
+			inputName = "file";
+		} else if (inputName.equals("File")) {
+			inputName = "file";
+		} else if (inputName.equals("Integer")) {
+			inputName = "number";
+		} else if (inputName.equals("Boolean")) {
+			inputName = "true/false";
+		} else if (inputName.equals("Character")) {
+			inputName = "char";
+		} else if (inputName.equals("String")) {
+			inputName = "text";
+		} else if (p.getClassType().isEnum()) {
+			Enum<?>[] enumList = (Enum<?>[]) p.getClassType().getEnumConstants();
+			inputName = "";
+
+			for (int i=0; i<enumList.length; i++) {
+				if (i > 0) {
+					inputName += " | ";
+				}
+
+				inputName += enumList[i];
+			}
+		}
+
+		if (p.isOptional() && p.getDefaultValue() != null) {
+			inputName += " = " + p.getDefaultValue();
+		}
+		
+		System.out.print(((isParser) ? FROM : TO) + "-" + p.getFlattenedName() + " <" + inputName + ">");
+
+		if (p.isOptional()) System.out.print("]");
+	}
+
+	@Override
 	public void produceStatement(Statement statement) {
 		try {
 			producer.produce(statement);
@@ -397,52 +214,12 @@ public class SQLConverterCLI implements ParserCallback {
 		}
 	}
 
+	@Override
 	public void log(String message) {
 		System.err.println(message);
 	}
 
-	private void exitMessage(String message) {
-		exitMessage(message, null);
-	}
-
-	private void exitMessage(String message, Throwable cause) {
-		System.out.println(message);
-
-		if (cause != null) {
-			cause.printStackTrace();
-		}
-
-		System.exit(0);
-	}
-
-	private void printUsage() {
-		System.out.println(
-			"jsqlparser <input options> <output options> [<global input options>]\n" +
-
-			"input options:\n" +
-			"\t-access-mdb -file <filename>\n" +
-			"\t-delim [ -file <filename> ] [-noheader] [-seperator <char>] [-quantifier <char>]\n" +
-			"\t-gen -num <number>\n"+
-			"\t-jdbc -driver <driver> -url <url> [-user <username>] [-pass <password>]\n" +
-			"\t-dbdesigner -file <filename>\n" +
-			"\t-sqlfairy -file <filename> [-prefix <prefix>]\n" +
-			"\t-turbine -file <filename>\n" +
-			"\t-workbench -file <filename>\n" +
-			"\n" +
-			"output options:\n" +
-			"\t-out-{access | mysql | oracle | postgresql | sqlserver}\n" +
-			"\t-out-access-mdb -ofile <filename>\n" +
-			"\t-out-dot\n" +
-			"\t-out-sqlfairy\n" +
-			"\t-out-turbine\n" +
-			"\t-out-xhtml\n" +
-			"\n" +
-			"global input options:\n" +
-			"\t-data"
-		);
-	}
-
-	public static void main(String[] args) throws ParserException, SQLException, FileNotFoundException, ClassNotFoundException {
-		new SQLConverterCLI(args);
+	public static void main(String args[]) throws IOException, ClassNotFoundException, IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+		new SQLConverterCLI(args).run();
 	}
 }

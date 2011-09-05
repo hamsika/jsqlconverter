@@ -1,17 +1,18 @@
 package com.googlecode.jsqlconverter.parser;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import junit.framework.Test;
-import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
-import com.googlecode.jsqlconverter.definition.Statement;
-import com.googlecode.jsqlconverter.definition.Name;
-import com.googlecode.jsqlconverter.definition.type.StringType;
-import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
-import com.googlecode.jsqlconverter.definition.create.table.Column;
-
 import java.io.File;
 import java.io.FileNotFoundException;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import com.googlecode.jsqlconverter.definition.Name;
+import com.googlecode.jsqlconverter.definition.Statement;
+import com.googlecode.jsqlconverter.definition.create.table.Column;
+import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
+import com.googlecode.jsqlconverter.definition.type.StringType;
+import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
 public class DelimitedParserTest extends TestCase {
 	protected void setUp() {
@@ -19,7 +20,7 @@ public class DelimitedParserTest extends TestCase {
 	}
 
 	public void testTextQuantifier() throws FileNotFoundException, ParserException {
-		DelimitedParser parser = new DelimitedParser(new File("tests/delimited/textquantifier.csv"), ',', '"', true, true);
+		DelimitedParser parser = new DelimitedParser(new File("test-data/delimited/textquantifier.csv"), ',', '"', true, true);
 
 		CreateTable correctTable = new CreateTable(new Name("textquantifier"));
 
@@ -36,7 +37,7 @@ public class DelimitedParserTest extends TestCase {
 	}
 
 	public void testMultiline() throws FileNotFoundException, ParserException {
-		DelimitedParser parser = new DelimitedParser(new File("tests/delimited/multiline.csv"), ',', '"', true, true);
+		DelimitedParser parser = new DelimitedParser(new File("test-data/delimited/multiline.csv"), ',', '"', true, true);
 
 		CreateTable correctTable = new CreateTable(new Name("multiline"));
 		correctTable.addColumn(new Column(new Name("name"), StringType.VARCHAR));

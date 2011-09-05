@@ -5,7 +5,6 @@ import com.googlecode.jsqlconverter.definition.truncate.table.Truncate;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.create.index.CreateIndex;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
-import com.googlecode.jsqlconverter.logging.LogLevel;
 import com.googlecode.jsqlconverter.producer.interfaces.CreateIndexInterface;
 import com.googlecode.jsqlconverter.producer.interfaces.CreateTableInterface;
 import com.googlecode.jsqlconverter.producer.interfaces.InsertFromValuesInterface;
@@ -57,7 +56,7 @@ public abstract class Producer {
 				LOG.warning("This Producer does not support TruncateInterface");
 			}
 		} else {
-			LOG.log(LogLevel.UNHANDLED, "statement type: " + statement.getClass().getName());
+			LOG.warning("Unhandled statement type: " + statement.getClass().getName());
 		}
 	}
 }

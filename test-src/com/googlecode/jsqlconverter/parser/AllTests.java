@@ -10,9 +10,7 @@ public final class AllTests {
 		TestSuite suite = new TestSuite("all parser tests");
 
 		suite.addTestSuite(DelimitedParserTest.class);
-		suite.addTestSuite(TypeMappingCorrectTest.class);
 		suite.addTestSuite(TypeMappingHandledTest.class);
-		suite.addTestSuite(ValidationTest.class);
 
 		return suite;
 	}
