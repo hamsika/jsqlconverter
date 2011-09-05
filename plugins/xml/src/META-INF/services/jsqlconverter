@@ -1,0 +1,8 @@
+com.googlecode.jsqlconverter.parser.xml.DBDesignerXMLParser
+com.googlecode.jsqlconverter.parser.xml.LiquiBaseXMLParser
+com.googlecode.jsqlconverter.parser.xml.SQLFairyXMLParser
+com.googlecode.jsqlconverter.parser.xml.TurbineXMLParser
+com.googlecode.jsqlconverter.parser.xml.WorkbenchXMLParser
+com.googlecode.jsqlconverter.producer.xml.HibernateXMLProducer
+com.googlecode.jsqlconverter.producer.xml.SQLFairyXMLProducer
+com.googlecode.jsqlconverter.producer.xml.TurbineXMLProducer

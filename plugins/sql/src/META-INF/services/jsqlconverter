@@ -1,0 +1,5 @@
+com.googlecode.jsqlconverter.producer.sql.AccessSQLProducer
+com.googlecode.jsqlconverter.producer.sql.MySQLProducer
+com.googlecode.jsqlconverter.producer.sql.OracleSQLProducer
+com.googlecode.jsqlconverter.producer.sql.PostgreSQLProducer
+com.googlecode.jsqlconverter.producer.sql.SQLServerProducer

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test-src"/>
+	<classpathentry kind="src" output="classes/xhtml" path="plugins/xhtml/src"/>
+	<classpathentry kind="src" output="classes/jdbc" path="plugins/jdbc/src"/>
+	<classpathentry kind="src" output="classes/xml" path="plugins/xml/src"/>
+	<classpathentry kind="src" output="classes/sql" path="plugins/sql/src"/>
+	<classpathentry kind="src" output="classes/jackcess" path="plugins/jackcess/src"/>
+	<classpathentry kind="src" output="classes/generator" path="plugins/generator/src"/>
+	<classpathentry kind="src" output="classes/dot" path="plugins/dot/src"/>
+	<classpathentry kind="src" output="classes/delimited" path="plugins/delimited/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="lib" path="plugins/jackcess/lib/jackcess-1.2.3.jar"/>
+	<classpathentry kind="lib" path="plugins/jackcess/lib/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="plugins/jackcess/lib/commons-lang-2.6.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="lib" path="plugins/json/lib/gson-1.6.jar"/>
+	<classpathentry kind="output" path="classes/main"/>
+</classpath>

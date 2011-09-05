@@ -1,0 +1,2 @@
+com.googlecode.jsqlconverter.parser.JDBCParser
+com.googlecode.jsqlconverter.producer.JDBCProducer
