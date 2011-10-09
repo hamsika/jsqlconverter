@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 import com.googlecode.jsqlconverter.annotation.ParameterName;
@@ -50,14 +51,16 @@ public class AccessMDBParser extends Parser {
 
 	public void parse(ParserCallback callback) throws ParserException {
 		Database db;
+		Set<String> tableSet;
 
 		try {
 			db = Database.open(mdbFile, false);
+			tableSet = db.getTableNames();
 		} catch (IOException e) {
 			throw new ParserException(e.getMessage(), e.getCause());
 		}
 
-		for (String tableName : db.getTableNames()) {
+		for (String tableName : tableSet) {
 			Table table;
 
 			try {
