@@ -28,11 +28,11 @@
 			<classpath refid="classpath.lib"/>
 		</javac>
 
-		<copy todir="${build.temp}/META-INF/lib">
+		<unzip dest="${build.temp}">
 			<fileset dir=".">
 				<include name="${project.lib}/*.jar"/>
 			</fileset>
-		</copy>
+		</unzip>
 
 		<copy todir="${build.temp}/META-INF">
 			<fileset dir="${project.src}/META-INF">
@@ -42,7 +42,7 @@
 	</target>
 
 	<target name="jar" depends="compile">
-		<jar compress="true" jarfile="${build.temp}/${project.name}.jar">
+		<jar compress="true" jarfile="${build.temp}/${project.name}.jar">		
 			<manifest>
 				<attribute name="Implementation-Vendor" value="${project.author}"/>
 			</manifest>
