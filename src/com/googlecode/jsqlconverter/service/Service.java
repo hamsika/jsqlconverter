@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 import com.googlecode.jsqlconverter.annotation.ServiceName;
+import com.googlecode.jsqlconverter.parser.Parser;
 
 public class Service {
 	private ArrayList<EntryPoint> entryPointList = new ArrayList<EntryPoint>();
@@ -23,7 +24,7 @@ public class Service {
 		this.serviceClass = serviceClass;
 		name = a.value();
 		flattenedName = name.toLowerCase().replace(" ", "-");
-		isParser = serviceClass.getSimpleName().contains("Parser"); // TODO: find a better way to do this
+		isParser = Parser.class.isAssignableFrom(serviceClass);
 
 		Constructor<?>[] cs = serviceClass.getConstructors();
 

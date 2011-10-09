@@ -35,7 +35,7 @@ public class ServiceUtil {
 		ArrayList<Service> matchedServices = new ArrayList<Service>();
 		
 		for (Service service : getServices()) {
-			if (service.getName().equalsIgnoreCase(name)) {
+			if (service.getFlattenedName().equalsIgnoreCase(name)) {
 				matchedServices.add(service);
 			}
 		}

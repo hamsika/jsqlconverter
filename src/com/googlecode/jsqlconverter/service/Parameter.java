@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 
 import com.googlecode.jsqlconverter.annotation.ParameterName;
@@ -68,31 +69,31 @@ public class Parameter {
 			value = getDefaultValue();
 		}
 
-		if (getClassType() == Integer.class) {
+		if (Integer.class.isAssignableFrom(getClassType())) {
 			return Integer.parseInt(value);
-		} else if (getClassType() == Float.class) {
+		} else if (Float.class.isAssignableFrom(getClassType())) {
 			return Float.parseFloat(value);
-		} else if (getClassType() == Double.class) {
+		} else if (Double.class.isAssignableFrom(getClassType())) {
 			return Double.parseDouble(value);
-		} else if (getClassType() == Long.class) {
+		} else if (Long.class.isAssignableFrom(getClassType())) {
 			return Long.parseLong(value);
-		} else if (getClassType() == Short.class) {
+		} else if (Short.class.isAssignableFrom(getClassType())) {
 			return Short.parseShort(value);
-		} else if (getClassType() == Boolean.class) {
+		} else if (Boolean.class.isAssignableFrom(getClassType())) {
 			return Boolean.parseBoolean(value);
-		} else if (getClassType() == File.class) {
+		} else if (File.class.isAssignableFrom(getClassType())) {
 			return new File(value);
-		} else if (getClassType() == String.class) {
+		} else if (String.class.isAssignableFrom(getClassType())) {
 			return value;
-		} else if (getClassType() == Character.class) {
+		} else if (Character.class.isAssignableFrom(getClassType())) {
 			if (value.length() != 1) {
 				throw new RuntimeException("Input " + getFlattenedName() + " must be 1 character only");
 			}
 
 			return value.charAt(0);
-		} else if (getClassType() == BufferedInputStream.class) {
+		} else if (InputStream.class.isAssignableFrom(getClassType())) {
 			return new BufferedInputStream(new FileInputStream(value));
-		} else if (getClassType().isEnum()) {
+		} else if (Enum.class.isAssignableFrom(getClassType())) {
 			Enum<?>[] enumList = (Enum<?>[]) getClassType().getEnumConstants();
 
 			for (Enum<?> myEnum : enumList) {

@@ -1,7 +1,9 @@
 package com.googlecode.jsqlconverter.frontend.cli;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -169,21 +171,22 @@ public class SQLConverterCLI implements ParserCallback {
 
 		if (p.isOptional()) System.out.print("[");
 
-		String inputName = p.getClassType().getSimpleName();
+		Class<?> inputClass = p.getClassType();
+		String inputName = "";
 
-		if (inputName.endsWith("InputStream")) {
+		if (InputStream.class.isAssignableFrom(inputClass)) {
 			inputName = "file";
-		} else if (inputName.equals("File")) {
+		} else if (File.class.isAssignableFrom(inputClass)) {
 			inputName = "file";
-		} else if (inputName.equals("Integer")) {
+		} else if (Integer.class.isAssignableFrom(inputClass)) {
 			inputName = "number";
-		} else if (inputName.equals("Boolean")) {
+		} else if (Boolean.class.isAssignableFrom(inputClass)) {
 			inputName = "true/false";
-		} else if (inputName.equals("Character")) {
+		} else if (Character.class.isAssignableFrom(inputClass)) {
 			inputName = "char";
-		} else if (inputName.equals("String")) {
+		} else if (String.class.isAssignableFrom(inputClass)) {
 			inputName = "text";
-		} else if (p.getClassType().isEnum()) {
+		} else if (Enum.class.isAssignableFrom(inputClass)) {
 			Enum<?>[] enumList = (Enum<?>[]) p.getClassType().getEnumConstants();
 			inputName = "";
 
@@ -199,7 +202,7 @@ public class SQLConverterCLI implements ParserCallback {
 		if (p.isOptional() && p.getDefaultValue() != null) {
 			inputName += " = " + p.getDefaultValue();
 		}
-		
+
 		System.out.print(((isParser) ? FROM : TO) + "-" + p.getFlattenedName() + " <" + inputName + ">");
 
 		if (p.isOptional()) System.out.print("]");
