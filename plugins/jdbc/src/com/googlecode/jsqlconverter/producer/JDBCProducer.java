@@ -39,7 +39,7 @@ public class JDBCProducer extends Producer implements CreateIndexInterface, Crea
 	private boolean ignoreInsert;
 	private boolean ignoreTruncate;
 
-	public enum SQLProducerList {
+	public enum SQLDialect {
 		Access,
 		MySQL,
 		Oracle,
@@ -52,7 +52,7 @@ public class JDBCProducer extends Producer implements CreateIndexInterface, Crea
 			@ParameterName("URL") String url,
 			@ParameterName("Username") String username,
 			@ParameterName("Password") String password,
-			@ParameterName("SQLProducer") SQLProducerList sqlProducer,
+			@ParameterName("Dialect") SQLDialect sqlProducer,
 			@ParameterName("Ignore Table") @ParameterOptional(defaultValue = "false") Boolean ignoreCreateTable,
 			@ParameterName("Ignore Index") @ParameterOptional(defaultValue = "false") Boolean ignoreCreateIndex,
 			@ParameterName("Ignore Insert") @ParameterOptional(defaultValue = "false") Boolean ignoreInsert,
