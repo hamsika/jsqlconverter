@@ -23,8 +23,8 @@ public class CLIParser {
 		return null;
 	}
 
-	public HashMap<String, String> getArgsWithPrefix(String prefix) {
-		HashMap<String, String> paramMap = new HashMap<String, String>();
+	public HashMap<String, Object> getArgsWithPrefix(String prefix) {
+		HashMap<String, Object> paramMap = new HashMap<String, Object>();
 
 		for (int i=0; i<args.length; i++) {
 			if (args[i].startsWith(prefix)) {

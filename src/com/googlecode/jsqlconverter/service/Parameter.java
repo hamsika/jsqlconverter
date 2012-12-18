@@ -1,8 +1,8 @@
 package com.googlecode.jsqlconverter.service;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -64,9 +64,21 @@ public class Parameter {
 		return isOptional;
 	}
 
+	public Object toObject(Object value) throws FileNotFoundException {
+		if (value instanceof String) {
+			return toObject((String)value);
+		}
+
+		return value;
+	}
+
 	public Object toObject(String value) throws FileNotFoundException {
-		if (value == null) {
+		if (value == null || value.isEmpty()) {
 			value = getDefaultValue();
+		}
+
+		if (value == null) {
+			return value;
 		}
 
 		if (Integer.class.isAssignableFrom(getClassType())) {
@@ -92,7 +104,7 @@ public class Parameter {
 
 			return value.charAt(0);
 		} else if (InputStream.class.isAssignableFrom(getClassType())) {
-			return new BufferedInputStream(new FileInputStream(value));
+			return new BufferedInputStream(new ByteArrayInputStream(value.getBytes()));
 		} else if (Enum.class.isAssignableFrom(getClassType())) {
 			Enum<?>[] enumList = (Enum<?>[]) getClassType().getEnumConstants();
 
