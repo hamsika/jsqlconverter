@@ -73,6 +73,7 @@ public class SQLFairyXMLProducer extends Producer implements CreateTableInterfac
 		//</indices>
 	}*/
 
+	@Override
 	public void doCreateTable(CreateTable table) {
 		if (tablesElement == null) {
 			tablesElement = document.createElement("tables");
@@ -345,6 +346,7 @@ public class SQLFairyXMLProducer extends Producer implements CreateTableInterfac
 		}
 	}
 
+	@Override
 	public void doFinal() throws ProducerException {
 		DOMSource source = new DOMSource(document);
 		Result result;

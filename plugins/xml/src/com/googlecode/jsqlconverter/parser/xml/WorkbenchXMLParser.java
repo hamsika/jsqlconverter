@@ -20,14 +20,17 @@ public class WorkbenchXMLParser extends XMLParser {
 		super(zipFile, "document.mwb.xml");
 	}
 
+	@Override
 	public String getTableListPath() {
 		return "//value[@struct-name='workbench.physical.TableFigure']";
 	}
 
+	@Override
 	public String getTableNamePath() {
 		return "value[@key='name']/text()";
 	}
 
+	@Override
 	public String getColumnListPath(Element tableNode) {
 		// TODO: don't assume this is always the first <link> element
 		String tableId = tableNode.getElementsByTagName("link").item(0).getTextContent();
@@ -35,38 +38,47 @@ public class WorkbenchXMLParser extends XMLParser {
 		return "//value[@struct-name='db.mysql.Column'][link/text() = '" + tableId + "']";
 	}
 
+	@Override
 	public String getColumnNamePath() {
 		return getTableNamePath();
 	}
 
+	@Override
 	public String getPrimaryKeyPath() {
 		return "value[@key='isPrimary']/text()=1";
 	}
 
+	@Override
 	public String getAutoIncrementPath() {
 		return "value[@key='autoIncrement']/text()=1";
 	}
 
+	@Override
 	public String getIsRequiredPath() {
 		return "value[@key='isNotNull']/text()=1";
 	}
 
+	@Override
 	public String getColumnSizePath() {
 		return "value[@key='length']/text()";
 	}
 
+	@Override
 	public String getDefaultValuePath() {
 		return "value[@key='defaultValue']/text()";
 	}
 
+	@Override
 	public String getDataTypePath(Element columnElement) {
 		return "link[@key='simpleType']";
 	}
 
+	@Override
 	public boolean columnPathContainsSize() {
 		return false;
 	}
 
+	@Override
 	public Type getType(String type, int size) {
 		// TODO: check these
 		if (type.equals("com.mysql.rdbms.mysql.datatype.bigint")) {

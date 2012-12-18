@@ -22,51 +22,63 @@ public class DBDesignerXMLParser extends XMLParser {
 		super(in);
 	}
 
+	@Override
 	public String getTableListPath() {
 		return "/DBMODEL/METADATA/TABLES/TABLE";
 	}
 
+	@Override
 	public String getTableNamePath() {
 		return "@Tablename";
 	}
 
+	@Override
 	public String getColumnListPath(Element tableNode) {
 		return "COLUMNS/COLUMN";
 	}
 
+	@Override
 	public String getColumnNamePath() {
 		return "@ColName";
 	}
 
+	@Override
 	public String getPrimaryKeyPath() {
 		return "@PrimaryKey=1";
 	}
 
+	@Override
 	public String getAutoIncrementPath() {
 		return "@AutoInc=1";
 	}
 
+	@Override
 	public String getIsRequiredPath() {
 		return "@NotNull=1";
 	}
 
+	@Override
 	public String getColumnSizePath() {
 		// TODO: @DatatypeParams  (80) and (8,2)
 		return "1";
 	}
 
+	@Override
 	public String getDefaultValuePath() {
 		return "@DefaultValue";
 	}
 
+	@Override
 	public String getDataTypePath(Element columnElement) {
 		return "//DATATYPE[@ID=" + columnElement.getAttribute("idDatatype") + "]/@TypeName";
 	}
 
+	@Override
 	public boolean columnPathContainsSize() {
 		return false;
 	}
 
+	@Override
 	public Type getType(String type, int size) {
 		if (type.equals("BIT")) {
 			return BinaryType.BIT;

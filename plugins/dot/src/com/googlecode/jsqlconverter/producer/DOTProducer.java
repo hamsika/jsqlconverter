@@ -24,6 +24,7 @@ public class DOTProducer extends Producer implements CreateTableInterface, Final
 		out.println("	]");
 	}
 
+	@Override
 	public void doCreateTable(CreateTable table) throws ProducerException {
 		String tableName = table.getName().getObjectName();
 
@@ -47,6 +48,7 @@ public class DOTProducer extends Producer implements CreateTableInterface, Final
 		}
 	}
 
+	@Override
 	public void doFinal() throws ProducerException {
 		out.println();
 

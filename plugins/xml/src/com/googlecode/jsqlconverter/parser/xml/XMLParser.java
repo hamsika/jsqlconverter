@@ -41,6 +41,7 @@ public abstract class XMLParser extends Parser {
 		in = new BufferedInputStream(zip.getInputStream(zip.getEntry(xmlFileName)));
 	}
 
+	@Override
 	public void parse(ParserCallback callback) throws ParserException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder;

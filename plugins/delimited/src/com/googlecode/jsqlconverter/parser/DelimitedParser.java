@@ -69,6 +69,7 @@ public class DelimitedParser extends Parser {
 		this.convertDataToInsert = convertDataToInsert;
 	}
 
+	@Override
 	public void parse(ParserCallback callback) throws ParserException {
 		try {
 			// only 'detect' data types if headers are available

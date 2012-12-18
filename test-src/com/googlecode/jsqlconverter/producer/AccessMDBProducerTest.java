@@ -13,6 +13,7 @@ import com.googlecode.jsqlconverter.parser.GeneratorParser;
 public class AccessMDBProducerTest extends TestCase {
 	private CreateTable[] createTables;
 
+	@Override
 	protected void setUp() {
 		GeneratorParser gp = new GeneratorParser(50);
 

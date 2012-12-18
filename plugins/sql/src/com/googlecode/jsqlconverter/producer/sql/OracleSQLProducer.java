@@ -24,26 +24,32 @@ public class OracleSQLProducer extends SQLProducer {
 		super(out);
 	}
 
+	@Override
 	public char getLeftQuote(QuoteType type) {
 		return '"';
 	}
 
+	@Override
 	public char getRightQuote(QuoteType type) {
 		return '"';
 	}
 
+	@Override
 	public String getValidIdentifier(String name) {
 		return name;
 	}
 
+	@Override
 	public String getEscapedString(String value) {
 		return value;
 	}
 
+	@Override
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
 		return "DEFAULT \"" + defaultConstraint.getValue() + "\"";
 	}
 
+	@Override
 	public String getType(ApproximateNumericType type) {
 		switch (type) {
 			case DOUBLE:
@@ -57,6 +63,7 @@ public class OracleSQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(BinaryType type) {
 		switch(type) {
 			case BINARY:
@@ -72,10 +79,12 @@ public class OracleSQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(BooleanType type) {
 		return null;
 	}
 
+	@Override
 	public String getType(DateTimeType type) {
 		switch(type) {
 			case DATE:
@@ -89,10 +98,12 @@ public class OracleSQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(DecimalType type) {
 		return "numeric";
 	}
 
+	@Override
 	public String getType(ExactNumericType type) {
 		switch(type) {
 			case BIGINT:
@@ -107,10 +118,12 @@ public class OracleSQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(MonetaryType type) {
 		return null;
 	}
 
+	@Override
 	public String getType(StringType type, int size) {
 		switch(type) {
 			case CHAR:
@@ -132,26 +145,32 @@ public class OracleSQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public boolean outputTypeSize(Type type, String localname) {
 		return true;
 	}
 
+	@Override
 	public boolean isValidIdentifier(String name) {
 		return true;
 	}
 
+	@Override
 	public boolean supportsIdentifier(IdentifierType type) {
 		return true;
 	}
 
+	@Override
 	public boolean supportsTableOption(TableOption option) {
 		return true;
 	}
 
+	@Override
 	public boolean supportsForeignKeyAction(ForeignKeyAction action) {
 		return true;
 	}
 
+	@Override
 	public boolean supportsColumnOption(ColumnOption option) {
 		return true;
 	}

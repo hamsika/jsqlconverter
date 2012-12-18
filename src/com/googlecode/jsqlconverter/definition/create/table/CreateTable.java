@@ -102,6 +102,7 @@ public class CreateTable extends Statement implements Comparable<CreateTable> {
 		columns.remove(column);
 	}
 
+	@Override
 	public int compareTo(CreateTable that) {
 		// compare this to that
 		int thisFKeyCount = 0;

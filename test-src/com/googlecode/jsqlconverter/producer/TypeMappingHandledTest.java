@@ -33,6 +33,7 @@ public class TypeMappingHandledTest extends TestCase {
 	private ArrayList<SQLProducer> sqlproducers = new ArrayList<SQLProducer>();
 	private TurbineXMLProducer turbineProducer;
 
+	@Override
 	protected void setUp() throws TransformerException, ParserConfigurationException, IOException {
 		decimalType = new DecimalType(4, 5);
 

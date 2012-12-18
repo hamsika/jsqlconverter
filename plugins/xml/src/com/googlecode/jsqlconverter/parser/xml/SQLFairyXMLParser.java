@@ -20,50 +20,62 @@ public class SQLFairyXMLParser extends XMLParser {
 		super(in);
 	}
 
+	@Override
 	public String getTableListPath() {
 		return "//table";
 	}
 
+	@Override
 	public String getTableNamePath() {
 		return "@name";
 	}
 
+	@Override
 	public String getColumnListPath(Element tableNode) {
 		return "fields/field";
 	}
 
+	@Override
 	public String getColumnNamePath() {
 		return getTableNamePath();
 	}
 
+	@Override
 	public String getPrimaryKeyPath() {
 		return "@is_primary_key=1";
 	}
 
+	@Override
 	public String getAutoIncrementPath() {
 		return "@is_auto_increment=1";
 	}
 
+	@Override
 	public String getIsRequiredPath() {
 		return "@is_nullable=0";
 	}
 
+	@Override
 	public String getColumnSizePath() {
 		return "@size";
 	}
 
+	@Override
 	public String getDefaultValuePath() {
 		return "defaultValue";
 	}
 
+	@Override
 	public String getDataTypePath(Element columnElement) {
 		return "@data_type";
 	}
 
+	@Override
 	public boolean columnPathContainsSize() {
 		return false;
 	}
 
+	@Override
 	public Type getType(String type, int size) {
 		type = type.toLowerCase();
 

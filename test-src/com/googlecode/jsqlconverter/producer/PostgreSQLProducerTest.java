@@ -10,6 +10,7 @@ import com.googlecode.jsqlconverter.producer.sql.SQLProducer;
 public class PostgreSQLProducerTest extends TestCase {
 	private SQLProducer producer;
 
+	@Override
 	protected void setUp() {
 		producer = new PostgreSQLProducer(System.out);
 	}

@@ -26,6 +26,7 @@ public class SQLServerProducer extends SQLProducer {
 		super(out);
 	}
 
+	@Override
 	public char getLeftQuote(QuoteType type) {
 		switch(type) {
 			case TABLE:
@@ -35,6 +36,7 @@ public class SQLServerProducer extends SQLProducer {
 		return '\'';
 	}
 
+	@Override
 	public char getRightQuote(QuoteType type) {
 		switch(type) {
 			case TABLE:
@@ -44,19 +46,23 @@ public class SQLServerProducer extends SQLProducer {
 		return '\'';
 	}
 
+	@Override
 	public String getValidIdentifier(String name) {
 		return name;
 	}
 
+	@Override
 	public String getEscapedString(String value) {
 		return value.replace("'", "''");
 	}
 
+	@Override
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
 		// Remove (, ) and ' as for some reason the default that comes from JDBC Driver is often something like: ('100')
 		return "DEFAULT '" + defaultConstraint.getValue().replace("(", "").replace(")", "").replace("'", "") + "'";
 	}
 
+	@Override
 	public String getType(ApproximateNumericType type) {
 		switch (type) {
 			case DOUBLE:
@@ -70,6 +76,7 @@ public class SQLServerProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(BinaryType type) {
 		switch(type) {
 			case BINARY:
@@ -88,6 +95,7 @@ public class SQLServerProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(BooleanType type) {
 		switch(type) {
 			case BOOLEAN:
@@ -97,6 +105,7 @@ public class SQLServerProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(DateTimeType type) {
 		switch(type) {
 			case DATE:
@@ -110,10 +119,12 @@ public class SQLServerProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(DecimalType type) {
 		return "numeric";
 	}
 
+	@Override
 	public String getType(ExactNumericType type) {
 		switch(type) {
 			case BIGINT:
@@ -131,6 +142,7 @@ public class SQLServerProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(MonetaryType type) {
 		// TODO: check these. best for money = numeric(19, 4)
 
@@ -144,6 +156,7 @@ public class SQLServerProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(StringType type, int size) {
 		switch(type) {
 			case CHAR:
@@ -166,6 +179,7 @@ public class SQLServerProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public boolean outputTypeSize(Type type, String localname) {
 		return	!(type instanceof NumericType) &&
 				!(type instanceof BooleanType) &&
@@ -173,15 +187,18 @@ public class SQLServerProducer extends SQLProducer {
 				 (type != BinaryType.BIT);
 	}
 
+	@Override
 	public boolean isValidIdentifier(String name) {
 		// TODO: do some regex here
 		return false;
 	}
 
+	@Override
 	public boolean supportsIdentifier(IdentifierType type) {
 		return true;
 	}
 
+	@Override
 	public boolean supportsTableOption(TableOption option) {
 		switch(option) {
 			case TEMPORARY:
@@ -192,6 +209,7 @@ public class SQLServerProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public boolean supportsForeignKeyAction(ForeignKeyAction action) {
 		switch(action) {
 			case CASCADE:
@@ -207,6 +225,7 @@ public class SQLServerProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public boolean supportsColumnOption(ColumnOption option) {
 		switch(option) {
 			case AUTO_INCREMENT:

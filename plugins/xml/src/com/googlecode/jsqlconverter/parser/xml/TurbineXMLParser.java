@@ -22,50 +22,62 @@ public class TurbineXMLParser extends XMLParser {
 		super(in);
 	}
 
+	@Override
 	public String getTableListPath() {
 		return "/database/table";
 	}
 
+	@Override
 	public String getTableNamePath() {
 		return "@name";
 	}
 
+	@Override
 	public String getColumnListPath(Element tableNode) {
 		return "column";
 	}
 
+	@Override
 	public String getColumnNamePath() {
 		return getTableNamePath();
 	}
 
+	@Override
 	public String getPrimaryKeyPath() {
 		return "@primaryKey='true'";
 	}
 
+	@Override
 	public String getAutoIncrementPath() {
 		return "@autoIncrement='true'";
 	}
 
+	@Override
 	public String getIsRequiredPath() {
 		return "@required='true'";
 	}
 
+	@Override
 	public String getColumnSizePath() {
 		return "@size";
 	}
 
+	@Override
 	public String getDefaultValuePath() {
 		return "defaultValue";
 	}
 
+	@Override
 	public String getDataTypePath(Element columnElement) {
 		return "@type";
 	}
 
+	@Override
 	public boolean columnPathContainsSize() {
 		return false;
 	}
 
+	@Override
 	public Type getType(String type, int size) {
 		if (type.equals("ARRAY")) {
 		} else if (type.equals("BIGINT")) {

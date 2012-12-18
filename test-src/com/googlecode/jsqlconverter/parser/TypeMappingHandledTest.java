@@ -15,6 +15,7 @@ public class TypeMappingHandledTest extends TestCase {
 
 	// TODO: add turbine / sql fairy
 
+	@Override
 	protected void setUp() {
 		accessMDBParser = new AccessMDBParser(null, false);
 

@@ -15,6 +15,7 @@ import com.googlecode.jsqlconverter.definition.type.StringType;
 import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
 public class DelimitedParserTest extends TestCase {
+	@Override
 	protected void setUp() {
 		
 	}
@@ -55,6 +56,7 @@ public class DelimitedParserTest extends TestCase {
 			this.correctTable = correctTable;
 		}
 
+		@Override
 		public void produceStatement(Statement statement) {
 			if (!(statement instanceof CreateTable)) {
 				return;
@@ -76,6 +78,7 @@ public class DelimitedParserTest extends TestCase {
 			}
 		}
 
+		@Override
 		public void log(String message) {
 			System.err.println(message);
 		}

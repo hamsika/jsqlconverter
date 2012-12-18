@@ -39,6 +39,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		super(out);
 	}
 
+	@Override
 	public void doCreateIndex(CreateIndex createIndex) throws ProducerException {
 		out.print("CREATE ");
 
@@ -55,6 +56,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		out.println(");");
 	}
 
+	@Override
 	public void doCreateTable(CreateTable table) throws ProducerException {
 		out.print("CREATE ");
 
@@ -176,6 +178,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		out.println(");");
 	}
 
+	@Override
 	public void doInsertFromValues(InsertFromValues insert) throws ProducerException {
 		out.print("INSERT INTO ");
 		out.print(getQuotedName(insert.getTableName(), QuoteType.TABLE));
@@ -228,6 +231,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 		out.println(");");
 		}
 
+	@Override
 	public void doTruncate(Truncate truncate) throws ProducerException {
 		out.print("TRUNCATE TABLE ");
 		out.print(getQuotedName(truncate.getTableName(), QuoteType.TRUNCATE));

@@ -25,6 +25,7 @@ public class MySQLProducer extends SQLProducer {
 		super(out);
 	}
 
+	@Override
 	public char getLeftQuote(QuoteType type) {
 		switch(type) {
 			case TABLE:
@@ -34,22 +35,27 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public char getRightQuote(QuoteType type) {
 		return getLeftQuote(type);
 	}
 
+	@Override
 	public String getEscapedString(String value) {
 		return value.replace("'", "''");
 	}
 
+	@Override
 	public String getValidIdentifier(String name) {
 		return name;
 	}
 
+	@Override
 	public String getDefaultConstraintString(DefaultConstraint defaultConstraint) {
 		return "DEFAULT '" + defaultConstraint.getValue() + "'";
 	}
 
+	@Override
 	public String getType(ApproximateNumericType type) {
 		switch (type) {
 			case DOUBLE:
@@ -63,6 +69,7 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(BinaryType type) {
 		switch(type) {
 			case BINARY:
@@ -84,6 +91,7 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(BooleanType type) {
 		switch(type) {
 			case BOOLEAN:
@@ -93,6 +101,7 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(DateTimeType type) {
 		switch(type) {
 			case DATE:
@@ -108,10 +117,12 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(DecimalType type) {
 		return "numeric";
 	}
 
+	@Override
 	public String getType(ExactNumericType type) {
 		switch(type) {
 			case BIGINT:
@@ -129,6 +140,7 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(MonetaryType type) {
 		// TODO: check these. best for money = numeric(19, 4)
 
@@ -142,6 +154,7 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public String getType(StringType type, int size) {
 		switch(type) {
 			case CHAR:
@@ -167,16 +180,19 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public boolean outputTypeSize(Type type, String localname) {
 		// TODO: support DOUBLE. certain times it should be ok.
 		return !(type instanceof DateTimeType) && !(type instanceof BooleanType) && type != ApproximateNumericType.DOUBLE;
 	}
 
+	@Override
 	public boolean isValidIdentifier(String name) {
 		// TODO: do some regex here
 		return false;
 	}
 
+	@Override
 	public boolean supportsIdentifier(IdentifierType type) {
 		switch (type) {
 			case SCHEMA:
@@ -189,6 +205,7 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public boolean supportsTableOption(TableOption option) {
 		switch(option) {
 			case TEMPORARY:
@@ -199,6 +216,7 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public boolean supportsForeignKeyAction(ForeignKeyAction action) {
 		switch(action) {
 			case CASCADE:
@@ -214,6 +232,7 @@ public class MySQLProducer extends SQLProducer {
 		}
 	}
 
+	@Override
 	public boolean supportsColumnOption(ColumnOption option) {
 		switch(option) {
 			case AUTO_INCREMENT:

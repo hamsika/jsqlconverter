@@ -70,6 +70,7 @@ public class JDBCParser extends Parser {
 		this.columnNamePattern = columnNamePattern;
 	}
 
+	@Override
 	public void parse(ParserCallback callback) throws ParserException {
 		this.callback = callback;
 

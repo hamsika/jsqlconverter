@@ -28,6 +28,7 @@ public class HibernateXMLProducer extends Producer implements CreateTableInterfa
 		this.packageName = packageName;
 	}
 
+	@Override
 	public void doCreateTable(CreateTable table) throws ProducerException {
 		FileWriter outXml;
 		FileWriter outJava;

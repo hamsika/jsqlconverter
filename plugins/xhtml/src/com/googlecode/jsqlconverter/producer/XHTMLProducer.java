@@ -23,10 +23,12 @@ public class XHTMLProducer extends Producer implements CreateTableInterface, Fin
 		super(out);
 	}
 
+	@Override
 	public void doCreateTable(CreateTable table) throws ProducerException {
 		tableStatements.add(table);
 	}
 
+	@Override
 	public void doFinal() throws ProducerException {
 		printHeader();
 

@@ -20,47 +20,58 @@ public class LiquiBaseXMLParser extends XMLParser {
 		super(in);
 	}
 
+	@Override
 	public String getTableListPath() {
 		return "/databaseChangeLog/changeSet/createTable";
 	}
 
+	@Override
 	public String getTableNamePath() {
 		return "@tableName";
 	}
 
+	@Override
 	public String getColumnListPath(Element tableNode) {
 		return "column";
 	}
 
+	@Override
 	public String getColumnNamePath() {
 		// TODO: varchar(50) / date / etc
 		return "@name";
 	}
 
+	@Override
 	public String getPrimaryKeyPath() {
 		return "constraints/@primaryKey='true'";
 	}
 
+	@Override
 	public String getAutoIncrementPath() {
 		return "@autoIncrement='true'";
 	}
 
+	@Override
 	public String getIsRequiredPath() {
 		return "constraints/@nullable='false'";
 	}
 
+	@Override
 	public String getColumnSizePath() {
 		return null;
 	}
 
+	@Override
 	public String getDefaultValuePath() {
 		return "@defaultValue";
 	}
 
+	@Override
 	public String getDataTypePath(Element columnElement) {
 		return "@type";
 	}
 
+	@Override
 	public Type getType(String type, int size) {
 		if (type.equals("int")) {
 			return ExactNumericType.INTEGER;
@@ -73,6 +84,7 @@ public class LiquiBaseXMLParser extends XMLParser {
 		return StringType.VARCHAR;
 	}
 
+	@Override
 	public boolean columnPathContainsSize() {
 		return true;
 	}

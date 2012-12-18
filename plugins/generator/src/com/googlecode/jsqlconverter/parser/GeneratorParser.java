@@ -44,6 +44,7 @@ public class GeneratorParser extends Parser {
 		this.numCreateTable = numCreateTable;
 	}
 
+	@Override
 	public void parse(ParserCallback callback) throws ParserException {
 		for (CreateTable table : generateCreateTableStatements(numCreateTable)) {
 			callback.produceStatement(table);
