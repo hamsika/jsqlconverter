@@ -28,7 +28,7 @@ import com.googlecode.jsqlconverter.parser.ParserException;
 import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
 public abstract class XMLParser extends Parser {
-	protected BufferedInputStream in;
+	private BufferedInputStream in;
 	private XPath xpath;
 
 	public XMLParser(BufferedInputStream in) {

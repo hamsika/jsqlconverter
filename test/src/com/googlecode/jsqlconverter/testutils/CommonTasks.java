@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public final class CommonTasks {
-	private static final GeneratorParser gp = new GeneratorParser(50);
-	private static final CreateTable[] createTables = gp.generateCreateTableStatements();
+	private static final GeneratorParser GEN = new GeneratorParser(50);
+	private static final CreateTable[] CREATE_TABLES = GEN.generateCreateTableStatements();
 
 	private CommonTasks() {}
 
@@ -30,6 +30,6 @@ public final class CommonTasks {
 	}
 
 	public static CreateTable[] getCreateTables() {
-		return createTables;
+		return CREATE_TABLES;
 	}
 }

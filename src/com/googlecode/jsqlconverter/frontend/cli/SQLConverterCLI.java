@@ -93,7 +93,9 @@ public class SQLConverterCLI implements ParserCallback {
 		}
 
 		if (returnPrintStream) {
-			return new Object[] { System.out };
+			return new Object[] {
+				System.out
+			};
 		}
 
 		if (matchedEp == null) {
@@ -169,7 +171,9 @@ public class SQLConverterCLI implements ParserCallback {
 	private void printParameter(Parameter p, boolean isParser) {
 		System.out.print(" ");
 
-		if (p.isOptional()) System.out.print("[");
+		if (p.isOptional()) {
+			System.out.print("[");
+		}
 
 		Class<?> inputClass = p.getClassType();
 		String inputName = "";
@@ -205,7 +209,9 @@ public class SQLConverterCLI implements ParserCallback {
 
 		System.out.print(((isParser) ? FROM : TO) + "-" + p.getFlattenedName() + " <" + inputName + ">");
 
-		if (p.isOptional()) System.out.print("]");
+		if (p.isOptional()) {
+			System.out.print("]");
+		}
 	}
 
 	@Override
