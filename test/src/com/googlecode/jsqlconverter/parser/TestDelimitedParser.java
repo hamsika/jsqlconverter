@@ -1,11 +1,11 @@
 package com.googlecode.jsqlconverter.parser;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Test;
 
 import com.googlecode.jsqlconverter.definition.Name;
 import com.googlecode.jsqlconverter.definition.Statement;
@@ -14,14 +14,10 @@ import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.type.StringType;
 import com.googlecode.jsqlconverter.parser.callback.ParserCallback;
 
-public class DelimitedParserTest extends TestCase {
-	@Override
-	protected void setUp() {
-		
-	}
-
+public class TestDelimitedParser {
+	@Test
 	public void testTextQuantifier() throws FileNotFoundException, ParserException {
-		DelimitedParser parser = new DelimitedParser(new File("test-data/delimited/textquantifier.csv"), ',', '"', true, true);
+		DelimitedParser parser = new DelimitedParser(new File("test/resources/data/delimited/textquantifier.csv"), ',', '"', true, true);
 
 		CreateTable correctTable = new CreateTable(new Name("textquantifier"));
 
@@ -37,8 +33,9 @@ public class DelimitedParserTest extends TestCase {
 		parser.parse(new TextQuantifierCallback(correctTable));
 	}
 
+	@Test
 	public void testMultiline() throws FileNotFoundException, ParserException {
-		DelimitedParser parser = new DelimitedParser(new File("test-data/delimited/multiline.csv"), ',', '"', true, true);
+		DelimitedParser parser = new DelimitedParser(new File("test/resources/data/delimited/multiline.csv"), ',', '"', true, true);
 
 		CreateTable correctTable = new CreateTable(new Name("multiline"));
 		correctTable.addColumn(new Column(new Name("name"), StringType.VARCHAR));
@@ -82,13 +79,5 @@ public class DelimitedParserTest extends TestCase {
 		public void log(String message) {
 			System.err.println(message);
 		}
-	}
-
-	public static Test suite() {
-		return new TestSuite(DelimitedParserTest.class);
-	}
-
-	public static void main(String[] args) {
-		junit.textui.TestRunner.run(suite());
 	}
 }

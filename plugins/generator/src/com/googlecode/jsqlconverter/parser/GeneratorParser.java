@@ -46,7 +46,7 @@ public class GeneratorParser extends Parser {
 
 	@Override
 	public void parse(ParserCallback callback) throws ParserException {
-		for (CreateTable table : generateCreateTableStatements(numCreateTable)) {
+		for (CreateTable table : generateCreateTableStatements()) {
 			callback.produceStatement(table);
 		}
 	}
@@ -59,10 +59,10 @@ public class GeneratorParser extends Parser {
 	 * @param   num number of statements to generate
 	 * @return      an array of CreateTable objects
 	 */
-	public CreateTable[] generateCreateTableStatements(int num) {
+	public CreateTable[] generateCreateTableStatements() {
 		ArrayList<CreateTable> statements = new ArrayList<CreateTable>();
 
-		for (int i=0; i<num; i++) {
+		for (int i=0; i<numCreateTable; i++) {
 			CreateTable table = generateCreateTableStatement(statements.toArray(new CreateTable[statements.size()]));
 
 			statements.add(table);

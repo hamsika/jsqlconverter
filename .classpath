@@ -14,6 +14,6 @@
 	<classpathentry kind="lib" path="plugins/jackcess/lib/jackcess-1.2.4.jar"/>
 	<classpathentry kind="lib" path="plugins/jackcess/lib/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="lib" path="plugins/jackcess/lib/commons-lang-2.6.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="output" path="classes/main"/>
 </classpath>
