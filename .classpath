@@ -15,5 +15,6 @@
 	<classpathentry kind="lib" path="plugins/jackcess/lib/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="lib" path="plugins/jackcess/lib/commons-lang-2.6.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="test/lib/mysql-connector-java-5.1.22-bin.jar"/>
 	<classpathentry kind="output" path="classes/main"/>
 </classpath>
