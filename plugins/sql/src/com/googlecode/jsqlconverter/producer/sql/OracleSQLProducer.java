@@ -146,12 +146,12 @@ public class OracleSQLProducer extends SQLProducer {
 	}
 
 	@Override
-	public boolean outputTypeSize(Type type, String localname) {
+	public boolean isValidIdentifier(String name) {
 		return true;
 	}
 
 	@Override
-	public boolean isValidIdentifier(String name) {
+	public boolean supportsTypeSize(Type type, String localname) {
 		return true;
 	}
 

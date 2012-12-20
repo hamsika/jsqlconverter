@@ -181,15 +181,15 @@ public class MySQLProducer extends SQLProducer {
 	}
 
 	@Override
-	public boolean outputTypeSize(Type type, String localname) {
-		// TODO: support DOUBLE. certain times it should be ok.
-		return !(type instanceof DateTimeType) && !(type instanceof BooleanType) && type != ApproximateNumericType.DOUBLE;
-	}
-
-	@Override
 	public boolean isValidIdentifier(String name) {
 		// TODO: do some regex here
 		return false;
+	}
+
+	@Override
+	public boolean supportsTypeSize(Type type, String localname) {
+		// TODO: support DOUBLE. certain times it should be ok.
+		return !(type instanceof DateTimeType) && !(type instanceof BooleanType) && type != ApproximateNumericType.DOUBLE;
 	}
 
 	@Override
