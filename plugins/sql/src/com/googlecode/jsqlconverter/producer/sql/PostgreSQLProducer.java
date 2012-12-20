@@ -168,21 +168,21 @@ public class PostgreSQLProducer extends SQLProducer {
 	}
 
 	@Override
-	public boolean outputTypeSize(Type type, String localname) {
+	public boolean isValidIdentifier(String name) {
+		Pattern pattern = Pattern.compile("^([:alpha:_](\\w|_|\\$){0,62})$");
+		Matcher matcher = pattern.matcher(name);
+
+		return matcher.find();
+	}
+
+	@Override
+	public boolean supportsTypeSize(Type type, String localname) {
 		return !(type instanceof NumericType) &&
 			!(type instanceof BooleanType) &&
 			!(type instanceof DateTimeType) &&
 			!(type instanceof MonetaryType) &&
 			!localname.equals("bytea") &&
 			!localname.equals("text");
-	}
-
-	@Override
-	public boolean isValidIdentifier(String name) {
-		Pattern pattern = Pattern.compile("^([:alpha:_](\\w|_|\\$){0,62})$");
-		Matcher matcher = pattern.matcher(name);
-
-		return matcher.find();
 	}
 
 	@Override
