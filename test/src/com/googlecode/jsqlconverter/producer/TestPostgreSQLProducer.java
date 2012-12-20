@@ -1,20 +1,23 @@
 package com.googlecode.jsqlconverter.producer;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import com.googlecode.jsqlconverter.producer.sql.PostgreSQLProducer;
 import com.googlecode.jsqlconverter.producer.sql.SQLProducer;
 
-public class PostgreSQLProducerTest extends TestCase {
+public class TestPostgreSQLProducer {
 	private SQLProducer producer;
 
-	@Override
-	protected void setUp() {
+	@Before
+	public void setUp() {
 		producer = new PostgreSQLProducer(System.out);
 	}
 
+	@Test
 	public void testValidName() {
 		assertTrue(producer.isValidIdentifier("abc12f"));
 		assertTrue(producer.isValidIdentifier("_abc"));
@@ -30,13 +33,5 @@ public class PostgreSQLProducerTest extends TestCase {
 
 		// 64 chars
 		assertFalse(producer.isValidIdentifier("abccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddd"));
-	}
-
-	public static Test suite() {
-		return new TestSuite(PostgreSQLProducerTest.class);
-	}
-
-	public static void main(String[] args) {
-		junit.textui.TestRunner.run(suite());
 	}
 }

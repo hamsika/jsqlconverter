@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="test-src"/>
+	<classpathentry kind="src" path="test/src"/>
 	<classpathentry kind="src" output="classes/xhtml" path="plugins/xhtml/src"/>
 	<classpathentry kind="src" output="classes/jdbc" path="plugins/jdbc/src"/>
 	<classpathentry kind="src" output="classes/xml" path="plugins/xml/src"/>
@@ -14,6 +14,9 @@
 	<classpathentry kind="lib" path="plugins/jackcess/lib/jackcess-1.2.4.jar"/>
 	<classpathentry kind="lib" path="plugins/jackcess/lib/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="lib" path="plugins/jackcess/lib/commons-lang-2.6.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="test/lib/mysql-connector-java-5.1.22-bin.jar"/>
+	<classpathentry kind="lib" path="test/lib/ojdbc6.jar"/>
+	<classpathentry kind="lib" path="test/lib/postgresql-9.2-1002.jdbc4.jar"/>
 	<classpathentry kind="output" path="classes/main"/>
 </classpath>

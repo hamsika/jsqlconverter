@@ -433,7 +433,7 @@ public class JDBCParser extends Parser {
 		return primaryKey;
 	}
 
-	public Type getType(int dbType, int columnSize, int decimalDigits) {
+	public static Type getType(int dbType, int columnSize, int decimalDigits) {
 		Type dataType;
 
 		switch(dbType) {

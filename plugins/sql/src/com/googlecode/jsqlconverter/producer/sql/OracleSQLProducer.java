@@ -67,8 +67,9 @@ public class OracleSQLProducer extends SQLProducer {
 	public String getType(BinaryType type) {
 		switch(type) {
 			case BINARY:
+				return "binary";
 			case VARBINARY:
-				return "raw";
+				return "varbinary";
 			case BLOB:
 			case LONGBLOB:
 			case MEDIUMBLOB:
