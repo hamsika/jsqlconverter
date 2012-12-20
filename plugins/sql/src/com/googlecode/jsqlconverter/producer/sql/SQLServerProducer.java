@@ -180,17 +180,17 @@ public class SQLServerProducer extends SQLProducer {
 	}
 
 	@Override
-	public boolean outputTypeSize(Type type, String localname) {
+	public boolean isValidIdentifier(String name) {
+		// TODO: do some regex here
+		return false;
+	}
+
+	@Override
+	public boolean supportsTypeSize(Type type, String localname) {
 		return	!(type instanceof NumericType) &&
 				!(type instanceof BooleanType) &&
 				!(type instanceof DateTimeType) &&
 				 (type != BinaryType.BIT);
-	}
-
-	@Override
-	public boolean isValidIdentifier(String name) {
-		// TODO: do some regex here
-		return false;
 	}
 
 	@Override

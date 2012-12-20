@@ -161,14 +161,14 @@ public class AccessSQLProducer extends SQLProducer {
 	}
 
 	@Override
-	public boolean outputTypeSize(Type type, String localname) {
-		return !localname.equals("memo") && !localname.equals("oleobject") && !localname.equals("longbinary") && !(type instanceof DecimalType) && !(type instanceof NumericType) && !(type instanceof BooleanType);
-	}
-
-	@Override
 	public boolean isValidIdentifier(String name) {
 		// TODO: do some regex here
 		return false;
+	}
+
+	@Override
+	public boolean supportsTypeSize(Type type, String localname) {
+		return !localname.equals("memo") && !localname.equals("oleobject") && !localname.equals("longbinary") && !(type instanceof DecimalType) && !(type instanceof NumericType) && !(type instanceof BooleanType);
 	}
 
 	@Override

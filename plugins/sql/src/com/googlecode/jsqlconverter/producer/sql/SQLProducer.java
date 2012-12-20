@@ -82,7 +82,7 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 
 			out.print(typeName);
 
-			if (column.getSize() != 0 && outputTypeSize(column.getType(), typeName)) {
+			if (column.getSize() != 0 && supportsTypeSize(column.getType(), typeName)) {
 				out.print("(" + column.getSize() + ")");
 			}
 
@@ -382,10 +382,9 @@ public abstract class SQLProducer extends Producer implements CreateIndexInterfa
 	public abstract String getType(MonetaryType type);
 	public abstract String getType(StringType type, int size);
 
-	public abstract boolean outputTypeSize(Type type, String localname);
-
 	public abstract boolean isValidIdentifier(String name);
 
+	public abstract boolean supportsTypeSize(Type type, String localname);
 	public abstract boolean supportsIdentifier(IdentifierType type);
 	public abstract boolean supportsTableOption(TableOption option);
 	public abstract boolean supportsForeignKeyAction(ForeignKeyAction action);
