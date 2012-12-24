@@ -2,7 +2,6 @@ package com.googlecode.jsqlconverter.parser;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Random;
 
 import com.googlecode.jsqlconverter.annotation.ParameterName;
@@ -15,7 +14,6 @@ import com.googlecode.jsqlconverter.definition.create.table.ColumnOption;
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
 import com.googlecode.jsqlconverter.definition.create.table.TableOption;
 import com.googlecode.jsqlconverter.definition.create.table.constraint.ColumnForeignKeyConstraint;
-import com.googlecode.jsqlconverter.definition.create.table.constraint.CompoundForeignKeyConstraint;
 import com.googlecode.jsqlconverter.definition.insert.InsertFromValues;
 import com.googlecode.jsqlconverter.definition.type.ApproximateNumericType;
 import com.googlecode.jsqlconverter.definition.type.BinaryType;
@@ -68,120 +66,12 @@ public class GeneratorParser extends Parser {
 			statements.add(table);
 		}
 
-		// setup foreign keys
-		if (statements.size() > 1) {
-			for (int i=0; i<statements.size()*3; i++) {
-				CreateTable tableA = statements.get(gen.nextInt(statements.size()));
-				Column columnA = getRandomColumn(tableA);
-
-				CreateTable tableB;
-				Column columnB = null;
-
-				// make sure tableB isn't the same as this table
-				do {
-					tableB = statements.get(gen.nextInt(statements.size()));
-				} while (tableA == tableB);
-
-				// make sure neither tableA nor tableB are temporary
-				if (tableA.containsOption(TableOption.TEMPORARY) || tableB.containsOption(TableOption.TEMPORARY)) {
-					continue;
-				}
-
-				// make sure tableB doesn't already have references to tableA
-				boolean mutualReference = false;
-
-				for (Column column : tableB.getColumns()) {
-					ColumnForeignKeyConstraint fkey = column.getForeignKeyConstraint();
-
-					if (fkey != null) {
-						if (fkey.getTableName().getObjectName().equals(tableA.getName().getObjectName())) {
-							mutualReference = true;
-							break;
-						}
-					}
-				}
-
-				if (mutualReference) {
-					continue;
-				}
-
-				// circle reference
-				// make sure this wont create a circle reference
-				// TODO:
-				// make sure we don't have a circle reference back to tableB
-
-				//isCircleReference(statements, tableA, tableB);
-
-				// make sure columnB is the same type as column a
-				for (Column column : tableB.getColumns()) {
-					if (column.getType().equals(columnA.getType())) {
-						columnB = column;
-						break;
-					}
-				}
-
-				// make sure columnB is indexed.
-				if (columnB != null) {
-					if (columnB.containsOption(ColumnOption.PRIMARY_KEY) || columnB.containsOption(ColumnOption.UNIQUE)) {
-						columnA.setForeignKeyConstraint(new ColumnForeignKeyConstraint(tableB.getName(), columnB.getName()));
-					}
-				}
-			}
-		}
-
 		Collections.sort(statements);
 
 		return statements.toArray(new CreateTable[statements.size()]);
 	}
 
-	private void isCircleReference(ArrayList<CreateTable> statements, CreateTable tableA, CreateTable tableB) {
-		// table A points to table B
-		// find all tables that point to table A
-		HashMap<String, ArrayList<String>> referenceMap = new HashMap<String, ArrayList<String>>();
-
-		for (CreateTable table : statements) {
-			CompoundForeignKeyConstraint[] compoundKey = table.getCompoundForeignKeyConstraints();
-
-			if (compoundKey.length != 0) {
-				// TODO: support compound keys
-			} else {
-				for (Column column : table.getColumns()) {
-					ColumnForeignKeyConstraint fkey = column.getForeignKeyConstraint();
-
-					if (fkey != null) {
-						String key = table.getName().getObjectName();
-
-						if (!referenceMap.containsKey(key)) {
-							referenceMap.put(key, new ArrayList<String>());
-						}
-
-						ArrayList<String> refTables = referenceMap.get(key);
-
-						refTables.add(fkey.getTableName().getObjectName());
-					}
-				}
-			}
-		}
-
-		for (String tableName : referenceMap.keySet()) {
-			for (String refTable : referenceMap.get(tableName)) {
-				if (refTable.contains(tableA.getName().getObjectName())) {
-
-				}
-			}
-		}
-	}
-
-	/**
-	 * Returns a CreateTable object with randomly generated names, columns, keys, etc
-	 *
-	 * @return the generated CreateTable object
-	 */
-	public CreateTable generateCreateTableStatement() {
-		return generateCreateTableStatement(null);
-	}
-
-	public CreateTable generateCreateTableStatement(CreateTable[] previousTables) {
+	private CreateTable generateCreateTableStatement(CreateTable[] previousTables) {
 		// TODO: support generating table name with a SCHEMA. (schema must exist..)
 		Name tableName;
 
@@ -248,6 +138,8 @@ public class GeneratorParser extends Parser {
 		ct.addColumn(b);
 
 		generateTableOptions(ct);
+
+		generateTableReferences(ct, previousTables);
 
 		return ct;
 	}
@@ -319,6 +211,48 @@ public class GeneratorParser extends Parser {
 				//	ct.adudUniqueCompoundKeyConstraint(new KeyConstraint(names.toArray(new Name[names.size()])));
 			}
 		}*/
+	}
+
+	private void generateTableReferences(CreateTable ct, CreateTable[] previousTables) {
+		if (previousTables.length == 0) {
+			return;
+		}
+
+		// make sure this table isn't temporary
+		if (ct.containsOption(TableOption.TEMPORARY)) {
+			return;
+		}
+
+		CreateTable referencedTable = previousTables[gen.nextInt(previousTables.length)];
+
+		// make sure the table to be referenced isn't temporary
+		if (referencedTable.containsOption(TableOption.TEMPORARY)) {
+			return;
+		}
+
+		for (int i=0; i<10; i++) {
+			Column column = getRandomColumn(ct);
+			Column refColumn = null;
+
+			if (column.getForeignKeyConstraint() != null) {
+				continue;
+			}
+
+			// get valid column from reference table
+			for (Column refCol : referencedTable.getColumns()) {
+				// ensure the types match and the ref column is indexed
+				if (column.getType() == refCol.getType() && (refCol.containsOption(ColumnOption.PRIMARY_KEY) || refCol.containsOption(ColumnOption.UNIQUE))) {
+					refColumn = refCol;
+				}
+			}
+
+			if (refColumn == null) {
+				return;
+			}
+
+			// create the reference
+			column.setForeignKeyConstraint(new ColumnForeignKeyConstraint(referencedTable.getName(), refColumn.getName()));
+		}
 	}
 
 	/**
@@ -463,24 +397,6 @@ public class GeneratorParser extends Parser {
 
 	private int generateInt() {
 		return gen.nextInt(30);
-
-		/*
-		int seed = gen.nextInt(100);
-		int num;
-
-		if (seed > 30) {
-			// small
-			num = gen.nextInt(30);
-		} else if (seed > 10) {
-			// possibly larger
-			num = gen.nextInt(255);
-		} else {
-			// largest, least common
-			num = gen.nextInt(4000);
-		}
-
-		return num;
-		*/
 	}
 
 	private int generateInt(int min, int max) {
