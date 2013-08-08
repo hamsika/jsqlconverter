@@ -9,7 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.googlecode.jsqlconverter.definition.create.table.CreateTable;
-import com.googlecode.jsqlconverter.producer.JDBCProducer.SQLProducerList;
+import com.googlecode.jsqlconverter.producer.JDBCProducer.SQLDialect;
 import com.googlecode.jsqlconverter.testutils.CommonTasks;
 import com.googlecode.jsqlconverter.testutils.TestProperties;
 
@@ -44,7 +44,7 @@ public class TestJDBCProducer {
 			prop.getProperty(dbKey + ".url"),
 			prop.getProperty(dbKey + ".user"),
 			prop.getProperty(dbKey + ".pass"),
-			SQLProducerList.valueOf(dbKey),
+			SQLDialect.valueOf(dbKey),
 			false,
 			false,
 			false,

@@ -1,12 +1,10 @@
 package com.googlecode.jsqlconverter.frontend.cli;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.googlecode.jsqlconverter.definition.Statement;
@@ -40,82 +38,19 @@ public class SQLConverterCLI implements ParserCallback {
 		String parserName = cli.getString(FROM);
 		String producerName = cli.getString(TO);
 
-		HashMap<String, String> parserArgs = cli.getArgsWithPrefix(FROM + "-");
-		HashMap<String, String> producerArgs = cli.getArgsWithPrefix(TO + "-");
+		HashMap<String, Object> parserArgs = cli.getArgsWithPrefix(FROM + "-");
+		HashMap<String, Object> producerArgs = cli.getArgsWithPrefix(TO + "-");
 
-		Service parserService = getService(parserName, true);
-		Service producerService = getService(producerName, false);
+		Service parserService = su.getFirstService(parserName, true);
+		Service producerService = su.getFirstService(producerName, false);
 
-		Object[] matchedParserArgs = getMatchingArgs(parserService, parserArgs);
-		Object[] matchedProducerArgs = getMatchingArgs(producerService, producerArgs);
+		Object[] matchedParserArgs = parserService.getMatchingConstructorArguments(parserArgs);
+		Object[] matchedProducerArgs = producerService.getMatchingConstructorArguments(producerArgs);
 
 		parser = (Parser) parserService.newInstance(matchedParserArgs);
 		producer = (Producer) producerService.newInstance(matchedProducerArgs);
 	}
 
-	private Service getService(String name, boolean isParser) {
-		for (Service service : su.getService(name)) {
-			if (service.isParser() == isParser) {
-				return service;
-			}
-		}
-
-		throw new RuntimeException("Service with name " + name + " not found");
-	}
-	
-	private Object[] getMatchingArgs(Service service, HashMap<String, String> argMap) throws FileNotFoundException {
-		EntryPoint[] eps = service.getEntryPoints();
-		EntryPoint matchedEp = null;
-		ArrayList<Object> finalArgs = new ArrayList<Object>();
-		boolean matchAll;
-		boolean returnPrintStream = false;
-
-		for (EntryPoint ep : eps) {
-			matchAll = true;
-			returnPrintStream = false;
-
-			for (Parameter p : ep.getParameters()) {
-				if (!argMap.containsKey(p.getFlattenedName()) && !p.isOptional()) {
-					if (p.getClassType().equals(PrintStream.class)) {
-						returnPrintStream = true;
-						continue;
-					}
-
-					matchAll = false;
-					break;
-				}
-			}
-
-			if (matchAll) {
-				matchedEp = ep;
-				break;
-			}
-		}
-
-		if (returnPrintStream) {
-			return new Object[] {
-				System.out
-			};
-		}
-
-		if (matchedEp == null) {
-			throw new RuntimeException("No matching EntryPoint found");
-		}
-
-		// match constructor order and set defaults
-		for (Parameter p : matchedEp.getParameters()) {
-			if (argMap.containsKey(p.getFlattenedName())) {
-				finalArgs.add(p.toObject(argMap.get(p.getFlattenedName())));
-			} else if (p.isOptional()) {
-				finalArgs.add(p.toObject(argMap.get(p.getDefaultValue())));
-			} else {
-				throw new RuntimeException("Argment matching, this should never happen");
-			}
-		}
-
-		return finalArgs.toArray(new Object[finalArgs.size()]);
-	}
-	
 	public void run() throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, ParserException, ProducerException {
 		long beforeMili = System.currentTimeMillis();
 
@@ -171,9 +106,7 @@ public class SQLConverterCLI implements ParserCallback {
 	private void printParameter(Parameter p, boolean isParser) {
 		System.out.print(" ");
 
-		if (p.isOptional()) {
-			System.out.print("[");
-		}
+		if (p.isOptional()) System.out.print("[");
 
 		Class<?> inputClass = p.getClassType();
 		String inputName = "";
@@ -209,9 +142,7 @@ public class SQLConverterCLI implements ParserCallback {
 
 		System.out.print(((isParser) ? FROM : TO) + "-" + p.getFlattenedName() + " <" + inputName + ">");
 
-		if (p.isOptional()) {
-			System.out.print("]");
-		}
+		if (p.isOptional()) System.out.print("]");
 	}
 
 	@Override

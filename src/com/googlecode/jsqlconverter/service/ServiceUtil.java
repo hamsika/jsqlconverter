@@ -35,13 +35,23 @@ public class ServiceUtil {
 		ArrayList<Service> matchedServices = new ArrayList<Service>();
 		
 		for (Service service : getServices()) {
-			if (service.getFlattenedName().equalsIgnoreCase(name)) {
+			if (service.getFlattenedName().equalsIgnoreCase(name) || service.getName().equalsIgnoreCase(name)) {
 				matchedServices.add(service);
 			}
 		}
 
 		if (matchedServices.size() > 0) {
 			return matchedServices.toArray(new Service[matchedServices.size()]);
+		}
+
+		throw new RuntimeException("Service with name " + name + " not found");
+	}
+
+	public Service getFirstService(String name, boolean isParser) {
+		for (Service service : getService(name)) {
+			if (service.isParser() == isParser) {
+				return service;
+			}
 		}
 
 		throw new RuntimeException("Service with name " + name + " not found");

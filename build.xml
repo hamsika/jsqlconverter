@@ -56,6 +56,21 @@
 			</fileset>
 		</jar>
 
+		<!-- gui lib -->
+		<jar compress="true" jarfile="${build.temp}/${project.name}-gui.jar">
+			<manifest>
+				<attribute name="Implementation-Vendor" value="${project.author}"/>
+				<attribute name="Main-Class" value="com.googlecode.jsqlconverter.frontend.gui.SQLConverterGUIMain"/>
+				<attribute name="Class-Path" value="*.jar"/>
+			</manifest>
+
+			<fileset dir="${build.temp}">
+				<patternset>
+					<include name="**/gui/*.class"/>
+				</patternset>
+			</fileset>
+		</jar>
+
 		<move todir="${build.bin}">
 			<fileset dir="${build.temp}" includes="*.jar"/>
 		</move>

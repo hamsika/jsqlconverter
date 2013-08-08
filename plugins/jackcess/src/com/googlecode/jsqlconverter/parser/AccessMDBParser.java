@@ -76,6 +76,8 @@ public class AccessMDBParser extends Parser {
 			for (Column column : table.getColumns()) {
 				com.googlecode.jsqlconverter.definition.create.table.Column col = new com.googlecode.jsqlconverter.definition.create.table.Column(new Name(column.getName()), getType(column.getType()));
 
+				// TODO: set column size here
+				
 				ct.addColumn(col);
 			}
 
